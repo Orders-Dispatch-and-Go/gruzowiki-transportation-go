@@ -1,9 +1,6 @@
 package consigner
 
 type Service interface {
-	get(id int) (GetConsignerResponse, error)
-	save(PostConsignerRequest) error
-}
-
-type Repository interface {
+	Get(id int) (GetConsignerResponse, error)
+	Save(PostConsignerRequest) error
 }

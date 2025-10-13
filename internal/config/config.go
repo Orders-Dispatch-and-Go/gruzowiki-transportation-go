@@ -1,48 +1,45 @@
 package config
 
 import (
-	"github.com/go-ozzo/ozzo-validation"
-	"gopkg.in/yaml.v2"
-	"io/ioutil"
+	"encoding/json"
+	"fmt"
+	"github.com/creasty/defaults"
+	"github.com/go-playground/validator/v10"
+	"gruzowiki-transportation/internal/auth"
 	"log"
-)
-
-const (
-	defaultServerPort = 8080
+	"os"
 )
 
 type Config struct {
-	ServerPort int `yaml:"server_port" env:"TRANSPORTATION_SERVICE_PORT"`
+	ServerPort  string
+	PostgresDSN string
+	Jwt         auth.JwtConfig
 }
 
-func (c Config) Validate() error {
-	return validation.ValidateStruct(
-		&c,
-		//validation.Field(&c.DSN, validation.Required),
-		//validation.Field(&c.JWTSigningKey, validation.Required),
-	)
-}
-
-func Load(file string, logger *log.Logger) (*Config, error) {
-	c := Config{
-		ServerPort: defaultServerPort,
-	}
-
-	bytes, err := ioutil.ReadFile(file)
+func Load(path string) (Config, error) {
+	file, err := os.Open(path)
 	if err != nil {
-		return nil, err
-	}
-	if err = yaml.Unmarshal(bytes, &c); err != nil {
-		return nil, err
+		return Config{}, fmt.Errorf("Open(%q): %w", path, err)
 	}
 
-	//if err = env.New("APP_", logger.Infof).Load(&c); err != nil {
-	//	return nil, err
-	//}
+	defer func() {
+		if err := file.Close(); err != nil {
+			log.Printf("Close(): %v", err)
+		}
+	}()
 
-	if err = c.Validate(); err != nil {
-		return nil, err
+	var cfg Config
+	if err := json.NewDecoder(file).Decode(&cfg); err != nil {
+		return Config{}, fmt.Errorf("Decode(): %w", err)
 	}
 
-	return &c, err
+	if err := defaults.Set(&cfg); err != nil {
+		return Config{}, fmt.Errorf("Set(%+v): %w", cfg, err)
+	}
+
+	if err := validator.New().Struct(cfg); err != nil {
+		return Config{}, fmt.Errorf("Struct(%+v): %w", cfg, err)
+	}
+
+	return cfg, nil
 }

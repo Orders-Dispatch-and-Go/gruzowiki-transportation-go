@@ -1,8 +1,5 @@
 package consigner
 
-type repository struct {
-}
-
-func get() {
+func Get() {
 
 }
