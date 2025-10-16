@@ -8,7 +8,6 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"gruzowiki-transportation/internal/auth"
 	"gruzowiki-transportation/internal/config"
-	"gruzowiki-transportation/internal/healthcheck"
 	"gruzowiki-transportation/internal/middlewares"
 	"log"
 	"net/http"
@@ -21,8 +20,6 @@ const version = "1.0.0"
 type application struct {
 	logger *log.Logger
 }
-
-var flagConfig = flag.String("config", "./config/local.yaml", "path to the config file")
 
 func main() {
 	flag.Parse()
@@ -58,10 +55,10 @@ func buildHandler(
 	logger *log.Logger,
 	cfg config.Config,
 ) http.Handler {
-	router := routing.New()
+	//app.Use(middlewares[0].Authenticate)
+	//healthcheck.RegisterHandlers(router, version)
 
-	app.Use(middlewares)
-	healthcheck.RegisterHandlers(router, version)
+	app.Post("/healthcheck", middlewares[0].Authenticate)
 
-	return router
+	return nil
 }
