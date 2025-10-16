@@ -1,5 +1,0 @@
-package consigner
-
-func Get() {
-
-}

@@ -3,17 +3,26 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/creasty/defaults"
-	"github.com/go-playground/validator/v10"
-	"gruzowiki-transportation/internal/auth"
 	"log"
 	"os"
+
+	"github.com/creasty/defaults"
+	"github.com/go-playground/validator/v10"
+
+	"auth-service/internal/delivery"
+	"auth-service/internal/utils/auth"
+	"auth-service/internal/utils/duration"
+	"auth-service/internal/utils/email"
 )
 
 type Config struct {
-	ServerPort  string
-	PostgresDSN string
-	Jwt         auth.JwtConfig
+	ShutdownTimeoutSeconds duration.Seconds `validate:"required"`
+
+	PostgresDSN string         `validate:"required"`
+	JWT         auth.JWTConfig `validate:"required"`
+	Email       email.Config   `validate:"required"`
+
+	Delivery delivery.Config `validate:"required"`
 }
 
 func Load(path string) (Config, error) {
