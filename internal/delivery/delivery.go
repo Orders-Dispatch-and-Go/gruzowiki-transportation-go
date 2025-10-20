@@ -1,6 +1,7 @@
 package delivery
 
 import (
+	"auth-service/internal/api/controller/carrierController"
 	"context"
 
 	"github.com/gofiber/fiber/v2"
@@ -12,11 +13,11 @@ type Delivery struct {
 	app *fiber.App
 }
 
-func New(cfg Config, transport transport, middlewares middlewares) *Delivery {
+func New(cfg Config, carrierController carrierController.CarrierController, middlewares middlewares) *Delivery {
 	app := fiber.New(cfg.Server.convertToForeign())
 	app.Use(cors.New(cfg.Cors.convertToForeign()))
 
-	registerRoutes(app, transport, middlewares)
+	registerRoutes(app, carrierController, middlewares)
 
 	return &Delivery{
 		cfg: cfg,

@@ -1,23 +1,20 @@
 package app
 
 import (
-	"context"
-	"fmt"
-	"log"
-	"sync"
-
-	"github.com/jackc/pgx/v5/pgxpool"
-
-	"auth-service/internal/api"
+	"auth-service/internal/api/controller/carrierController"
 	"auth-service/internal/api/middlewares"
 	"auth-service/internal/config"
 	"auth-service/internal/db/pg"
 	"auth-service/internal/delivery"
-	"auth-service/internal/repo"
+	"auth-service/internal/repo/carrierRepo"
+	"auth-service/internal/service/carrierService"
 	"auth-service/internal/utils/auth"
-	"auth-service/internal/utils/crypto"
-	"auth-service/internal/utils/email"
 	"auth-service/internal/utils/request"
+	"context"
+	"fmt"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"log"
+	"sync"
 )
 
 func Run(ctx context.Context, cfg config.Config) error {
@@ -28,18 +25,17 @@ func Run(ctx context.Context, cfg config.Config) error {
 
 	defer conn.Close()
 
-	//passwordHasher := crypto.NewBcryptPasswordHasher()
 	auth := auth.NewJWT(cfg.JWT)
-	//requestReader := request.NewReader()
-	//emailSender := email.NewEmailSender(cfg.Email)
+	requestReader := request.NewReader()
 
-	//repo := repo.New(conn)
-	//service := service.New(repo, passwordHasher, auth, emailSender)
-	//api := api.New(requestReader, service)
-	middlewares := middlewares.New(auth)
-	delivery := delivery.New(cfg.Delivery, api, middlewares)
+	carrierRepoV := carrierRepo.New(conn)
+	carrierServiceV := carrierService.New(carrierRepoV)
+	carrierControllerV := carrierController.New(requestReader, carrierServiceV)
 
-	if err := runDelivery(ctx, cfg, delivery); err != nil {
+	middlewaresV := middlewares.New(auth)
+	deliveryV := delivery.New(cfg.Delivery, carrierControllerV, middlewaresV)
+
+	if err := runDelivery(ctx, cfg, deliveryV); err != nil {
 		return fmt.Errorf("run delivery: %w", err)
 	}
 

@@ -1,4 +1,4 @@
-package carrier
+package carrierService
 
 import (
 	"auth-service/internal/domain/carrierDto"

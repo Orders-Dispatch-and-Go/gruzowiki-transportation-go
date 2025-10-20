@@ -1,4 +1,4 @@
-package repo
+package carrierRepo
 
 import (
 	"auth-service/internal/db/pg"

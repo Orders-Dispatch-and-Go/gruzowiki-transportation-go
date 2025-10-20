@@ -12,7 +12,6 @@ import (
 	"auth-service/internal/delivery"
 	"auth-service/internal/utils/auth"
 	"auth-service/internal/utils/duration"
-	"auth-service/internal/utils/email"
 )
 
 type Config struct {
@@ -20,7 +19,6 @@ type Config struct {
 
 	PostgresDSN string         `validate:"required"`
 	JWT         auth.JWTConfig `validate:"required"`
-	Email       email.Config   `validate:"required"`
 
 	Delivery delivery.Config `validate:"required"`
 }
