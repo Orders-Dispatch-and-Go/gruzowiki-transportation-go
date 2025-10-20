@@ -5,8 +5,6 @@ import (
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
-
-	"auth-service/internal/api/consts"
 )
 
 func (m *Middlewares) Auth(fiberCtx *fiber.Ctx) error {
@@ -26,12 +24,12 @@ func (m *Middlewares) Auth(fiberCtx *fiber.Ctx) error {
 
 	token := authParts[1]
 
-	userID, err := m.auth.ParseToken(token)
+	_, err := m.auth.ParseToken(token)
 	if err != nil {
 		return fmt.Errorf("auth: %w", err)
 	}
 
-	fiberCtx.Locals(consts.UserIDContextKey, userID)
+	//fiberCtx.Locals(consts.UserIDContextKey, userID)
 
 	return fiberCtx.Next()
 }

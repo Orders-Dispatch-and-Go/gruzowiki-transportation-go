@@ -1,0 +1,22 @@
+{
+  "ShutdownTimeoutSeconds": 10,
+  "PostgresDSN": "user='transporation_service_user' password='transporation_service_password' host='localhost' port=5433 dbname='transporation_service' sslmode=disable",
+  "JWT": {
+    "SecretKey": "1.kla$",
+    "TokenLifetimeSeconds": 1800,
+    "VerificationTokenLifetimeSeconds" : 86400
+  },
+  "Delivery": {
+    "Server": {
+      "ReadTimeoutSeconds": 10,
+      "WriteTimeoutSeconds": 10
+    },
+    "Cors": {
+      "AllowOrigins": "*",
+      "AllowHeaders": "Authorization"
+    },
+    "Serve": {
+      "Address": ":8000"
+    }
+  }
+}
