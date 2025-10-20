@@ -1,11 +1,11 @@
-package transport
+package api
 
 import (
 	"errors"
 
 	"github.com/gofiber/fiber/v2"
 
-	"auth-service/internal/transport/consts"
+	"auth-service/internal/api/consts"
 )
 
 func extractUserID(fiberCtx *fiber.Ctx) (int64, error) {

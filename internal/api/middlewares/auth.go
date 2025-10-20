@@ -6,7 +6,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 
-	"auth-service/internal/transport/consts"
+	"auth-service/internal/api/consts"
 )
 
 func (m *Middlewares) Auth(fiberCtx *fiber.Ctx) error {

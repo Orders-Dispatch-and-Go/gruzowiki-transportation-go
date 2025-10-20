@@ -8,13 +8,12 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	"auth-service/internal/api"
+	"auth-service/internal/api/middlewares"
 	"auth-service/internal/config"
 	"auth-service/internal/db/pg"
 	"auth-service/internal/delivery"
 	"auth-service/internal/repo"
-	"auth-service/internal/service"
-	"auth-service/internal/transport"
-	"auth-service/internal/transport/middlewares"
 	"auth-service/internal/utils/auth"
 	"auth-service/internal/utils/crypto"
 	"auth-service/internal/utils/email"
@@ -29,16 +28,16 @@ func Run(ctx context.Context, cfg config.Config) error {
 
 	defer conn.Close()
 
-	passwordHasher := crypto.NewBcryptPasswordHasher()
+	//passwordHasher := crypto.NewBcryptPasswordHasher()
 	auth := auth.NewJWT(cfg.JWT)
-	requestReader := request.NewReader()
-	emailSender := email.NewEmailSender(cfg.Email)
+	//requestReader := request.NewReader()
+	//emailSender := email.NewEmailSender(cfg.Email)
 
-	repo := repo.New(conn)
-	service := service.New(repo, passwordHasher, auth, emailSender)
-	transport := transport.New(requestReader, service)
+	//repo := repo.New(conn)
+	//service := service.New(repo, passwordHasher, auth, emailSender)
+	//api := api.New(requestReader, service)
 	middlewares := middlewares.New(auth)
-	delivery := delivery.New(cfg.Delivery, transport, middlewares)
+	delivery := delivery.New(cfg.Delivery, api, middlewares)
 
 	if err := runDelivery(ctx, cfg, delivery); err != nil {
 		return fmt.Errorf("run delivery: %w", err)
