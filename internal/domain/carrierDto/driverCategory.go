@@ -1,4 +1,4 @@
-package carrier
+package carrierDto
 
 const Category1 = "first category"
 const Category2 = "second category"

@@ -1,14 +1,13 @@
 package carrier
 
 import (
-	"auth-service/internal/api/controller"
-	"auth-service/internal/api/controller/carrier"
+	"auth-service/internal/domain/carrierDto"
 	"context"
 )
 
 type CarrierService interface {
-	GetCarrier(id int32, ctx context.Context, requestReader controller.RequestReader) (
-		getCarrierResponse carrier.GetCarrierResponse,
+	GetCarrier(id int32, ctx context.Context) (
+		getCarrierResponse carrierDto.GetCarrierResponse,
 		err error,
 	)
 }

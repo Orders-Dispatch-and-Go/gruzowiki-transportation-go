@@ -1,7 +1,7 @@
 package carrier
 
 import (
-	"auth-service/internal/api/controller/carrier"
+	"auth-service/internal/domain/carrierDto"
 	"context"
 )
 
@@ -11,8 +11,8 @@ type Service struct {
 }
 
 func GetCarrier(id int32, ctx context.Context) (
-	getCarrierResponse carrier.GetCarrierResponse,
+	getCarrierResponse carrierDto.GetCarrierResponse,
 	err error,
 ) {
-	return carrier.GetCarrierResponse{}, nil
+	return carrierDto.GetCarrierResponse{}, nil
 }
