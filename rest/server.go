@@ -14,13 +14,13 @@ type СarriersHandler interface {
 
 type ServerImpl struct {
 	Address  string
-	Сarriers СarriersHandler
+	Carriers СarriersHandler
 }
 
 func NewServer(address string, carriers СarriersHandler) Server {
 	return &ServerImpl{
 		Address:  address,
-		Сarriers: carriers,
+		Carriers: carriers,
 	}
 }
 
@@ -33,7 +33,7 @@ func (s *ServerImpl) Start() {
 	e.Use()
 
 	ping := e.Group("/carriers")
-	ping.GET("/:id", s.Сarriers.GetCarrier)
+	ping.GET("/:id", s.Carriers.GetCarrier)
 
 	startServer(e, s.Address)
 }
