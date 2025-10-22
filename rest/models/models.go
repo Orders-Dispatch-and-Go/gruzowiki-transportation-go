@@ -1,6 +1,6 @@
 package models
 
-type CarrierResponse struct {
-	Id             int    `json:"id"`
-	DriverCategory string `json:"driver_category"`
+type GetCarrierResponse struct {
+	Id             int32  `json:"id"`
+	DriverCategory string `json:"driverCategory"`
 }

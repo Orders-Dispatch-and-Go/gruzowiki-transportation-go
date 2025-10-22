@@ -2,11 +2,13 @@ package services
 
 import (
 	"context"
-	"gruzowiki/repositories"
+	"errors"
+	"gruzowiki/db/pg"
+	"gruzowiki/rest/models"
 )
 
 type Repo interface {
-	GetCarrierById(context.Context, string) (repositories.Carrier, error)
+	GetCarrierById(context.Context, int32) (*pg.Carrier, error)
 }
 
 type CarrierService struct {
@@ -19,10 +21,15 @@ func NewCarrierService(repo Repo) *CarrierService {
 	}
 }
 
-func (c *CarrierService) GetCarrier(ctx context.Context, id string) (repositories.Carrier, error) {
+func (c *CarrierService) GetCarrier(ctx context.Context, id int32) (*models.GetCarrierResponse, error) {
 	carrier, err := c.repo.GetCarrierById(ctx, id)
 	if err != nil {
-		return repositories.Carrier{}, nil
+		return nil, err
 	}
-	return carrier, err
+
+	if carrier == nil {
+		return nil, errors.New("carrier not found")
+	}
+
+	return &models.GetCarrierResponse{Id: carrier.ID, DriverCategory: carrier.DriverCategory.String}, err
 }

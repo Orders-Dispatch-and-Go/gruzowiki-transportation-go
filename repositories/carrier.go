@@ -2,25 +2,31 @@ package repositories
 
 import (
 	"context"
-	"github.com/jmoiron/sqlx"
+	"errors"
+	"fmt"
+	"github.com/jackc/pgx/v5"
+	"gruzowiki/db/pg"
 )
 
 type CarrierRepo struct {
-	conn *sqlx.DB
+	conn pg.Conn
 }
 
-func NewCarrierRepo(conn *sqlx.DB) *CarrierRepo {
+func NewCarrierRepo(conn pg.Conn) *CarrierRepo {
 	return &CarrierRepo{
 		conn: conn,
 	}
 }
 
-func (c *CarrierRepo) GetCarrierById(ctx context.Context, id string) (Carrier, error) {
-	var carrier Carrier
-	query := "SELECT id, driver_category FROM carrier WHERE id = $1"
-	err := c.conn.GetContext(ctx, &carrier, query, id)
+func (c *CarrierRepo) GetCarrierById(ctx context.Context, id int32) (*pg.Carrier, error) {
+	carriers, err := c.conn.Queries(ctx).GetCarrier(ctx, id)
+
 	if err != nil {
-		return carrier, err
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, err
+		}
+		return nil, fmt.Errorf("query: %w", err)
 	}
-	return carrier, nil
+
+	return &carriers, nil
 }

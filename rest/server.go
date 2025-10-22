@@ -4,10 +4,6 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-const (
-	serverPrefix = "/gruzowiki/"
-)
-
 type Server interface {
 	Start()
 }
@@ -36,9 +32,7 @@ func (s *ServerImpl) Start() {
 	e := echo.New()
 	e.Use()
 
-	gruzowiki := e.Group(serverPrefix)
-
-	ping := gruzowiki.Group("/Сarriers")
+	ping := e.Group("/carriers")
 	ping.GET("/:id", s.Сarriers.GetCarrier)
 
 	startServer(e, s.Address)

@@ -2,15 +2,15 @@ package handlers
 
 import (
 	"context"
-	"gruzowiki/repositories"
 	"gruzowiki/rest/models"
 	"net/http"
+	"strconv"
 
 	"github.com/labstack/echo/v4"
 )
 
 type CarrierService interface {
-	GetCarrier(context.Context, string) (repositories.Carrier, error)
+	GetCarrier(context.Context, int32) (*models.GetCarrierResponse, error)
 }
 
 type Carrier struct {
@@ -24,16 +24,18 @@ func NewCarrierHandler(service CarrierService) *Carrier {
 }
 
 func (carriers *Carrier) GetCarrier(c echo.Context) error {
-	id := c.Param("id")
+	idStr := c.Param("id")
 	ctx := c.Request().Context()
 
-	carrier, err := carriers.service.GetCarrier(ctx, id)
+	id, err := strconv.ParseInt(idStr, 10, 32)
 	if err != nil {
 		return err
 	}
 
-	return c.JSON(http.StatusOK, models.CarrierResponse{
-		Id:             carrier.Id,
-		DriverCategory: carrier.DriverCategory,
-	})
+	carrier, err := carriers.service.GetCarrier(ctx, int32(id))
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, carrier)
 }

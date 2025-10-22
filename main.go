@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"gruzowiki/config"
 	"gruzowiki/repositories"
 	"gruzowiki/rest"
@@ -8,6 +9,8 @@ import (
 	"gruzowiki/services"
 	"log/slog"
 	"os"
+	"os/signal"
+	"syscall"
 )
 
 func main() {
@@ -18,7 +21,10 @@ func main() {
 
 	logger.Info("starting server")
 
-	conn, err := repositories.NewConnect(cfg.Dsn)
+	ctx, stopCtx := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stopCtx()
+
+	conn, err := repositories.NewConnect(ctx, cfg.Dsn)
 	if err != nil {
 		logger.Error(err.Error())
 		return
