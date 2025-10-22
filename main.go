@@ -13,25 +13,22 @@ import (
 func main() {
 	cfg := config.MustLoad()
 
-	loger := mustMakeLogger(cfg.LogLevel)
+	logger := mustMakeLogger(cfg.LogLevel)
 	//TO DO прокинуть везде логер
 
-	loger.Info("starting server")
+	logger.Info("starting server")
 
-	conn, err := repositories.NewConnect(cfg.Address)
+	conn, err := repositories.NewConnect(cfg.Dsn)
 	if err != nil {
-		loger.Error(err.Error())
+		logger.Error(err.Error())
 		return
 	}
 
-	carrierRepo := repositories.NewCarrier(conn)
-
+	carrierRepo := repositories.NewCarrierRepo(conn)
 	carrierService := services.NewCarrierService(carrierRepo)
-
-	carrierHandler := handlers.NewCarrier(carrierService)
+	carrierHandler := handlers.NewCarrierHandler(carrierService)
 
 	server := rest.NewServer(cfg.Address, carrierHandler)
-
 	server.Start()
 }
 

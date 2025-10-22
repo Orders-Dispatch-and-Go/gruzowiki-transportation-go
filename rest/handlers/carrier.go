@@ -17,7 +17,7 @@ type Carrier struct {
 	service CarrierService
 }
 
-func NewCarrier(service CarrierService) *Carrier {
+func NewCarrierHandler(service CarrierService) *Carrier {
 	return &Carrier{
 		service: service,
 	}

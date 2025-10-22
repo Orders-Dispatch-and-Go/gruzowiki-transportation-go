@@ -5,10 +5,11 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-func NewConnect(address string) (*sqlx.DB, error) {
-	conn, err := sqlx.Connect("pgx", address)
+func NewConnect(dsn string) (*sqlx.DB, error) {
+	db, err := sqlx.Open("pgx", dsn)
 	if err != nil {
 		return nil, err
 	}
-	return conn, nil
+
+	return db, nil
 }

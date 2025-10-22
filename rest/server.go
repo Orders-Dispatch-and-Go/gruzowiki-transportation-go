@@ -12,34 +12,34 @@ type Server interface {
 	Start()
 }
 
-type СarriersHandler interface{
+type СarriersHandler interface {
 	GetCarrier(c echo.Context) error
 }
 
 type ServerImpl struct {
-	Port string
+	Address  string
 	Сarriers СarriersHandler
 }
 
-func NewServer(port string, carriers СarriersHandler) Server {
+func NewServer(address string, carriers СarriersHandler) Server {
 	return &ServerImpl{
-		Port: port,
+		Address:  address,
 		Сarriers: carriers,
 	}
 }
 
-func startServer(e *echo.Echo, port string) {
-	e.Logger.Fatal(e.Start("127.0.0.1:" + port))
+func startServer(e *echo.Echo, address string) {
+	e.Logger.Fatal(e.Start(address))
 }
 
 func (s *ServerImpl) Start() {
 	e := echo.New()
 	e.Use()
 
-	gruzowiki:= e.Group(serverPrefix)
+	gruzowiki := e.Group(serverPrefix)
 
 	ping := gruzowiki.Group("/Сarriers")
 	ping.GET("/:id", s.Сarriers.GetCarrier)
 
-	startServer(e, s.Port)
+	startServer(e, s.Address)
 }

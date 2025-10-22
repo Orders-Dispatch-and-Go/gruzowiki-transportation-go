@@ -9,7 +9,8 @@ import (
 
 type Config struct {
 	LogLevel string `yaml:"log_level" env:"LOG_LEVEL" env-default:"DEBUG"`
-	Address  string `yaml:"update_address" env:"UPDATE_ADDRESS" env-default:"localhost:80"`
+	Address  string `yaml:"update_address" env:"UPDATE_ADDRESS" env-default:"localhost:8080"`
+	Dsn      string `yaml:"dsn" env:"DSN" env-default:"postgres://postgres:postgres@localhost:5433/transporation_service?sslmode=disable"`
 }
 
 func MustLoad() Config {
@@ -17,7 +18,7 @@ func MustLoad() Config {
 
 	flag.StringVar(&configPath, "config", "config.yaml", "server configuration file")
 	flag.Parse()
-	
+
 	var cfg Config
 	if err := cleanenv.ReadConfig(configPath, &cfg); err != nil {
 		if err := cleanenv.ReadEnv(&cfg); err != nil {
