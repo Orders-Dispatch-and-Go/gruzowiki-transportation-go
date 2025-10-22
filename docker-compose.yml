@@ -1,0 +1,40 @@
+services:
+  transportation_db_postgres:
+    image: 'postgres:16.4'
+    container_name: "transportation-postgres"
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${TRANSPORTATION_PG_USER}
+      POSTGRES_PASSWORD: ${TRANSPORTATION_PG_PASSWORD}
+      POSTGRES_DB: ${TRANSPORTATION_PG_DATABASE}
+    ports:
+      - "${TRANSPORTATION_PG_PORT}:5432"
+    networks:
+      - gruzowiki_network
+
+  transportation_flyway:
+    image: 'flyway/flyway:11.4'
+    container_name: "transportation-flyway"
+    env_file:
+      - .env
+    environment:
+      FLYWAY_URL: jdbc:postgresql://transportation_db_postgres:5432/${TRANSPORTATION_PG_DATABASE}
+      FLYWAY_USER: ${TRANSPORTATION_PG_USER}
+      FLYWAY_PASSWORD: ${TRANSPORTATION_PG_PASSWORD}
+    command:
+      - migrate
+    volumes:
+      - ./internal/db/pg/migrations:/flyway/sql
+    depends_on:
+      transportation_db_postgres:
+        condition: service_started
+        restart: true
+    networks:
+      - gruzowiki_network
+
+networks:
+  gruzowiki_network:
+    name: "gruzowiki-network"
+    driver: bridge
+    external: true
