@@ -2,22 +2,23 @@ package rest
 
 import (
 	"github.com/labstack/echo/v4"
+	"gruzowiki/rest/middlewares"
 )
 
 type Server interface {
 	Start()
 }
 
-type СarriersHandler interface {
+type CarrierHandler interface {
 	GetCarrier(c echo.Context) error
 }
 
 type ServerImpl struct {
 	Address  string
-	Carriers СarriersHandler
+	Carriers CarrierHandler
 }
 
-func NewServer(address string, carriers СarriersHandler) Server {
+func NewServer(address string, carriers CarrierHandler) Server {
 	return &ServerImpl{
 		Address:  address,
 		Carriers: carriers,
@@ -31,6 +32,8 @@ func startServer(e *echo.Echo, address string) {
 func (s *ServerImpl) Start() {
 	e := echo.New()
 	e.Use()
+
+	e.HTTPErrorHandler = middlewares.ErrorHandler
 
 	ping := e.Group("/carriers")
 	ping.GET("/:id", s.Carriers.GetCarrier)

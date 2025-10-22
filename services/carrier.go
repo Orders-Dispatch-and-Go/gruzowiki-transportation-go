@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"gruzowiki/db/pg"
+	"gruzowiki/rest/exceptions"
 	"gruzowiki/rest/models"
 )
 
@@ -28,7 +29,7 @@ func (c *CarrierService) GetCarrier(ctx context.Context, id int32) (*models.GetC
 	}
 
 	if carrier == nil {
-		return nil, errors.New("carrier not found")
+		return nil, errors.New(exceptions.CarrierNotFound)
 	}
 
 	return &models.GetCarrierResponse{Id: carrier.ID, DriverCategory: carrier.DriverCategory.String}, err
