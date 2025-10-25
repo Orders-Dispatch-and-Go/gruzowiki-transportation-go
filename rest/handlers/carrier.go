@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"context"
-	"gruzowiki/rest/exceptions"
+	"gruzowiki/terror"
 	"gruzowiki/rest/models"
 	"net/http"
 	"strconv"
@@ -30,12 +30,12 @@ func (carriers *Carrier) GetCarrier(c echo.Context) error {
 
 	id, err := strconv.ParseInt(idStr, 10, 32)
 	if err != nil {
-		return exceptions.NewException(exceptions.IncorrectParams, err)
+		return terror.NewValidationError(err.Error())
 	}
 
 	carrier, err := carriers.service.GetCarrier(ctx, int32(id))
 	if err != nil {
-		return exceptions.NewException(exceptions.CarrierNotFound, err)
+		return err
 	}
 
 	return c.JSON(http.StatusOK, carrier)

@@ -3,9 +3,10 @@ package repositories
 import (
 	"context"
 	"errors"
-	"fmt"
-	"github.com/jackc/pgx/v5"
 	"gruzowiki/db/pg"
+	"gruzowiki/terror"
+
+	"github.com/jackc/pgx/v5"
 )
 
 type CarrierRepo struct {
@@ -23,9 +24,9 @@ func (c *CarrierRepo) GetCarrierById(ctx context.Context, id int32) (*pg.Carrier
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, err
+			return nil, terror.NewObjectNotFound(id, "carrier")
 		}
-		return nil, fmt.Errorf("query: %w", err)
+		return nil, err
 	}
 
 	return &carriers, nil

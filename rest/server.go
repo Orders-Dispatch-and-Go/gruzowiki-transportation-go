@@ -31,12 +31,11 @@ func startServer(e *echo.Echo, address string) {
 
 func (s *ServerImpl) Start() {
 	e := echo.New()
-	e.Use()
+	
+	e.Use(middlewares.HandleError)
 
-	e.HTTPErrorHandler = middlewares.ErrorHandler
-
-	ping := e.Group("/carriers")
-	ping.GET("/:id", s.Carriers.GetCarrier)
+	carriers := e.Group("/carriers")
+	carriers.GET("/:id", s.Carriers.GetCarrier)
 
 	startServer(e, s.Address)
 }
