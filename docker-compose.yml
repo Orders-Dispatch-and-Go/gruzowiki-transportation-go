@@ -44,7 +44,7 @@ services:
     environment:
       LOG_LEVEL: ${LOG_LEVEL}
       UPDATE_ADDRESS: ${UPDATE_ADDRESS}
-      DSN: "user='${TRANSPORTATION_PG_USER}' password='${TRANSPORTATION_PG_PASSWORD}' host='transportation_db_postgres' port=5432 dbname='${TRANSPORTATION_PG_DATABASE}' sslmode=disable"
+      DSN: "user='${TRANSPORTATION_PG_USER}' password='${TRANSPORTATION_PG_PASSWORD}' host='${TRANSPORTATION_PG_HOST}' port=${TRANSPORTATION_PG_PORT} dbname='${TRANSPORTATION_PG_DATABASE}' sslmode=disable"
     ports:
       - "${TRANSPORTATION_SERVICE_PORT}:8080"
     depends_on:
