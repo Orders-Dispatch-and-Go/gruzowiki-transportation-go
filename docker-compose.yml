@@ -9,11 +9,11 @@ services:
       POSTGRES_PASSWORD: ${TRANSPORTATION_PG_PASSWORD}
       POSTGRES_DB: ${TRANSPORTATION_PG_DATABASE}
     ports:
-      - "${TRANSPORTATION_PG_PORT}:5432"
+      - "5433:5432"
     volumes:
       - postgres_data_transportation:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${TRANSPORTATION_PG_USER} -d ${TRANSPORTATION_PG_DATABASE}"]
+      test: ["CMD-SHELL", "pg_isready -U ${TRANSPORTATION_PG_USER} -d ${TRANSPORTATION_PG_DATABASE} -p 5432"]
       interval: 10s
       timeout: 5s
       retries: 5

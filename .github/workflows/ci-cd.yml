@@ -123,16 +123,16 @@ jobs:
           sed -i 's|dockerfile: Dockerfile|# dockerfile: Dockerfile|g' docker-compose.yml
           sed -i '/transportation_service:/a\    image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest' docker-compose.yml
 
-          cat > .env << EOF
-          TRANSPORTATION_PG_HOST=transportation_db_postgres
-          TRANSPORTATION_PG_PORT=${{secrets.TRANSPORTATION_PG_PORT}}
-          TRANSPORTATION_PG_DATABASE=${{ secrets.TRANSPORTATION_PG_DATABASE }}
-          TRANSPORTATION_PG_USER=${{ secrets.TRANSPORTATION_PG_USER }}
-          TRANSPORTATION_PG_PASSWORD=${{ secrets.TRANSPORTATION_PG_PASSWORD }}
-          TRANSPORTATION_SERVICE_PORT=${{ secrets.TRANSPORTATION_SERVICE_PORT }}
-          LOG_LEVEL=${{ secrets.LOG_LEVEL }}
-          UPDATE_ADDRESS=${{ secrets.UPDATE_ADDRESS }}
-          EOF
+           cat > .env << EOF
+           TRANSPORTATION_PG_HOST=transportation_db_postgres
+           TRANSPORTATION_PG_PORT=5432
+           TRANSPORTATION_PG_DATABASE=${{ secrets.TRANSPORTATION_PG_DATABASE }}
+           TRANSPORTATION_PG_USER=${{ secrets.TRANSPORTATION_PG_USER }}
+           TRANSPORTATION_PG_PASSWORD=${{ secrets.TRANSPORTATION_PG_PASSWORD }}
+           TRANSPORTATION_SERVICE_PORT=${{ secrets.TRANSPORTATION_SERVICE_PORT }}
+           LOG_LEVEL=${{ secrets.LOG_LEVEL }}
+           UPDATE_ADDRESS=${{ secrets.UPDATE_ADDRESS }}
+           EOF
           
           docker network create gruzowiki-network 2>/dev/null || true
 
