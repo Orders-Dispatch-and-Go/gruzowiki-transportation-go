@@ -12,6 +12,11 @@ services:
       - "${TRANSPORTATION_PG_PORT}:5432"
     volumes:
       - postgres_data_transportation:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${TRANSPORTATION_PG_USER} -d ${TRANSPORTATION_PG_DATABASE}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - gruzowiki_network
 
@@ -48,7 +53,8 @@ services:
     ports:
       - "${TRANSPORTATION_SERVICE_PORT}:8080"
     depends_on:
-      - transportation_db_postgres
+      transportation_db_postgres:
+        condition: service_healthy
     networks:
       - gruzowiki_network
 
