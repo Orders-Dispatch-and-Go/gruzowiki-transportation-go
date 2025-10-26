@@ -25,11 +25,28 @@ services:
     command:
       - migrate
     volumes:
-      - ./internal/db/pg/migrations:/flyway/sql
+      - ./db/pg/migrations:/flyway/sql
     depends_on:
       transportation_db_postgres:
         condition: service_started
         restart: true
+    networks:
+      - gruzowiki_network
+
+  transportation_service:
+    build:
+      dockerfile: Dockerfile
+    container_name: "transportation-service"
+    env_file:
+      - .env
+    environment:
+      LOG_LEVEL: ${LOG_LEVEL}
+      UPDATE_ADDRESS: ${UPDATE_ADDRESS}
+      DSN: "user='${TRANSPORTATION_PG_USER}' password='${TRANSPORTATION_PG_PASSWORD}' host='transportation_db_postgres' port=5432 dbname='${TRANSPORTATION_PG_DATABASE}' sslmode=disable"
+    ports:
+      - "${TRANSPORTATION_SERVICE_PORT}:8080"
+    depends_on:
+      - transportation_db_postgres
     networks:
       - gruzowiki_network
 
