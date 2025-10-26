@@ -10,6 +10,8 @@ services:
       POSTGRES_DB: ${TRANSPORTATION_PG_DATABASE}
     ports:
       - "${TRANSPORTATION_PG_PORT}:5432"
+    volumes:
+      - postgres_data_transportation:/var/lib/postgresql/data
     networks:
       - gruzowiki_network
 
@@ -49,6 +51,9 @@ services:
       - transportation_db_postgres
     networks:
       - gruzowiki_network
+
+volumes:
+  postgres_data_transportation:
 
 networks:
   gruzowiki_network:
