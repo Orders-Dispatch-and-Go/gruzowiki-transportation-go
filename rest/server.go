@@ -2,7 +2,14 @@ package rest
 
 import (
 	"github.com/labstack/echo/v4"
-	"gruzowiki/rest/middlewares"
+	. "gruzowiki/rest/middlewares"
+)
+
+var (
+	USER_ROLE    = "user"
+	CARRIER_ROLE = "carrier"
+	SENDER_ROLE  = "sender"
+	ALL_ROLES    = []string{USER_ROLE, CARRIER_ROLE, SENDER_ROLE}
 )
 
 type Server interface {
@@ -31,11 +38,11 @@ func startServer(e *echo.Echo, address string) {
 
 func (s *ServerImpl) Start() {
 	e := echo.New()
-	
-	e.Use(middlewares.HandleError)
+
+	e.Use(HandleError)
 
 	carriers := e.Group("/carriers")
-	carriers.GET("/:id", s.Carriers.GetCarrier)
+	carriers.GET("/:id", s.Carriers.GetCarrier, AllowedeRoles(ALL_ROLES...))
 
 	startServer(e, s.Address)
 }
