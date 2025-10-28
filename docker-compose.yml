@@ -12,6 +12,7 @@ services:
       - "5433:5432"
     volumes:
       - postgres_data_transportation:/var/lib/postgresql/data
+    restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${TRANSPORTATION_PG_USER} -d ${TRANSPORTATION_PG_DATABASE} -p 5432"]
       interval: 10s
@@ -55,6 +56,7 @@ services:
     depends_on:
       transportation_db_postgres:
         condition: service_healthy
+    restart: unless-stopped
     networks:
       - gruzowiki_network
 
