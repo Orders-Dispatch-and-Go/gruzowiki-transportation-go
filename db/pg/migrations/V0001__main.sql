@@ -24,9 +24,9 @@ create table trips(
     id uuid primary key default gen_random_uuid(),
     from_station bigint,
     to_station bigint,
-    started_at timestamp,
-    calculate_end_at timestamp,
-    actual_end_at timestamp,
+    started_at bigint,
+    calculate_end_at bigint,
+    actual_end_at bigint,
     price decimal(10, 2),
     status varchar(50),
     carrier int references carriers(id),
@@ -47,19 +47,18 @@ create table recipients(
     first_name varchar(100),
     second_name varchar(100),
     third_name varchar(100),
-    phone int unique,
-    passport_series int,
-    passport_number int,
-    unique (passport_series, passport_number)
+    phone varchar(15) unique,
+    email varchar(100) unique
 );
 
 create table requests(
     id uuid primary key default gen_random_uuid(),
     consigner_id int references consigners(id),
     recipient_id int references recipients(id),
-    created_at timestamp,
-    deadline timestamp,
-    trip_id uuid references trips(id),
+    created_at bigint,
+    deadline bigint,
+    calculated_trip_id uuid,
+    actual_trip_id uuid references trips(id),
     from_station bigint,
     to_station bigint,
     price decimal(10, 2),

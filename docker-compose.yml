@@ -25,7 +25,7 @@ services:
     command:
       - migrate
     volumes:
-      - ./internal/db/pg/migrations:/flyway/sql
+      - ./db/pg/migrations:/flyway/sql
     depends_on:
       transportation_db_postgres:
         condition: service_started
