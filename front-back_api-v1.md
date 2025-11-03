@@ -1,7 +1,18 @@
 ## Api грузовиков
 
-### получение заявки (вернутся заявки по id отправителю, id вытащится из jwt токена)
-Get /cargo_request/{id}?page_number=int&page_size=int
+### получение заявки, если оставить параметр null, то он не будет использоваться в фильтре
+Get /cargo_request?page_number=int&page_size=int
+
+````
+{
+    "id": "uuid",
+    "consignerId": "int",
+    "recipientId": "int",
+    "status": "string",
+    "createdFrom": "iso8601",
+    "createdTo": "iso8601"
+}
+````
 
 Http status: 200
 
@@ -9,16 +20,29 @@ Http status: 200
 {
   "cargoRequests": [
     {
-      "id": "uuid",
-      "recipientId": "int",
-      "createdAt": "long",
-      "deadline": "long",
-      "calculatedTripId": "uuid",
-      "actualTripId": "uuid",
-      "fromStation": "long",
-      "toStation": "long",
-      "price": "decimal",
-      "status": "string"
+        "id": "uuid",
+        "consignerId": "int",
+        "recipientId": "int",
+        "createdAt": "long",
+        "deadline": "long",
+        "calculatedTripId": "uuid",
+        "actualTripId": "uuid",
+        "fromStation": {
+            address: string,
+            coords: {
+                lat: float,
+                lon: float
+            }
+        },
+        "toStation": {
+            address: string,
+            coords: {
+                lat: float,
+                lon: float
+            }
+        },
+        "maxPrice": "decimal(10, 2)",
+        "status": "string"
     }
   ]
 }
@@ -32,10 +56,22 @@ Post /cargo_request
 {
     "consignerId": "int",
     "recipientId": "int",
-    "fromStation": "long",
-    "toStation": "long",
+    "fromStation": {
+        address: string,
+        coords: {
+            lat: float,
+            lon: float
+        }
+    },
+    "toStation":  {
+        address: string,
+        coords: {
+            lat: float,
+            lon: float
+        }
+    },
     "deadline": "iso8601",
-    "maxPrice": "decimal"
+    "maxPrice": "decimal(10, 2)"
 }
 ````
 
@@ -57,6 +93,7 @@ Post /cargo
   "width": "int",
   "weight": "int",
   "cargoType": "int",
+  "description": "string",
   "worth": "int",
   "cargoRequestId": "int"
 }
@@ -101,12 +138,24 @@ Http status: 200
   "trips": [
     {
       "id": "uuid",
-      "fromStation": "long",
-      "toStation": "long",
+      "fromStation": {
+        address: string,
+        coords: {
+            lat: float,
+            lon: float
+        }
+      },
+      "toStation": {
+        address: string,
+        coords: {
+            lat: float,
+            lon: float
+        }
+      },
       "startedAt": "long,
       "calculatedEndAt": "long",
       "actualEndAt": "long",
-      "price": "decimal",
+      "price": "decimal(10, 2)",
       "status": "string",
       "carrierId": "int",
       "carId": "int"
@@ -129,15 +178,27 @@ Http status: 200
 ````
 {
   "id": "uuid",
-  "fromStation": "long",
-  "toStation": "long",
+  "fromStation": {
+    address: string,
+    coords: {
+        lat: float,
+        lon: float
+    }
+  },
+  "toStation": {
+    address: string,
+    coords: {
+        lat: float,
+        lon: float
+    }
+  },
   "startedAt": "long",
   "calculatedEndAt": "long",
   "actualEndAt": "long",
-  "price": "decimal",
+  "price": "decimal(10, 2)",
   "status": "string",
-  "carrier": "int",
-  "car": "int"
+  "carrierId": "int",
+  "carId": "int"
 }
 ````
 
@@ -150,9 +211,15 @@ Http status: 200
 {
   "stations": [
     {
-      "stationId": "long",
+      "stationId": {
+        address: string,
+        coords: {
+            lat: float,
+            lon: float
+        }
+      },
       "distance": "int",
-      "ordernum": "int",
+      "orderNum": "int",
       "arrivalAt": "long",
       "departureTime": "long"
     }
@@ -160,7 +227,21 @@ Http status: 200
 }
 ````
 
-## Форматы
+## статусы
+статусы для заявок, грузов, поездок - констаны в string, сообщим позже 
+
+## форматы
+### порядок сортировки
+````
+ASC
+DESC
+````
+
+### decimal(10, 2)
+````
+предполагается, что будет строка типа "7.47", 
+надо договориться, как правильно передавать цены
+````
 
 ### timestamp (long)
 время возвращается в секундах UTC https://www.unixtimestamp.com
@@ -170,7 +251,7 @@ Http status: 200
 2025-11-03T05:16:38+00:00
 ````
 
-## Ошибки
+## ошибки
 если пришла ошибка без описания - описания не будет;
 http status ошибки, если повезет, 
 будет адекватный

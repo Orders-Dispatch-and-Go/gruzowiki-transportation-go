@@ -51,7 +51,7 @@ create table recipients(
     email varchar(100) unique
 );
 
-create table requests(
+create table cargo_requests(
     id uuid primary key default gen_random_uuid(),
     consigner_id int references consigners(id),
     recipient_id int references recipients(id),
@@ -79,5 +79,5 @@ create table cargo(
     weight int,
     cargo_type int references cargo_types(id) default 1,
     worth decimal(10, 2),
-    request_id uuid references requests(id)
+    request_id uuid references cargo_requests(id)
 );
