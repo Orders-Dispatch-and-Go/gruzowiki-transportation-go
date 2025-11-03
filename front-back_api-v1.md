@@ -211,7 +211,7 @@ Http status: 200
 {
   "stations": [
     {
-      "stationId": {
+      "station": {
         address: string,
         coords: {
             lat: float,
