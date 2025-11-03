@@ -30,12 +30,12 @@ Http status: 200
 Post /cargo_request
 ````
 {
-    "consigner_id": "int",
-    "recipient_id": "int",
-    "from_station": "long",
-    "to_station": "long",
+    "consignerId": "int",
+    "recipientId": "int",
+    "fromStation": "long",
+    "toStation": "long",
     "deadline": "iso8601",
-    "max_price": "decimal"
+    "maxPrice": "decimal"
 }
 ````
 
@@ -56,9 +56,9 @@ Post /cargo
   "height": "int",
   "width": "int",
   "weight": "int",
-  "cargo_type": "int",
+  "cargoType": "int",
   "worth": "int",
-  "cargo_request_id": "int"
+  "cargoRequestId": "int"
 }
 ````
 
@@ -69,15 +69,15 @@ Http status: 200
 }
 ````
 
-### Создание получателя
+### создание получателя
 
 Post /recipients
 
 ````
 {
-  "first_name": "string",
-  "second_name": "string",
-  "third_name": "string",
+  "firstname": "string",
+  "secondname": "string",
+  "thirdname": "string",
   "phone": "string",
   "email": "string"
 }
@@ -90,7 +90,7 @@ Http status: 200
 }
 ````
 
-### Получение поездок для заявки
+### получение поездок для заявки
 Get /trips/cargo_request/{id}?page_number=int&page_size=int
 
 response
@@ -101,21 +101,21 @@ Http status: 200
   "trips": [
     {
       "id": "uuid",
-      "from_station": "long",
-      "to_station": "long",
-      "started_at": "long, #utc timestamp
-      "calculated_end_at": "long",
-      "actual_end_at": "long",
+      "fromStation": "long",
+      "toStation": "long",
+      "startedAt": "long,
+      "calculatedEndAt": "long",
+      "actualEndAt": "long",
       "price": "decimal",
       "status": "string",
-      "carrier_id": "int",
-      "car_id": "int"
+      "carrierId": "int",
+      "carId": "int"
     }
   ]
 }
 ````
 
-### Выбор подходящей поездки
+### выбор подходящей поездки
 
 Post /cargo_request/{id}/trip/{id}
 
@@ -129,11 +129,11 @@ Http status: 200
 ````
 {
   "id": "uuid",
-  "from_station": "long",
-  "to_station": "long",
-  "started_at": "long",
-  "calculated_end_at": "long",
-  "actual_end_at": "long",
+  "fromStation": "long",
+  "toStation": "long",
+  "startedAt": "long",
+  "calculatedEndAt": "long",
+  "actualEndAt": "long",
   "price": "decimal",
   "status": "string",
   "carrier": "int",
@@ -148,20 +148,22 @@ Http status: 200
 
 ````
 {
-  "stationSequencs": [
+  "stations": [
     {
-      "station_id": "long",
+      "stationId": "long",
       "distance": "int",
-      "order_num": "int",
-      "arrival_at": "long",
-      "departure_time": "long"
+      "ordernum": "int",
+      "arrivalAt": "long",
+      "departureTime": "long"
     }
   ]
 }
-
 ````
 
 ## Форматы
+
+### timestamp (long)
+время возвращается в секундах UTC https://www.unixtimestamp.com
 
 ### iso8601
 ````
