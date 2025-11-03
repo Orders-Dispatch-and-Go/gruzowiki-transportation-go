@@ -1,0 +1,143 @@
+name: Transportation Go CI/CD
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: orders-dispatch-and-go/gruzowiki-transportation-go
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && contains(github.event.head_commit.modified, '*.go') || contains(github.event.head_commit.added, '*.go') || contains(github.event.head_commit.removed, '*.go')
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.23'
+
+    - name: Create environment file
+      run: |
+        cat > .env << EOF
+        TRANSPORTATION_PG_HOST=${{ secrets.TRANSPORTATION_PG_HOST }}
+        TRANSPORTATION_PG_PORT=${{ secrets.TRANSPORTATION_PG_PORT }}
+        TRANSPORTATION_PG_DATABASE=${{ secrets.TRANSPORTATION_PG_DATABASE }}
+        TRANSPORTATION_PG_USER=${{ secrets.TRANSPORTATION_PG_USER }}
+        TRANSPORTATION_PG_PASSWORD=${{ secrets.TRANSPORTATION_PG_PASSWORD }}
+        TRANSPORTATION_SERVICE_PORT=${{ secrets.TRANSPORTATION_SERVICE_PORT }}
+        LOG_LEVEL=${{ secrets.LOG_LEVEL }}
+        UPDATE_ADDRESS=${{ secrets.UPDATE_ADDRESS }}
+        EOF
+
+    - name: Run tests
+      run: go test ./...
+
+  build:
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'push' && contains(github.event.head_commit.modified, '*.go') || contains(github.event.head_commit.added, '*.go') || contains(github.event.head_commit.removed, '*.go')
+    
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Create environment file
+      run: |
+        cat > .env << EOF
+        TRANSPORTATION_PG_HOST=${{ secrets.TRANSPORTATION_PG_HOST }}
+        TRANSPORTATION_PG_PORT=${{ secrets.TRANSPORTATION_PG_PORT }}
+        TRANSPORTATION_PG_DATABASE=${{ secrets.TRANSPORTATION_PG_DATABASE }}
+        TRANSPORTATION_PG_USER=${{ secrets.TRANSPORTATION_PG_USER }}
+        TRANSPORTATION_PG_PASSWORD=${{ secrets.TRANSPORTATION_PG_PASSWORD }}
+        TRANSPORTATION_SERVICE_PORT=${{ secrets.TRANSPORTATION_SERVICE_PORT }}
+        LOG_LEVEL=${{ secrets.LOG_LEVEL }}
+        UPDATE_ADDRESS=${{ secrets.UPDATE_ADDRESS }}
+        EOF
+
+    - name: Log in to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=sha,prefix={{branch}}-
+          type=raw,value=latest,enable={{is_default_branch}}
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [test, build]
+    if: github.ref == 'refs/heads/main' && always()
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Copy files to server
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ secrets.DEPLOY_HOST }}
+        username: ${{ secrets.DEPLOY_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        source: "docker-compose.yml,db/pg/migrations"
+        target: "/home/${{ secrets.DEPLOY_USER }}/gruzowiki-transportation-go/"
+
+    - name: Deploy to prod server
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.DEPLOY_HOST }}
+        username: ${{ secrets.DEPLOY_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
+          cd /home/${{ secrets.DEPLOY_USER }}/gruzowiki-transportation-go
+          
+          sed -i 's|build:|# build:|g' docker-compose.yml
+          sed -i 's|dockerfile: Dockerfile|# dockerfile: Dockerfile|g' docker-compose.yml
+          sed -i '/transportation_service:/a\    image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest' docker-compose.yml
+
+          cat > .env << EOF
+          TRANSPORTATION_PG_HOST=transportation_db_postgres
+          TRANSPORTATION_PG_PORT=5432
+          TRANSPORTATION_PG_DATABASE=${{ secrets.TRANSPORTATION_PG_DATABASE }}
+          TRANSPORTATION_PG_USER=${{ secrets.TRANSPORTATION_PG_USER }}
+          TRANSPORTATION_PG_PASSWORD=${{ secrets.TRANSPORTATION_PG_PASSWORD }}
+          TRANSPORTATION_SERVICE_PORT=${{ secrets.TRANSPORTATION_SERVICE_PORT }}
+          LOG_LEVEL=${{ secrets.LOG_LEVEL }}
+          UPDATE_ADDRESS=${{ secrets.UPDATE_ADDRESS }}
+          EOF
+          
+          docker network create gruzowiki-network 2>/dev/null || true
+
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+          docker compose pull
+
+          docker compose up -d
