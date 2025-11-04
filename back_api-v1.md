@@ -1,13 +1,13 @@
 ## Api грузовиков
 
 ### получение заявки, если оставить параметр null, то он не будет использоваться в фильтре
-Get /cargo_request?page_number=int&page_size=int
 
+Post /cargo_request?page_number=int&page_size=int
 ````
 {
     "id": "uuid",
-    "consignerId": "int",
-    "recipientId": "int",
+    "consignerId": int,
+    "recipientId": int,
     "status": "string",
     "createdFrom": "iso8601",
     "createdTo": "iso8601"
@@ -15,16 +15,15 @@ Get /cargo_request?page_number=int&page_size=int
 ````
 
 Http status: 200
-
 ````
 {
   "cargoRequests": [
     {
         "id": "uuid",
-        "consignerId": "int",
-        "recipientId": "int",
-        "createdAt": "long",
-        "deadline": "long",
+        "consignerId": int,
+        "recipientId": int,
+        "createdAt": long,
+        "deadline": long,
         "calculatedTripId": "uuid",
         "actualTripId": "uuid",
         "fromStation": {
@@ -54,8 +53,8 @@ Http status: 200
 Post /cargo_request
 ````
 {
-    "consignerId": "int",
-    "recipientId": "int",
+    "consignerId": int,
+    "recipientId": int,
     "fromStation": {
         address: string,
         coords: {
@@ -78,38 +77,59 @@ Post /cargo_request
 Http status: 200
 ````
 {
-  "id": "int"
+  "id": int
+}
+````
+
+### получение типов грузов
+Get /cargo/types
+
+Http status: 200
+````
+{
+  "cargoTypes": [
+    {
+      "id": int,
+      "type": "string",
+      "fragile": "boolean"
+    }
+  ]
 }
 ````
 
 ### создание груза
 
 Post /cargo
-
 ````
 {
-  "length": "int",
-  "height": "int",
-  "width": "int",
-  "weight": "int",
-  "cargoType": "int",
-  "description": "string",
-  "worth": "int",
-  "cargoRequestId": "int"
+  cargo: [
+    {
+      "length": int,
+      "height": int,
+      "width": int,
+      "weight": int,
+      "cargoType": int,
+      "description": "string",
+      "worth": int,
+      "cargoRequestId": int
+    }
+  ]
 }
 ````
 
 Http status: 200
 ````
 {
-  "id: "int"
+  ids: [
+    int,
+    int
+  ]
 }
 ````
 
 ### создание получателя
 
 Post /recipients
-
 ````
 {
   "firstname": "string",
@@ -123,14 +143,13 @@ Post /recipients
 Http status: 200
 ````
 {
-  "id: "int"
+  "id: int
 }
 ````
 
 ### получение поездок для заявки
-Get /trips/cargo_request/{id}?page_number=int&page_size=int
 
-response
+Get /trips/cargo_request/{id}?page_number=int&page_size=int
 
 Http status: 200
 ````
@@ -152,13 +171,13 @@ Http status: 200
             lon: float
         }
       },
-      "startedAt": "long,
-      "calculatedEndAt": "long",
-      "actualEndAt": "long",
+      "startedAt": long,
+      "calculatedEndAt": long,
+      "actualEndAt": long,
       "price": "decimal(10, 2)",
       "status": "string",
-      "carrierId": "int",
-      "carId": "int"
+      "carrierId": int,
+      "carId": int
     }
   ]
 }
@@ -174,7 +193,6 @@ Http status: 200
 Get /cargo_request/{id}/trip?page_number=int&page_size=int
 
 Http status: 200
-
 ````
 {
   "id": "uuid",
@@ -192,13 +210,13 @@ Http status: 200
         lon: float
     }
   },
-  "startedAt": "long",
-  "calculatedEndAt": "long",
-  "actualEndAt": "long",
+  "startedAt": long,
+  "calculatedEndAt": long,
+  "actualEndAt": long,
   "price": "decimal(10, 2)",
   "status": "string",
-  "carrierId": "int",
-  "carId": "int"
+  "carrierId": int,
+  "carId": int
 }
 ````
 
@@ -206,7 +224,6 @@ Http status: 200
 Get /route/trip/{uuid}
 
 Http status: 200
-
 ````
 {
   "stations": [
@@ -218,14 +235,40 @@ Http status: 200
             lon: float
         }
       },
-      "distance": "int",
-      "orderNum": "int",
-      "arrivalAt": "long",
-      "departureTime": "long"
+      "distance": int,
+      "orderNum": int,
+      "arrivalAt": long,
+      "departureTime": long
     }
   ]
 }
 ````
+
+## Внутренние запросы (фронту не нужны)
+
+### сохранение отправителя в системе
+
+Post /consigner
+````
+{
+  "id": int
+}
+
+````
+
+Http status: 200
+
+### сохранение водителя в системе
+
+Post /carrier
+````
+{
+  "id": int,
+  "driver_category": "string"
+}
+````
+
+Http status: 200
 
 ## статусы
 статусы для заявок, грузов, поездок - констаны в string, сообщим позже 
