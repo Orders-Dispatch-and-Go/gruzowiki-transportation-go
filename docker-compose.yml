@@ -9,9 +9,9 @@ services:
       POSTGRES_PASSWORD: ${TRANSPORTATION_PG_PASSWORD}
       POSTGRES_DB: ${TRANSPORTATION_PG_DATABASE}
     ports:
-      - "5433:5432"
-    volumes:
-      - postgres_data_transportation:/var/lib/postgresql/data
+      - ${TRANSPORTATION_PG_PORT}:5432
+#    volumes:
+#      - postgres_data_transportation:/var/lib/postgresql/data
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${TRANSPORTATION_PG_USER} -d ${TRANSPORTATION_PG_DATABASE} -p 5432"]
@@ -41,24 +41,24 @@ services:
     networks:
       - gruzowiki_network
 
-  transportation_service:
-    build:
-      dockerfile: Dockerfile
-    container_name: "transportation-service"
-    env_file:
-      - .env
-    environment:
-      LOG_LEVEL: ${LOG_LEVEL}
-      UPDATE_ADDRESS: ${UPDATE_ADDRESS}
-      DSN: "user='${TRANSPORTATION_PG_USER}' password='${TRANSPORTATION_PG_PASSWORD}' host='${TRANSPORTATION_PG_HOST}' port=${TRANSPORTATION_PG_PORT} dbname='${TRANSPORTATION_PG_DATABASE}' sslmode=disable"
-    ports:
-      - "${TRANSPORTATION_SERVICE_PORT}:8080"
-    depends_on:
-      transportation_db_postgres:
-        condition: service_healthy
-    restart: unless-stopped
-    networks:
-      - gruzowiki_network
+#  transportation_service:
+#    build:
+#      dockerfile: Dockerfile
+#    container_name: "transportation-service"
+#    env_file:
+#      - .env
+#    environment:
+#      LOG_LEVEL: ${LOG_LEVEL}
+#      UPDATE_ADDRESS: ${UPDATE_ADDRESS}
+#      DSN: "user='${TRANSPORTATION_PG_USER}' password='${TRANSPORTATION_PG_PASSWORD}' host='${TRANSPORTATION_PG_HOST}' port=${TRANSPORTATION_PG_PORT} dbname='${TRANSPORTATION_PG_DATABASE}' sslmode=disable"
+#    ports:
+#      - "${TRANSPORTATION_SERVICE_PORT}:8080"
+#    depends_on:
+#      transportation_db_postgres:
+#        condition: service_healthy
+#    restart: unless-stopped
+#    networks:
+#      - gruzowiki_network
 
 volumes:
   postgres_data_transportation:
