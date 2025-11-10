@@ -85,7 +85,6 @@ HttpStatus: 200
         }
       },
       "distance": "int",
-      "orderNum": "int",
       "tripTime": "utc",
     }
   ]
@@ -165,8 +164,10 @@ Post /routes/trips/cargo_request/remove
 
 ````
 {
-  "fromStation": "uuid",
-  "toStation": "uuid",
+  "deleteStationIds": [ 
+    "uuid",
+    ...
+  ],
   "tripId": "uuid"
 }
 ````
