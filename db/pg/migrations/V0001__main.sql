@@ -20,14 +20,6 @@ create table cars(
     owner int references carriers(id)
 );
 
-/*
-create table stations(
-    id uuid primary key default gen_random_uuid(),
-    address varchar(100),
-    latitude float,
-    longitude float
-);*/
-
 create table trips(
     id uuid primary key default gen_random_uuid(),
     route_id uuid,
@@ -41,15 +33,6 @@ create table trips(
     carrier int references carriers(id),
     car int references cars(id)
 );
-
-/*create table stations_sequences(
-    trip_id uuid references trips(id),
-    station_id references stations(id),
-    distance int,
-    order_num int,
-    primary key (trip_id, station_id)
-);
-*/
 
 -- получатель
 create table recipients(

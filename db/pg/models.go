@@ -30,9 +30,22 @@ type Cargo struct {
 	RequestID pgtype.UUID
 }
 
+type CargoRequest struct {
+	ID          pgtype.UUID
+	ConsignerID pgtype.Int4
+	RecipientID pgtype.Int4
+	CreatedAt   pgtype.Int8
+	Deadline    pgtype.Int8
+	RouteID     pgtype.UUID
+	TripID      pgtype.UUID
+	Price       pgtype.Numeric
+	Status      pgtype.Text
+}
+
 type CargoType struct {
-	ID   int32
-	Type pgtype.Text
+	ID      int32
+	Type    pgtype.Text
+	Fragile pgtype.Bool
 }
 
 type Carrier struct {
@@ -45,42 +58,22 @@ type Consigner struct {
 }
 
 type Recipient struct {
-	ID             int32
-	FirstName      pgtype.Text
-	SecondName     pgtype.Text
-	ThirdName      pgtype.Text
-	Phone          pgtype.Int4
-	PassportSeries pgtype.Int4
-	PassportNumber pgtype.Int4
-}
-
-type Request struct {
-	ID          pgtype.UUID
-	ConsignerID pgtype.Int4
-	RecipientID pgtype.Int4
-	CreatedAt   pgtype.Timestamp
-	Deadline    pgtype.Timestamp
-	TripID      pgtype.UUID
-	FromStation pgtype.Int8
-	ToStation   pgtype.Int8
-	Price       pgtype.Numeric
-	Status      pgtype.Text
-}
-
-type StationsSequence struct {
-	TripID    pgtype.UUID
-	StationID int64
-	Distance  pgtype.Int4
-	OrderNum  pgtype.Int4
+	ID         int32
+	FirstName  pgtype.Text
+	SecondName pgtype.Text
+	ThirdName  pgtype.Text
+	Phone      pgtype.Text
+	Email      pgtype.Text
 }
 
 type Trip struct {
 	ID             pgtype.UUID
-	FromStation    pgtype.Int8
-	ToStation      pgtype.Int8
-	StartedAt      pgtype.Timestamp
-	CalculateEndAt pgtype.Timestamp
-	ActualEndAt    pgtype.Timestamp
+	RouteID        pgtype.UUID
+	FromStation    pgtype.UUID
+	ToStation      pgtype.UUID
+	StartedAt      pgtype.Int8
+	CalculateEndAt pgtype.Int8
+	ActualEndAt    pgtype.Int8
 	Price          pgtype.Numeric
 	Status         pgtype.Text
 	Carrier        pgtype.Int4
