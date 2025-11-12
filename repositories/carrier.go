@@ -23,7 +23,7 @@ func (c *CarrierRepo) GetCarrierById(ctx context.Context, id int32) (*pg.Carrier
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, err
+			return nil, nil
 		}
 		return nil, fmt.Errorf("query: %w", err)
 	}

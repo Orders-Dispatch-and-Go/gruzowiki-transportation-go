@@ -2,10 +2,10 @@ package services
 
 import (
 	"context"
-	"errors"
 	"gruzowiki/db/pg"
-	"gruzowiki/rest/exceptions"
 	"gruzowiki/rest/models"
+	"gruzowiki/rest/terror"
+	"strconv"
 )
 
 type Repo interface {
@@ -29,7 +29,7 @@ func (c *CarrierService) GetCarrier(ctx context.Context, id int32) (*models.GetC
 	}
 
 	if carrier == nil {
-		return nil, errors.New(exceptions.CarrierNotFound)
+		return nil, terror.NewNotFoundError("Carrier", strconv.Itoa(int(id)))
 	}
 
 	return &models.GetCarrierResponse{Id: carrier.ID, DriverCategory: carrier.DriverCategory.String}, err

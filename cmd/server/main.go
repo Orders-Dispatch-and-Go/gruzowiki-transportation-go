@@ -4,7 +4,6 @@ import (
 	"context"
 	"gruzowiki/config"
 	"gruzowiki/repositories"
-	"gruzowiki/rest"
 	"gruzowiki/rest/handlers"
 	"gruzowiki/services"
 	"log/slog"
@@ -34,7 +33,7 @@ func main() {
 	carrierService := services.NewCarrierService(carrierRepo)
 	carrierHandler := handlers.NewCarrierHandler(carrierService)
 
-	server := rest.NewServer(cfg.Address, carrierHandler)
+	server := NewServer(cfg.Address, carrierHandler)
 	server.Start()
 }
 

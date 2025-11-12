@@ -1,4 +1,4 @@
-package rest
+package main
 
 import (
 	"github.com/labstack/echo/v4"
@@ -14,14 +14,14 @@ type CarrierHandler interface {
 }
 
 type ServerImpl struct {
-	Address  string
-	Carriers CarrierHandler
+	Address        string
+	CarrierHandler CarrierHandler
 }
 
-func NewServer(address string, carriers CarrierHandler) Server {
+func NewServer(address string, carrierHandler CarrierHandler) Server {
 	return &ServerImpl{
-		Address:  address,
-		Carriers: carriers,
+		Address:        address,
+		CarrierHandler: carrierHandler,
 	}
 }
 
@@ -31,12 +31,11 @@ func startServer(e *echo.Echo, address string) {
 
 func (s *ServerImpl) Start() {
 	e := echo.New()
-	e.Use()
 
-	e.HTTPErrorHandler = middlewares.ErrorHandler
+	e.Use(middlewares.HandleError)
 
 	ping := e.Group("/carriers")
-	ping.GET("/:id", s.Carriers.GetCarrier)
+	ping.GET("/:id", s.CarrierHandler.GetCarrier)
 
 	startServer(e, s.Address)
 }

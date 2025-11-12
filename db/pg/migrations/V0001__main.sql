@@ -73,3 +73,5 @@ create table cargo(
     worth decimal(10, 2),
     request_id uuid references cargo_requests(id)
 );
+
+insert into carriers(id, driver_category) values (2, 'cat1');
