@@ -7,6 +7,6 @@ import (
 
 func ToNumeric(decimalNum decimal.Decimal) pgtype.Numeric {
 	price := pgtype.Numeric{}
-	_ = price.Scan(decimalNum)
+	_ = price.Scan(decimalNum.String())
 	return price
 }

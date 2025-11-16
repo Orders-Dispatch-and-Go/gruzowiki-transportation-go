@@ -272,7 +272,10 @@ Http status: 200
 
 ## статусы
 статусы для заявок, грузов, поездок - констаны в string, сообщим позже 
-
+````
+WAITING_TRIP_CHOICE, WAITING_DRIVER_APPROVAL, APPROVED_BY_DRIVER
+REJECTED_BY_DRIVER, IN_DELIVERY, COMPLETED, CANCELED
+````
 ## форматы
 ### порядок сортировки
 ````

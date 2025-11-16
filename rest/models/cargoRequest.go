@@ -5,10 +5,15 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-type GetCarrierResponse struct {
-	Id             int32  `json:"id"`
-	DriverCategory string `json:"driverCategory"`
-}
+const (
+	StatusWaitingTripChoice     = "WAITING_TRIP_CHOICE"
+	StatusWaitingDriverApproval = "WAITING_DRIVER_APPROVAL"
+	StatusApprovedByDriver      = "APPROVED_BY_DRIVER"
+	StatusRejectedByDriver      = "REJECTED_BY_DRIVER"
+	StatusInDelivery            = "IN_DELIVERY"
+	StatusCompleted             = "COMPLETED"
+	StatusCanceled              = "CANCELED"
+)
 
 type Coords struct {
 	Lat float64 `json:"lat"`

@@ -32,7 +32,7 @@ func (c *CargoRequestService) CreateCargoRequest(ctx context.Context, postCargoR
 		CreatedAt:   pgtype.Int8{Int64: time.Now().Unix(), Valid: true},
 		Deadline:    pgtype.Int8{Int64: util.ToTimestamp(postCargoRequestRequest.Deadline), Valid: true},
 		Price:       util.ToNumeric(postCargoRequestRequest.MaxPrice),
-		Status:      pgtype.Text{String: "pending", Valid: true},
+		Status:      pgtype.Text{String: models.StatusWaitingTripChoice, Valid: true},
 	})
 
 	if err != nil {
