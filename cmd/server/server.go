@@ -13,15 +13,21 @@ type CarrierHandler interface {
 	GetCarrier(c echo.Context) error
 }
 
-type ServerImpl struct {
-	Address        string
-	CarrierHandler CarrierHandler
+type CargoRequestHandler interface {
+	CreateCargoCargoRequest(c echo.Context) error
 }
 
-func NewServer(address string, carrierHandler CarrierHandler) Server {
+type ServerImpl struct {
+	Address             string
+	CarrierHandler      CarrierHandler
+	CargoRequestHandler CargoRequestHandler
+}
+
+func NewServer(address string, carrierHandler CarrierHandler, cargoRequestHandler CargoRequestHandler) Server {
 	return &ServerImpl{
-		Address:        address,
-		CarrierHandler: carrierHandler,
+		Address:             address,
+		CarrierHandler:      carrierHandler,
+		CargoRequestHandler: cargoRequestHandler,
 	}
 }
 
@@ -34,8 +40,9 @@ func (s *ServerImpl) Start() {
 
 	e.Use(middlewares.HandleError)
 
-	ping := e.Group("/carriers")
-	ping.GET("/:id", s.CarrierHandler.GetCarrier)
+	ping := e.Group("")
+	ping.GET("/carriers/:id", s.CarrierHandler.GetCarrier)
+	ping.POST("/cargo_request", s.CargoRequestHandler.CreateCargoCargoRequest)
 
 	startServer(e, s.Address)
 }
