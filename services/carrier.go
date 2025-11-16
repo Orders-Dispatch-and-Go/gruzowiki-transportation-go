@@ -8,15 +8,15 @@ import (
 	"strconv"
 )
 
-type Repo interface {
+type CarrierRepo interface {
 	GetCarrierById(context.Context, int32) (*pg.Carrier, error)
 }
 
 type CarrierService struct {
-	repo Repo
+	repo CarrierRepo
 }
 
-func NewCarrierService(repo Repo) *CarrierService {
+func NewCarrierService(repo CarrierRepo) *CarrierService {
 	return &CarrierService{
 		repo: repo,
 	}

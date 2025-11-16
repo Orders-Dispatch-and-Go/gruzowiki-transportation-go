@@ -33,7 +33,11 @@ func main() {
 	carrierService := services.NewCarrierService(carrierRepo)
 	carrierHandler := handlers.NewCarrierHandler(carrierService)
 
-	server := NewServer(cfg.Address, carrierHandler)
+	cargoRequestRepo := repositories.NewCargoRequestRepo(conn)
+	cargoRequestService := services.NewCargoRequestService(cargoRequestRepo)
+	cargoRequestHandler := handlers.NewCargoRequestController(cargoRequestService)
+
+	server := NewServer(cfg.Address, carrierHandler, cargoRequestHandler)
 	server.Start()
 }
 

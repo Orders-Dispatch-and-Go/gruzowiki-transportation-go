@@ -24,16 +24,16 @@ func NewCarrierHandler(service CarrierService) *Carrier {
 	}
 }
 
-func (carriers *Carrier) GetCarrier(c echo.Context) error {
+func (handler *Carrier) GetCarrier(c echo.Context) error {
 	idStr := c.Param("id")
 	ctx := c.Request().Context()
 
 	id, err := strconv.ParseInt(idStr, 10, 32)
 	if err != nil {
-		return terror.NewValidationError(err.Error())
+		return terror.NewValidationError("invalid arguments", err.Error())
 	}
 
-	carrier, err := carriers.service.GetCarrier(ctx, int32(id))
+	carrier, err := handler.service.GetCarrier(ctx, int32(id))
 	if err != nil {
 		return err
 	}

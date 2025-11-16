@@ -77,7 +77,7 @@ Post /cargo_request
 Http status: 200
 ````
 {
-  "id": int
+  "id": "uuid"
 }
 ````
 
