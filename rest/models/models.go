@@ -60,3 +60,36 @@ type UpdateCarrierRequest struct {
 type UpdateCarrierResponse struct {
 	ID int32
 }
+
+type CreateRecipientRequest struct {
+	FirstName  string
+	SecondName string
+	ThirdName  string
+	Phone      string
+	Email      string
+}
+
+type CreateRecipientResponse struct {
+	ID int32
+}
+
+type GetRecipientResponse struct {
+	ID         int32
+	FirstName  string
+	SecondName string
+	ThirdName  string
+	Phone      string
+	Email      string
+}
+
+type UpdateRecipientRequest struct {
+	FirstName  string
+	SecondName string
+	ThirdName  string
+	Phone      string
+	Email      string
+}
+
+type UpdateRecipientResponse struct {
+	ID int32
+}

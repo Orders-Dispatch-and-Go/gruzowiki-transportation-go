@@ -52,3 +52,31 @@ SELECT
 FROM cars 
 WHERE owner = $1 
 ORDER BY id;
+
+-- name: GetRecipient :one
+SELECT id, first_name, second_name, third_name, phone, email
+FROM recipients
+WHERE id = $1;
+
+-- name: CreateRecipient :one
+INSERT INTO recipients (first_name, second_name, third_name, phone, email)
+VALUES ($1, $2, $3, $4, $5)
+RETURNING id;
+
+-- name: UpdateRecipient :one
+UPDATE recipients
+SET first_name = $2,
+    second_name = $3,
+    third_name = $4,
+    phone = $5,
+    email = $6
+WHERE id = $1
+RETURNING id;
+
+-- name: DeleteRecipient :exec
+DELETE FROM recipients WHERE id = $1;
+
+-- name: ListRecipients :many
+SELECT id, first_name, second_name, third_name, phone, email
+FROM recipients
+ORDER BY id;
