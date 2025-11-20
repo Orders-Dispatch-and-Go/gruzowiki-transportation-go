@@ -144,6 +144,27 @@ func (q *Queries) GetCar(ctx context.Context, id int32) (Car, error) {
 	return i, err
 }
 
+const getCargoRequest = `-- name: GetCargoRequest :one
+select id, consigner_id, recipient_id, created_at, deadline, route_id, trip_id, price, status from cargo_requests where id = $1
+`
+
+func (q *Queries) GetCargoRequest(ctx context.Context, id pgtype.UUID) (CargoRequest, error) {
+	row := q.db.QueryRow(ctx, getCargoRequest, id)
+	var i CargoRequest
+	err := row.Scan(
+		&i.ID,
+		&i.ConsignerID,
+		&i.RecipientID,
+		&i.CreatedAt,
+		&i.Deadline,
+		&i.RouteID,
+		&i.TripID,
+		&i.Price,
+		&i.Status,
+	)
+	return i, err
+}
+
 const getCarrier = `-- name: GetCarrier :one
 SELECT id, driver_category FROM carriers WHERE id = $1
 `
@@ -332,6 +353,40 @@ func (q *Queries) UpdateRecipient(ctx context.Context, arg UpdateRecipientParams
 		arg.Email,
 	)
 	var id int32
+	err := row.Scan(&id)
+	return id, err
+}
+
+const insertCargoRequest = `-- name: InsertCargoRequest :one
+insert into cargo_requests (id, consigner_id, recipient_id, created_at, deadline, route_id, trip_id, price, status)
+values ($1, $2, $3, $4, $5, $6, $7, $8, $9) returning id
+`
+
+type InsertCargoRequestParams struct {
+	ID          pgtype.UUID
+	ConsignerID pgtype.Int4
+	RecipientID pgtype.Int4
+	CreatedAt   pgtype.Int8
+	Deadline    pgtype.Int8
+	RouteID     pgtype.UUID
+	TripID      pgtype.UUID
+	Price       pgtype.Numeric
+	Status      pgtype.Text
+}
+
+func (q *Queries) InsertCargoRequest(ctx context.Context, arg InsertCargoRequestParams) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, insertCargoRequest,
+		arg.ID,
+		arg.ConsignerID,
+		arg.RecipientID,
+		arg.CreatedAt,
+		arg.Deadline,
+		arg.RouteID,
+		arg.TripID,
+		arg.Price,
+		arg.Status,
+	)
+	var id pgtype.UUID
 	err := row.Scan(&id)
 	return id, err
 }

@@ -29,7 +29,10 @@ func NewCarHandler(service CarService) *CarHandler {
 func (h *CarHandler) CreateCar(c echo.Context) error {
 	var req models.CreateCarRequest
 	if err := c.Bind(&req); err != nil {
-		return terror.NewValidationError(err.Error())
+		return terror.NewValidationError(
+			err.Error(),
+			"binding CreateCarRequest",
+		)
 	}
 
 	resp, err := h.service.CreateCar(c.Request().Context(), req)
@@ -43,7 +46,10 @@ func (h *CarHandler) CreateCar(c echo.Context) error {
 func (h *CarHandler) GetCar(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		return terror.NewValidationError("invalid id")
+		return terror.NewValidationError(
+			"invalid id",
+			"parsing path parameter 'id'",
+		)
 	}
 
 	resp, err := h.service.GetCar(c.Request().Context(), int32(id))
@@ -57,12 +63,18 @@ func (h *CarHandler) GetCar(c echo.Context) error {
 func (h *CarHandler) UpdateCar(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		return terror.NewValidationError("invalid id")
+		return terror.NewValidationError(
+			"invalid id",
+			"parsing path parameter 'id'",
+		)
 	}
 
 	var req models.UpdateCarRequest
 	if err := c.Bind(&req); err != nil {
-		return terror.NewValidationError(err.Error())
+		return terror.NewValidationError(
+			err.Error(),
+			"binding UpdateCarRequest",
+		)
 	}
 
 	resp, err := h.service.UpdateCar(c.Request().Context(), int32(id), req)
@@ -76,7 +88,10 @@ func (h *CarHandler) UpdateCar(c echo.Context) error {
 func (h *CarHandler) DeleteCar(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		return terror.NewValidationError("invalid id")
+		return terror.NewValidationError(
+			"invalid id",
+			"parsing path parameter 'id'",
+		)
 	}
 
 	if err := h.service.DeleteCar(c.Request().Context(), int32(id)); err != nil {
@@ -89,7 +104,10 @@ func (h *CarHandler) DeleteCar(c echo.Context) error {
 func (h *CarHandler) ListCarsByOwner(c echo.Context) error {
 	ownerID, err := strconv.Atoi(c.Param("ownerId"))
 	if err != nil {
-		return terror.NewValidationError("invalid ownerId")
+		return terror.NewValidationError(
+			"invalid ownerId",
+			"parsing path parameter 'ownerId'",
+		)
 	}
 
 	cars, err := h.service.ListCarsByOwner(c.Request().Context(), int32(ownerID))

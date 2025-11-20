@@ -29,7 +29,10 @@ func NewCarrierHandler(service CarrierService) *CarrierHandler {
 func (h *CarrierHandler) CreateCarrier(c echo.Context) error {
 	var req models.CreateCarrierRequest
 	if err := c.Bind(&req); err != nil {
-		return terror.NewValidationError(err.Error())
+		return terror.NewValidationError(
+			err.Error(),
+			"binding CreateCarrierRequest",
+		)
 	}
 	fmt.Println("REQ:", req)
 
@@ -44,7 +47,10 @@ func (h *CarrierHandler) CreateCarrier(c echo.Context) error {
 func (h *CarrierHandler) GetCarrier(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		return terror.NewValidationError("invalid id")
+		return terror.NewValidationError(
+			"invalid id",
+			"parsing path parameter 'id'",
+		)
 	}
 
 	resp, err := h.service.GetCarrier(c.Request().Context(), int32(id))
@@ -58,12 +64,18 @@ func (h *CarrierHandler) GetCarrier(c echo.Context) error {
 func (h *CarrierHandler) UpdateCarrier(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		return terror.NewValidationError("invalid id")
+		return terror.NewValidationError(
+			"invalid id",
+			"parsing path parameter 'id'",
+		)
 	}
 
 	var req models.UpdateCarrierRequest
 	if err := c.Bind(&req); err != nil {
-		return terror.NewValidationError(err.Error())
+		return terror.NewValidationError(
+			err.Error(),
+			"binding UpdateCarrierRequest",
+		)
 	}
 
 	resp, err := h.service.UpdateCarrier(c.Request().Context(), int32(id), req.DriverCategory)
@@ -77,7 +89,10 @@ func (h *CarrierHandler) UpdateCarrier(c echo.Context) error {
 func (h *CarrierHandler) DeleteCarrier(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		return terror.NewValidationError("invalid id")
+		return terror.NewValidationError(
+			"invalid id",
+			"parsing path parameter 'id'",
+		)
 	}
 
 	if err := h.service.DeleteCarrier(c.Request().Context(), int32(id)); err != nil {

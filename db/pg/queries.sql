@@ -80,3 +80,10 @@ DELETE FROM recipients WHERE id = $1;
 SELECT id, first_name, second_name, third_name, phone, email
 FROM recipients
 ORDER BY id;
+
+-- name: GetCargoRequest :one
+select * from cargo_requests where id = $1;
+
+-- name: InsertCargoRequest :one
+insert into cargo_requests (id, consigner_id, recipient_id, created_at, deadline, route_id, trip_id, price, status)
+values ($1, $2, $3, $4, $5, $6, $7, $8, $9) returning id;
