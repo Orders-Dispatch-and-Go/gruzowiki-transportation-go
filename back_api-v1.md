@@ -2,7 +2,7 @@
 
 ### получение заявки, если оставить параметр null, то он не будет использоваться в фильтре
 
-Post /cargo_request?page_number=int&page_size=int
+Post /search/cargo_request?page_number=int&page_size=int
 ````
 {
     "id": "uuid",

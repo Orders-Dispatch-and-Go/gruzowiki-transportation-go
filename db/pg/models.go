@@ -34,6 +34,8 @@ type CargoRequest struct {
 	ID          pgtype.UUID
 	ConsignerID pgtype.Int4
 	RecipientID pgtype.Int4
+	FromStation pgtype.UUID
+	ToStation   pgtype.UUID
 	CreatedAt   pgtype.Int8
 	Deadline    pgtype.Int8
 	RouteID     pgtype.UUID

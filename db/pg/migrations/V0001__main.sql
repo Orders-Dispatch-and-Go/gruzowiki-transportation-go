@@ -48,6 +48,8 @@ create table cargo_requests(
     id uuid primary key default gen_random_uuid(),
     consigner_id int references consigners(id),
     recipient_id int references recipients(id),
+    from_station uuid,
+    to_station uuid,
     created_at bigint,
     deadline bigint,
     route_id uuid,
@@ -75,3 +77,9 @@ create table cargo(
 );
 
 insert into carriers(id, driver_category) values (2, 'cat1');
+
+insert into carriers(id, driver_category) values (1, 'b');
+
+insert into consigners(id) values (1);
+insert into recipients(id, first_name, second_name, third_name, phone, email)
+values (1, 'fn', 'sn', 'tn', '1234', 'email');

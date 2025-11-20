@@ -4,7 +4,7 @@ select * from carriers where id = $1;
 -- name: CreateCarrier :one
 insert into carriers (driver_category) values ($1) returning id;
 
--- name: GetCargoRequest :one
+-- name: GetCargoRequest :many
 select * from cargo_requests where id = $1;
 
 -- name: InsertCargoRequest :one

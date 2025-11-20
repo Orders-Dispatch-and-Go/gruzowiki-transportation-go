@@ -37,3 +37,30 @@ type PostCargoRequestRequest struct {
 type PostCargoRequestResponse struct {
 	ID uuid.UUID `json:"id"`
 }
+
+type GetCargoRequest struct {
+	ID          *string `json:"id"`
+	ConsignerID *int    `json:"consignerId"`
+	RecipientID *int    `json:"recipientId"`
+	Status      *string `json:"status"`
+	CreatedFrom *string `json:"createdFrom"`
+	CreatedTo   *string `json:"createdTo"`
+}
+
+type SearchCargoRequestsResponse struct {
+	CargoRequests []CargoRequestResponse `json:"cargoRequests"`
+}
+
+type CargoRequestResponse struct {
+	ID          string     `json:"id"`
+	ConsignerID int        `json:"consignerId"`
+	RecipientID int        `json:"recipientId"`
+	FromStation *uuid.UUID `json:"fromStation"`
+	ToStation   *uuid.UUID `json:"toStation"`
+	CreatedAt   int64      `json:"createdAt"`
+	Deadline    int64      `json:"deadline"`
+	RouteID     *string    `json:"routeId"`
+	TripID      *string    `json:"tripId"`
+	Price       string     `json:"price"`
+	Status      string     `json:"status"`
+}

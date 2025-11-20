@@ -16,12 +16,56 @@ type CargoRequestService struct {
 
 type CargoRequestRepo interface {
 	CreateCargoRequest(ctx context.Context, params pg.InsertCargoRequestParams) (*pgtype.UUID, error)
+	GetCargoRequestWithFilters(
+		ctx context.Context,
+		request models.GetCargoRequest,
+		pageNumber int,
+		pageSize int,
+	) ([]pg.CargoRequest, error)
 }
 
 func NewCargoRequestService(repo CargoRequestRepo) *CargoRequestService {
 	return &CargoRequestService{
 		repo: repo,
 	}
+}
+
+func (s *CargoRequestService) SearchCargoRequests(
+	ctx context.Context,
+	filter models.GetCargoRequest,
+	pageNumber int,
+	pageSize int,
+) (*models.SearchCargoRequestsResponse, error) {
+	pgCargoRequests, err := s.repo.GetCargoRequestWithFilters(ctx, filter, pageNumber, pageSize)
+
+	if err != nil {
+		return nil, err
+	}
+
+	responseCargoRequests := make([]models.CargoRequestResponse, 0, len(pgCargoRequests))
+	for _, pgReq := range pgCargoRequests {
+		id, _ := uuid.FromBytes(pgReq.ID.Bytes[:])
+		//routeId, _ := uuid.FromBytes(pgReq.RouteID.Bytes[:])
+		//tripId, _ := uuid.FromBytes(pgReq.TripID.Bytes[:])
+		maxPrice := util.NumericToString(pgReq.Price)
+		responseCargoRequests = append(responseCargoRequests, models.CargoRequestResponse{
+			ID:          id.String(),
+			ConsignerID: util.PgInt4ToInt(pgReq.ConsignerID),
+			RecipientID: util.PgInt4ToInt(pgReq.RecipientID),
+			FromStation: nil,
+			ToStation:   nil,
+			CreatedAt:   util.PgInt8ToInt(pgReq.CreatedAt),
+			Deadline:    util.PgInt8ToInt(pgReq.Deadline),
+			RouteID:     nil,
+			TripID:      nil,
+			Price:       maxPrice,
+			Status:      pgReq.Status.String,
+		})
+	}
+
+	return &models.SearchCargoRequestsResponse{
+		CargoRequests: responseCargoRequests,
+	}, nil
 }
 
 func (c *CargoRequestService) CreateCargoRequest(ctx context.Context, postCargoRequestRequest models.PostCargoRequestRequest) (*models.PostCargoRequestResponse, error) {

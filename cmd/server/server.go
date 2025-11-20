@@ -14,6 +14,7 @@ type CarrierHandler interface {
 }
 
 type CargoRequestHandler interface {
+	GetCargoRequest(c echo.Context) error
 	CreateCargoCargoRequest(c echo.Context) error
 }
 
@@ -42,6 +43,7 @@ func (s *ServerImpl) Start() {
 
 	ping := e.Group("")
 	ping.GET("/carriers/:id", s.CarrierHandler.GetCarrier)
+	ping.POST("/search/cargo_request", s.CargoRequestHandler.GetCargoRequest)
 	ping.POST("/cargo_request", s.CargoRequestHandler.CreateCargoCargoRequest)
 
 	startServer(e, s.Address)

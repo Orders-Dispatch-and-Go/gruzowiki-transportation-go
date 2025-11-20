@@ -22,25 +22,40 @@ func (q *Queries) CreateCarrier(ctx context.Context, driverCategory pgtype.Text)
 	return id, err
 }
 
-const getCargoRequest = `-- name: GetCargoRequest :one
-select id, consigner_id, recipient_id, created_at, deadline, route_id, trip_id, price, status from cargo_requests where id = $1
+const getCargoRequest = `-- name: GetCargoRequest :many
+select id, consigner_id, recipient_id, from_station, to_station, created_at, deadline, route_id, trip_id, price, status from cargo_requests where id = $1
 `
 
-func (q *Queries) GetCargoRequest(ctx context.Context, id pgtype.UUID) (CargoRequest, error) {
-	row := q.db.QueryRow(ctx, getCargoRequest, id)
-	var i CargoRequest
-	err := row.Scan(
-		&i.ID,
-		&i.ConsignerID,
-		&i.RecipientID,
-		&i.CreatedAt,
-		&i.Deadline,
-		&i.RouteID,
-		&i.TripID,
-		&i.Price,
-		&i.Status,
-	)
-	return i, err
+func (q *Queries) GetCargoRequest(ctx context.Context, id pgtype.UUID) ([]CargoRequest, error) {
+	rows, err := q.db.Query(ctx, getCargoRequest, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []CargoRequest
+	for rows.Next() {
+		var i CargoRequest
+		if err := rows.Scan(
+			&i.ID,
+			&i.ConsignerID,
+			&i.RecipientID,
+			&i.FromStation,
+			&i.ToStation,
+			&i.CreatedAt,
+			&i.Deadline,
+			&i.RouteID,
+			&i.TripID,
+			&i.Price,
+			&i.Status,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getCarrier = `-- name: GetCarrier :one
