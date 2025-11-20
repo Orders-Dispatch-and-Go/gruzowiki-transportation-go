@@ -11,6 +11,39 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const createCar = `-- name: CreateCar :one
+INSERT INTO cars (
+    type, length, width, height, max_weight, number, owner
+) VALUES (
+    $1, $2, $3, $4, $5, $6, $7
+) RETURNING id
+`
+
+type CreateCarParams struct {
+	Type      pgtype.Text
+	Length    pgtype.Int4
+	Width     pgtype.Int4
+	Height    pgtype.Int4
+	MaxWeight pgtype.Int4
+	Number    pgtype.Text
+	Owner     pgtype.Int4
+}
+
+func (q *Queries) CreateCar(ctx context.Context, arg CreateCarParams) (int32, error) {
+	row := q.db.QueryRow(ctx, createCar,
+		arg.Type,
+		arg.Length,
+		arg.Width,
+		arg.Height,
+		arg.MaxWeight,
+		arg.Number,
+		arg.Owner,
+	)
+	var id int32
+	err := row.Scan(&id)
+	return id, err
+}
+
 const createCargo = `-- name: CreateCargo :one
 INSERT INTO cargo (length, width, height, weight, cargo_type, worth, request_id)
 VALUES ($1, $2, $3, $4, $5, $6, $7)
@@ -43,14 +76,103 @@ func (q *Queries) CreateCargo(ctx context.Context, arg CreateCargoParams) (pgtyp
 }
 
 const createCarrier = `-- name: CreateCarrier :one
-insert into carriers (driver_category) values ($1) returning id
+INSERT INTO carriers (id, driver_category) VALUES ($1, $2) RETURNING id
 `
 
-func (q *Queries) CreateCarrier(ctx context.Context, driverCategory pgtype.Text) (int32, error) {
-	row := q.db.QueryRow(ctx, createCarrier, driverCategory)
+type CreateCarrierParams struct {
+	ID             int32
+	DriverCategory pgtype.Text
+}
+
+func (q *Queries) CreateCarrier(ctx context.Context, arg CreateCarrierParams) (int32, error) {
+	row := q.db.QueryRow(ctx, createCarrier, arg.ID, arg.DriverCategory)
 	var id int32
 	err := row.Scan(&id)
 	return id, err
+}
+
+const createRecipient = `-- name: CreateRecipient :one
+INSERT INTO recipients (first_name, second_name, third_name, phone, email)
+VALUES ($1, $2, $3, $4, $5)
+RETURNING id
+`
+
+type CreateRecipientParams struct {
+	FirstName  pgtype.Text
+	SecondName pgtype.Text
+	ThirdName  pgtype.Text
+	Phone      pgtype.Text
+	Email      pgtype.Text
+}
+
+func (q *Queries) CreateRecipient(ctx context.Context, arg CreateRecipientParams) (int32, error) {
+	row := q.db.QueryRow(ctx, createRecipient,
+		arg.FirstName,
+		arg.SecondName,
+		arg.ThirdName,
+		arg.Phone,
+		arg.Email,
+	)
+	var id int32
+	err := row.Scan(&id)
+	return id, err
+}
+
+const deleteCar = `-- name: DeleteCar :exec
+DELETE FROM cars WHERE id = $1
+`
+
+func (q *Queries) DeleteCar(ctx context.Context, id int32) error {
+	_, err := q.db.Exec(ctx, deleteCar, id)
+	return err
+}
+
+const deleteCarrier = `-- name: DeleteCarrier :exec
+DELETE FROM carriers WHERE id = $1
+`
+
+func (q *Queries) DeleteCarrier(ctx context.Context, id int32) error {
+	_, err := q.db.Exec(ctx, deleteCarrier, id)
+	return err
+}
+
+const deleteRecipient = `-- name: DeleteRecipient :exec
+DELETE FROM recipients WHERE id = $1
+`
+
+func (q *Queries) DeleteRecipient(ctx context.Context, id int32) error {
+	_, err := q.db.Exec(ctx, deleteRecipient, id)
+	return err
+}
+
+const getCar = `-- name: GetCar :one
+SELECT 
+    id, 
+    type, 
+    length, 
+    width, 
+    height, 
+    max_weight, 
+    number, 
+    owner 
+FROM cars 
+WHERE id = $1
+`
+
+func (q *Queries) GetCar(ctx context.Context, id int32) (Car, error) {
+	row := q.db.QueryRow(ctx, getCar, id)
+	var i Car
+	err := row.Scan(
+		&i.ID,
+		&i.Type,
+		&i.Length,
+		&i.Width,
+		&i.Height,
+		&i.MaxWeight,
+		&i.Number,
+		&i.Owner,
+	)
+	return i, err
 }
 
 const getCargoRequest = `-- name: GetCargoRequest :one
@@ -99,7 +221,7 @@ func (q *Queries) GetCargoTypes(ctx context.Context) ([]CargoType, error) {
 }
 
 const getCarrier = `-- name: GetCarrier :one
-select id, driver_category from carriers where id = $1
+SELECT id, driver_category FROM carriers WHERE id = $1
 `
 
 func (q *Queries) GetCarrier(ctx context.Context, id int32) (Carrier, error) {
@@ -107,6 +229,187 @@ func (q *Queries) GetCarrier(ctx context.Context, id int32) (Carrier, error) {
 	var i Carrier
 	err := row.Scan(&i.ID, &i.DriverCategory)
 	return i, err
+}
+
+const getRecipient = `-- name: GetRecipient :one
+SELECT id, first_name, second_name, third_name, phone, email
+FROM recipients
+WHERE id = $1
+`
+
+func (q *Queries) GetRecipient(ctx context.Context, id int32) (Recipient, error) {
+	row := q.db.QueryRow(ctx, getRecipient, id)
+	var i Recipient
+	err := row.Scan(
+		&i.ID,
+		&i.FirstName,
+		&i.SecondName,
+		&i.ThirdName,
+		&i.Phone,
+		&i.Email,
+	)
+	return i, err
+}
+
+const listCarsByOwner = `-- name: ListCarsByOwner :many
+SELECT 
+    id, type, length, width, height, max_weight, number, owner
+FROM cars 
+WHERE owner = $1 
+ORDER BY id
+`
+
+func (q *Queries) ListCarsByOwner(ctx context.Context, owner pgtype.Int4) ([]Car, error) {
+	rows, err := q.db.Query(ctx, listCarsByOwner, owner)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Car
+	for rows.Next() {
+		var i Car
+		if err := rows.Scan(
+			&i.ID,
+			&i.Type,
+			&i.Length,
+			&i.Width,
+			&i.Height,
+			&i.MaxWeight,
+			&i.Number,
+			&i.Owner,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listRecipients = `-- name: ListRecipients :many
+SELECT id, first_name, second_name, third_name, phone, email
+FROM recipients
+ORDER BY id
+`
+
+func (q *Queries) ListRecipients(ctx context.Context) ([]Recipient, error) {
+	rows, err := q.db.Query(ctx, listRecipients)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Recipient
+	for rows.Next() {
+		var i Recipient
+		if err := rows.Scan(
+			&i.ID,
+			&i.FirstName,
+			&i.SecondName,
+			&i.ThirdName,
+			&i.Phone,
+			&i.Email,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const updateCar = `-- name: UpdateCar :one
+UPDATE cars 
+SET 
+    type = $2, 
+    length = $3, 
+    width = $4, 
+    height = $5, 
+    max_weight = $6, 
+    number = $7, 
+    owner = $8
+WHERE id = $1 
+RETURNING id
+`
+
+type UpdateCarParams struct {
+	ID        int32
+	Type      pgtype.Text
+	Length    pgtype.Int4
+	Width     pgtype.Int4
+	Height    pgtype.Int4
+	MaxWeight pgtype.Int4
+	Number    pgtype.Text
+	Owner     pgtype.Int4
+}
+
+func (q *Queries) UpdateCar(ctx context.Context, arg UpdateCarParams) (int32, error) {
+	row := q.db.QueryRow(ctx, updateCar,
+		arg.ID,
+		arg.Type,
+		arg.Length,
+		arg.Width,
+		arg.Height,
+		arg.MaxWeight,
+		arg.Number,
+		arg.Owner,
+	)
+	var id int32
+	err := row.Scan(&id)
+	return id, err
+}
+
+const updateCarrier = `-- name: UpdateCarrier :one
+UPDATE carriers SET driver_category = $2 WHERE id = $1 RETURNING id
+`
+
+type UpdateCarrierParams struct {
+	ID             int32
+	DriverCategory pgtype.Text
+}
+
+func (q *Queries) UpdateCarrier(ctx context.Context, arg UpdateCarrierParams) (int32, error) {
+	row := q.db.QueryRow(ctx, updateCarrier, arg.ID, arg.DriverCategory)
+	var id int32
+	err := row.Scan(&id)
+	return id, err
+}
+
+const updateRecipient = `-- name: UpdateRecipient :one
+UPDATE recipients
+SET first_name = $2,
+    second_name = $3,
+    third_name = $4,
+    phone = $5,
+    email = $6
+WHERE id = $1
+RETURNING id
+`
+
+type UpdateRecipientParams struct {
+	ID         int32
+	FirstName  pgtype.Text
+	SecondName pgtype.Text
+	ThirdName  pgtype.Text
+	Phone      pgtype.Text
+	Email      pgtype.Text
+}
+
+func (q *Queries) UpdateRecipient(ctx context.Context, arg UpdateRecipientParams) (int32, error) {
+	row := q.db.QueryRow(ctx, updateRecipient,
+		arg.ID,
+		arg.FirstName,
+		arg.SecondName,
+		arg.ThirdName,
+		arg.Phone,
+		arg.Email,
+	)
+	var id int32
+	err := row.Scan(&id)
+	return id, err
 }
 
 const insertCargoRequest = `-- name: InsertCargoRequest :one

@@ -3,9 +3,10 @@ package repositories
 import (
 	"context"
 	"fmt"
+	"gruzowiki/db/pg"
+
 	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib"
-	"gruzowiki/db/pg"
 )
 
 func NewConnect(ctx context.Context, dsn string) (pg.Conn, error) {
