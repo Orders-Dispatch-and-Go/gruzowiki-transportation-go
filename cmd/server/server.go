@@ -10,25 +10,50 @@ type Server interface {
 }
 
 type CarrierHandler interface {
-	GetCarrier(c echo.Context) error
+    CreateCarrier(c echo.Context) error
+    GetCarrier(c echo.Context) error
+    UpdateCarrier(c echo.Context) error
+    DeleteCarrier(c echo.Context) error
+}
+
+type CarHandler interface {
+    CreateCar(c echo.Context) error
+    GetCar(c echo.Context) error
+    UpdateCar(c echo.Context) error
+    DeleteCar(c echo.Context) error
+    ListCarsByOwner(c echo.Context) error
+}
+
+type RecipientHandler interface {
+    CreateRecipient(c echo.Context) error
+    GetRecipient(c echo.Context) error
+    ListRecipients(c echo.Context) error
+    UpdateRecipient(c echo.Context) error
+    DeleteRecipient(c echo.Context) error
 }
 
 type CargoRequestHandler interface {
 	CreateCargoCargoRequest(c echo.Context) error
+	GetCargoTypes(c echo.Context) error
+	CreateCargo(c echo.Context) error
 }
 
 type ServerImpl struct {
-	Address             string
-	CarrierHandler      CarrierHandler
-	CargoRequestHandler CargoRequestHandler
+    Address             string
+    CarrierHandler      CarrierHandler
+    CargoRequestHandler CargoRequestHandler
+    CarHandler          CarHandler
+    RecipientHandler    RecipientHandler
 }
 
-func NewServer(address string, carrierHandler CarrierHandler, cargoRequestHandler CargoRequestHandler) Server {
+func NewServer(address string, carrierHandler CarrierHandler, cargoRequestHandler CargoRequestHandler, carHandler CarHandler,recipientHandler RecipientHandler) Server {
 	return &ServerImpl{
-		Address:             address,
-		CarrierHandler:      carrierHandler,
-		CargoRequestHandler: cargoRequestHandler,
-	}
+        Address:             address,
+        CarrierHandler:      carrierHandler,
+        CargoRequestHandler: cargoRequestHandler,
+        CarHandler:          carHandler,
+        RecipientHandler:    recipientHandler,
+    }
 }
 
 func startServer(e *echo.Echo, address string) {
@@ -40,9 +65,32 @@ func (s *ServerImpl) Start() {
 
 	e.Use(middlewares.HandleError)
 
-	ping := e.Group("")
-	ping.GET("/carriers/:id", s.CarrierHandler.GetCarrier)
-	ping.POST("/cargo_request", s.CargoRequestHandler.CreateCargoCargoRequest)
+	carriers := e.Group("/carriers")
+	carriers.GET("/:id", s.CarrierHandler.GetCarrier)
+	carriers.POST("", s.CarrierHandler.CreateCarrier)
+	carriers.PUT("/:id", s.CarrierHandler.UpdateCarrier)
+	carriers.DELETE("/:id", s.CarrierHandler.DeleteCarrier)
+
+	cargoRequest := e.Group("/cargo_request")
+	cargoRequest.POST("/cargo_request", s.CargoRequestHandler.CreateCargoCargoRequest)
+
+	cargo := e.Group("/cargo")
+	cargo.GET("/types", s.CargoRequestHandler.GetCargoTypes)
+	cargo.POST("", s.CargoRequestHandler.CreateCargo)
+
+	cars := e.Group("/cars")
+	cars.POST("", s.CarHandler.CreateCar)
+	cars.GET("/:id", s.CarHandler.GetCar)
+	cars.PUT("/:id", s.CarHandler.UpdateCar)
+	cars.DELETE("/:id", s.CarHandler.DeleteCar)
+	cars.GET("/owner/:ownerId", s.CarHandler.ListCarsByOwner)
+
+	recipients := e.Group("/recipients")
+	recipients.POST("", s.RecipientHandler.CreateRecipient)
+	recipients.GET("/:id", s.RecipientHandler.GetRecipient)
+	recipients.GET("", s.RecipientHandler.ListRecipients)
+	recipients.PUT("/:id", s.RecipientHandler.UpdateRecipient)
+	recipients.DELETE("/:id", s.RecipientHandler.DeleteRecipient)
 
 	startServer(e, s.Address)
 }
