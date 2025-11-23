@@ -15,52 +15,83 @@ const (
 	StatusCanceled              = "CANCELED"
 )
 
-type Coords struct {
-	Lat float64 `json:"lat"`
-	Lon float64 `json:"lon"`
-}
+type (
+	Coords struct {
+		Lat float64 `json:"lat"`
+		Lon float64 `json:"lon"`
+	}
 
-type Station struct {
-	Address string `json:"address"`
-	Coords  Coords `json:"coords"`
-}
+	Station struct {
+		Address string `json:"address"`
+		Coords  Coords `json:"coords"`
+	}
 
-type PostCargoRequestRequest struct {
-	ConsignerID int32           `json:"consignerId"`
-	RecipientID int32           `json:"recipientId"`
-	FromStation Station         `json:"fromStation"`
-	ToStation   Station         `json:"toStation"`
-	Deadline    string          `json:"deadline"`
-	MaxPrice    decimal.Decimal `json:"maxPrice"`
-}
+	PostCargoRequestRequest struct {
+		ConsignerID int32           `json:"consignerId"`
+		RecipientID int32           `json:"recipientId"`
+		FromStation Station         `json:"fromStation"`
+		ToStation   Station         `json:"toStation"`
+		Deadline    string          `json:"deadline"`
+		MaxPrice    decimal.Decimal `json:"maxPrice"`
+	}
 
-type PostCargoRequestResponse struct {
-	ID uuid.UUID `json:"id"`
-}
+	PostCargoRequestResponse struct {
+		ID uuid.UUID `json:"id"`
+	}
 
-type GetCargoRequest struct {
-	ID          *string `json:"id"`
-	ConsignerID *int    `json:"consignerId"`
-	RecipientID *int    `json:"recipientId"`
-	Status      *string `json:"status"`
-	CreatedFrom *string `json:"createdFrom"`
-	CreatedTo   *string `json:"createdTo"`
-}
+	GetCargoRequest struct {
+		ID          *string `json:"id"`
+		ConsignerID *int    `json:"consignerId"`
+		RecipientID *int    `json:"recipientId"`
+		Status      *string `json:"status"`
+		CreatedFrom *string `json:"createdFrom"`
+		CreatedTo   *string `json:"createdTo"`
+	}
 
-type SearchCargoRequestsResponse struct {
-	CargoRequests []CargoRequestResponse `json:"cargoRequests"`
-}
+	SearchCargoRequestsResponse struct {
+		CargoRequests []CargoRequestResponse `json:"cargoRequests"`
+	}
 
-type CargoRequestResponse struct {
-	ID          string     `json:"id"`
-	ConsignerID int        `json:"consignerId"`
-	RecipientID int        `json:"recipientId"`
-	FromStation *uuid.UUID `json:"fromStation"`
-	ToStation   *uuid.UUID `json:"toStation"`
-	CreatedAt   int64      `json:"createdAt"`
-	Deadline    int64      `json:"deadline"`
-	RouteID     *string    `json:"routeId"`
-	TripID      *string    `json:"tripId"`
-	Price       string     `json:"price"`
-	Status      string     `json:"status"`
-}
+	CargoRequestResponse struct {
+		ID          string     `json:"id"`
+		ConsignerID int        `json:"consignerId"`
+		RecipientID int        `json:"recipientId"`
+		FromStation *uuid.UUID `json:"fromStation"`
+		ToStation   *uuid.UUID `json:"toStation"`
+		CreatedAt   int64      `json:"createdAt"`
+		Deadline    int64      `json:"deadline"`
+		RouteID     *string    `json:"routeId"`
+		TripID      *string    `json:"tripId"`
+		Price       string     `json:"price"`
+		Status      string     `json:"status"`
+	}
+
+	CargoTypesResponse struct {
+		CargoTypes []CargoType `json:"cargoTypes"`
+	}
+
+	CargoType struct {
+		Id      int    `json:"id"`
+		Type    string `json:"type"`
+		Fragile bool   `json:"fragile"`
+	}
+
+	Cargo struct {
+		Length         int    `json:"length"`
+		Width          int    `json:"width"`
+		Height         int    `json:"height"`
+		Weight         int    `json:"weight"`
+		CargoType      int    `json:"cargoType"`
+		Description    string `json:"description"`
+		Worth          int    `json:"worth"`
+		CargoRequestId string `json:"cargoRequestId"`
+	}
+
+	CargoRequest struct {
+		Cargo []Cargo `json:"cargo"`
+	}
+
+	IdsResponse struct {
+		Ids []string `json:"ids"`
+	}
+)

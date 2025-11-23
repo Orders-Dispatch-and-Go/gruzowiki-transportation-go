@@ -2,9 +2,10 @@ package middlewares
 
 import (
 	"errors"
-	"github.com/labstack/echo/v4"
 	"gruzowiki/rest/terror"
 	"net/http"
+
+	"github.com/labstack/echo/v4"
 )
 
 func HandleError(next echo.HandlerFunc) echo.HandlerFunc {

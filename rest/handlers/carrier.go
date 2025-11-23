@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"fmt"
 	"gruzowiki/rest/models"
 	"gruzowiki/rest/terror"
 	"net/http"
@@ -11,32 +12,92 @@ import (
 )
 
 type CarrierService interface {
+	CreateCarrier(ctx context.Context, id int32, driverCategory string) (*models.CreateCarrierResponse, error)
 	GetCarrier(context.Context, int32) (*models.GetCarrierResponse, error)
+	UpdateCarrier(ctx context.Context, id int32, driverCategory string) (*models.UpdateCarrierResponse, error)
+	DeleteCarrier(ctx context.Context, id int32) error
 }
 
-type Carrier struct {
+type CarrierHandler struct {
 	service CarrierService
 }
 
-func NewCarrierHandler(service CarrierService) *Carrier {
-	return &Carrier{
-		service: service,
-	}
+func NewCarrierHandler(service CarrierService) *CarrierHandler {
+	return &CarrierHandler{service: service}
 }
 
-func (handler *Carrier) GetCarrier(c echo.Context) error {
-	idStr := c.Param("id")
-	ctx := c.Request().Context()
-
-	id, err := strconv.ParseInt(idStr, 10, 32)
-	if err != nil {
-		return terror.NewValidationError("invalid arguments", err.Error())
+func (h *CarrierHandler) CreateCarrier(c echo.Context) error {
+	var req models.CreateCarrierRequest
+	if err := c.Bind(&req); err != nil {
+		return terror.NewValidationError(
+			err.Error(),
+			"binding CreateCarrierRequest",
+		)
 	}
+	fmt.Println("REQ:", req)
 
-	carrier, err := handler.service.GetCarrier(ctx, int32(id))
+	resp, err := h.service.CreateCarrier(c.Request().Context(), req.ID, req.DriverCategory)
 	if err != nil {
 		return err
 	}
 
-	return c.JSON(http.StatusOK, carrier)
+	return c.JSON(http.StatusCreated, resp)
+}
+
+func (h *CarrierHandler) GetCarrier(c echo.Context) error {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return terror.NewValidationError(
+			"invalid id",
+			"parsing path parameter 'id'",
+		)
+	}
+
+	resp, err := h.service.GetCarrier(c.Request().Context(), int32(id))
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, resp)
+}
+
+func (h *CarrierHandler) UpdateCarrier(c echo.Context) error {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return terror.NewValidationError(
+			"invalid id",
+			"parsing path parameter 'id'",
+		)
+	}
+
+	var req models.UpdateCarrierRequest
+	if err := c.Bind(&req); err != nil {
+		return terror.NewValidationError(
+			err.Error(),
+			"binding UpdateCarrierRequest",
+		)
+	}
+
+	resp, err := h.service.UpdateCarrier(c.Request().Context(), int32(id), req.DriverCategory)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, resp)
+}
+
+func (h *CarrierHandler) DeleteCarrier(c echo.Context) error {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return terror.NewValidationError(
+			"invalid id",
+			"parsing path parameter 'id'",
+		)
+	}
+
+	if err := h.service.DeleteCarrier(c.Request().Context(), int32(id)); err != nil {
+		return err
+	}
+
+	return c.NoContent(http.StatusNoContent)
 }

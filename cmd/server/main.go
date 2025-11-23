@@ -37,7 +37,15 @@ func main() {
 	cargoRequestService := services.NewCargoRequestService(cargoRequestRepo)
 	cargoRequestHandler := handlers.NewCargoRequestController(cargoRequestService)
 
-	server := NewServer(cfg.Address, carrierHandler, cargoRequestHandler)
+	carRepo := repositories.NewCarRepo(conn)
+	carService := services.NewCarService(carRepo, carrierRepo)
+	carHandler := handlers.NewCarHandler(carService)
+
+	recipientRepo := repositories.NewRecipientRepo(conn)
+	recipientService := services.NewRecipientService(recipientRepo)
+	recipientHandler := handlers.NewRecipientHandler(recipientService)
+
+	server := NewServer(cfg.Address, carrierHandler, cargoRequestHandler, carHandler, recipientHandler)
 	server.Start()
 }
 

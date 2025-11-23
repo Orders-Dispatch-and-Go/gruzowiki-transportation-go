@@ -21,6 +21,8 @@ type CargoRequestService interface {
 		pageSize int,
 	) (*models.SearchCargoRequestsResponse, error)
 	CreateCargoRequest(ctx context.Context, postCargoRequestRequest models.PostCargoRequestRequest) (*models.PostCargoRequestResponse, error)
+	GetCargoTypes(ctx context.Context) ([]models.CargoType, error)
+	CreateCargo(ctx context.Context, cargo []models.Cargo) ([]string, error)
 }
 
 func NewCargoRequestController(service CargoRequestService) *CargoRequestHandler {
@@ -69,4 +71,33 @@ func (handler *CargoRequestHandler) CreateCargoCargoRequest(c echo.Context) erro
 	}
 
 	return c.JSON(http.StatusCreated, response)
+}
+
+func (h *CargoRequestHandler) GetCargoTypes(c echo.Context) error {
+	ctx := c.Request().Context()
+	cargoTypes, err := h.service.GetCargoTypes(ctx)
+	if err != nil {
+		return err
+	}
+
+	resp := models.CargoTypesResponse{CargoTypes: cargoTypes}
+
+	return c.JSON(http.StatusOK, resp)
+}
+
+func (h *CargoRequestHandler) CreateCargo(c echo.Context) error {
+	ctx := c.Request().Context()
+	var req models.CargoRequest
+	if err := c.Bind(&req); err != nil {
+		return terror.NewValidationError("invalid request body", err.Error())
+	}
+
+	ids, err := h.service.CreateCargo(ctx, req.Cargo)
+	if err != nil {
+		return err
+	}
+
+	resp := models.IdsResponse{Ids: ids}
+
+	return c.JSON(http.StatusOK, resp)
 }

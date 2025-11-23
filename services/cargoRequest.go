@@ -22,6 +22,8 @@ type CargoRequestRepo interface {
 		pageNumber int,
 		pageSize int,
 	) ([]pg.CargoRequest, error)
+	GetCargoTypes(ctx context.Context) ([]pg.CargoType, error)
+	CreateCargo(ctx context.Context, cargos []models.Cargo) ([]pgtype.UUID, error)
 }
 
 func NewCargoRequestService(repo CargoRequestRepo) *CargoRequestService {
@@ -84,4 +86,35 @@ func (c *CargoRequestService) CreateCargoRequest(ctx context.Context, postCargoR
 	}
 
 	return &models.PostCargoRequestResponse{ID: id.Bytes}, nil
+}
+
+func (c *CargoRequestService) GetCargoTypes(ctx context.Context) ([]models.CargoType, error) {
+	types, err := c.repo.GetCargoTypes(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := make([]models.CargoType, len(types))
+	for i, t := range types {
+		resp[i] = models.CargoType{
+			Id:      int(t.ID),
+			Type:    t.Type.String,
+			Fragile: t.Fragile.Bool,
+		}
+	}
+	return resp, nil
+}
+
+func (c *CargoRequestService) CreateCargo(ctx context.Context, cargo []models.Cargo) ([]string, error) {
+	ids, err := c.repo.CreateCargo(ctx, cargo)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := make([]string, 0, len(ids))
+	for i, _ := range ids {
+		resp[i] = uuid.UUID(ids[i].Bytes).String()
+	}
+
+	return resp, nil
 }
