@@ -12,20 +12,6 @@ func ToNumeric(decimalNum decimal.Decimal) pgtype.Numeric {
 }
 
 func NumericToString(n pgtype.Numeric) string {
-	//if !n.Valid {
-	//	return ""
-	//}
-	//
-	//if n.Exp == 0 {
-	//	return n.Int.String()
-	//}
-	//
-	//rat := new(big.Rat).SetInt(n.Int)
-	//
-	//scale := new(big.Rat).SetFloat64(math.Pow10(int(-n.Exp)))
-	//rat = rat.Mul(rat, scale)
-
-	//return rat.FloatString(int(-n.Exp))
 	numLen := len(n.Int.String())
 	return n.Int.String()[:numLen-2] + "." + n.Int.String()[numLen-2:]
 }
