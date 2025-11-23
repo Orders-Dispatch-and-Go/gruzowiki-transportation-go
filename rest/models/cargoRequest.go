@@ -26,6 +26,14 @@ type (
 		Coords  Coords `json:"coords"`
 	}
 
+	GetStationsResponse struct {
+		Stations []Station `json:"stations"`
+	}
+
+	CreateStationResponse struct {
+		ID uuid.UUID `json:"id"`
+	}
+
 	PostCargoRequestRequest struct {
 		ConsignerID int32           `json:"consignerId"`
 		RecipientID int32           `json:"recipientId"`
@@ -53,17 +61,17 @@ type (
 	}
 
 	CargoRequestResponse struct {
-		ID          string     `json:"id"`
-		ConsignerID int        `json:"consignerId"`
-		RecipientID int        `json:"recipientId"`
-		FromStation *uuid.UUID `json:"fromStation"`
-		ToStation   *uuid.UUID `json:"toStation"`
-		CreatedAt   int64      `json:"createdAt"`
-		Deadline    int64      `json:"deadline"`
-		RouteID     *string    `json:"routeId"`
-		TripID      *string    `json:"tripId"`
-		Price       string     `json:"price"`
-		Status      string     `json:"status"`
+		ID          string   `json:"id"`
+		ConsignerID int      `json:"consignerId"`
+		RecipientID int      `json:"recipientId"`
+		FromStation *Station `json:"fromStation"`
+		ToStation   *Station `json:"toStation"`
+		CreatedAt   int64    `json:"createdAt"`
+		Deadline    int64    `json:"deadline"`
+		RouteID     *string  `json:"routeId"`
+		TripID      *string  `json:"tripId"`
+		Price       string   `json:"price"`
+		Status      string   `json:"status"`
 	}
 
 	CargoTypesResponse struct {

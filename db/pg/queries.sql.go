@@ -267,14 +267,16 @@ func (q *Queries) GetRecipient(ctx context.Context, id int32) (Recipient, error)
 }
 
 const insertCargoRequest = `-- name: InsertCargoRequest :one
-insert into cargo_requests (id, consigner_id, recipient_id, created_at, deadline, route_id, trip_id, price, status)
-values ($1, $2, $3, $4, $5, $6, $7, $8, $9) returning id
+insert into cargo_requests (id, consigner_id, recipient_id, from_station, to_station, created_at, deadline, route_id, trip_id, price, status)
+values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) returning id
 `
 
 type InsertCargoRequestParams struct {
 	ID          pgtype.UUID
 	ConsignerID pgtype.Int4
 	RecipientID pgtype.Int4
+	FromStation pgtype.UUID
+	ToStation   pgtype.UUID
 	CreatedAt   pgtype.Int8
 	Deadline    pgtype.Int8
 	RouteID     pgtype.UUID
@@ -288,12 +290,37 @@ func (q *Queries) InsertCargoRequest(ctx context.Context, arg InsertCargoRequest
 		arg.ID,
 		arg.ConsignerID,
 		arg.RecipientID,
+		arg.FromStation,
+		arg.ToStation,
 		arg.CreatedAt,
 		arg.Deadline,
 		arg.RouteID,
 		arg.TripID,
 		arg.Price,
 		arg.Status,
+	)
+	var id pgtype.UUID
+	err := row.Scan(&id)
+	return id, err
+}
+
+const insertStation = `-- name: InsertStation :one
+insert into stations (id, address, lat, lon) values ($1, $2, $3, $4) returning id
+`
+
+type InsertStationParams struct {
+	ID      pgtype.UUID
+	Address pgtype.Text
+	Lat     pgtype.Float8
+	Lon     pgtype.Float8
+}
+
+func (q *Queries) InsertStation(ctx context.Context, arg InsertStationParams) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, insertStation,
+		arg.ID,
+		arg.Address,
+		arg.Lat,
+		arg.Lon,
 	)
 	var id pgtype.UUID
 	err := row.Scan(&id)
@@ -359,6 +386,56 @@ func (q *Queries) ListRecipients(ctx context.Context) ([]Recipient, error) {
 			&i.ThirdName,
 			&i.Phone,
 			&i.Email,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const selectStation = `-- name: SelectStation :one
+select id, address, lat, lon from stations s where s.id = $1
+`
+
+func (q *Queries) SelectStation(ctx context.Context, id pgtype.UUID) (Station, error) {
+	row := q.db.QueryRow(ctx, selectStation, id)
+	var i Station
+	err := row.Scan(
+		&i.ID,
+		&i.Address,
+		&i.Lat,
+		&i.Lon,
+	)
+	return i, err
+}
+
+const selectStations = `-- name: SelectStations :many
+select id, address, lat, lon from stations s where s.id in ($1, $2)
+`
+
+type SelectStationsParams struct {
+	ID   pgtype.UUID
+	ID_2 pgtype.UUID
+}
+
+func (q *Queries) SelectStations(ctx context.Context, arg SelectStationsParams) ([]Station, error) {
+	rows, err := q.db.Query(ctx, selectStations, arg.ID, arg.ID_2)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Station
+	for rows.Next() {
+		var i Station
+		if err := rows.Scan(
+			&i.ID,
+			&i.Address,
+			&i.Lat,
+			&i.Lon,
 		); err != nil {
 			return nil, err
 		}

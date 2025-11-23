@@ -68,6 +68,13 @@ type Recipient struct {
 	Email      pgtype.Text
 }
 
+type Station struct {
+	ID      pgtype.UUID
+	Address pgtype.Text
+	Lat     pgtype.Float8
+	Lon     pgtype.Float8
+}
+
 type Trip struct {
 	ID             pgtype.UUID
 	RouteID        pgtype.UUID

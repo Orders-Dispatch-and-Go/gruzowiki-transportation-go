@@ -31,7 +31,7 @@ func NewCargoRequestController(service CargoRequestService) *CargoRequestHandler
 	}
 }
 
-func (handler *CargoRequestHandler) GetCargoRequest(c echo.Context) error {
+func (h *CargoRequestHandler) GetCargoRequest(c echo.Context) error {
 	ctx := c.Request().Context()
 
 	pageNumber, err := strconv.Atoi(c.QueryParam("page_number"))
@@ -49,7 +49,7 @@ func (handler *CargoRequestHandler) GetCargoRequest(c echo.Context) error {
 		return terror.NewValidationError("invalid request body", err.Error())
 	}
 
-	response, err := handler.service.SearchCargoRequests(ctx, request, pageNumber, pageSize)
+	response, err := h.service.SearchCargoRequests(ctx, request, pageNumber, pageSize)
 	if err != nil {
 		return err
 	}
@@ -57,7 +57,7 @@ func (handler *CargoRequestHandler) GetCargoRequest(c echo.Context) error {
 	return c.JSON(http.StatusOK, response)
 }
 
-func (handler *CargoRequestHandler) CreateCargoCargoRequest(c echo.Context) error {
+func (h *CargoRequestHandler) CreateCargoCargoRequest(c echo.Context) error {
 	ctx := c.Request().Context()
 
 	var request models.PostCargoRequestRequest
@@ -65,7 +65,7 @@ func (handler *CargoRequestHandler) CreateCargoCargoRequest(c echo.Context) erro
 		return terror.NewValidationError("invalid request body", err.Error())
 	}
 
-	response, err := handler.service.CreateCargoRequest(ctx, request)
+	response, err := h.service.CreateCargoRequest(ctx, request)
 	if err != nil {
 		return err
 	}

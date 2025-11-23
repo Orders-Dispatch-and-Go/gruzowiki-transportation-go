@@ -20,11 +20,18 @@ create table cars(
     owner int references carriers(id)
 );
 
+create table stations(
+    id uuid primary key default gen_random_uuid(),
+    address varchar(200),
+    lat float8,
+    lon float8
+);
+
 create table trips(
     id uuid primary key default gen_random_uuid(),
     route_id uuid,
-    from_station uuid,
-    to_station uuid,
+    from_station uuid references stations(id),
+    to_station uuid references stations(id),
     started_at bigint,
     calculate_end_at bigint,
     actual_end_at bigint,
@@ -48,8 +55,8 @@ create table cargo_requests(
     id uuid primary key default gen_random_uuid(),
     consigner_id int references consigners(id),
     recipient_id int references recipients(id),
-    from_station uuid,
-    to_station uuid,
+    from_station uuid references stations(id),
+    to_station uuid references stations(id),
     created_at bigint,
     deadline bigint,
     route_id uuid,

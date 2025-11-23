@@ -6,6 +6,7 @@ Post /routes/cargo_requests
 ````
 {
     "fromStation": {
+        id: uuid,
         address: string,
         coords: {
             lat: float,
@@ -13,6 +14,7 @@ Post /routes/cargo_requests
         }
     },
     "toStation":  {
+        id: uuid,
         address: string,
         coords: {
             lat: float,

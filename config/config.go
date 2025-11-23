@@ -10,7 +10,7 @@ import (
 type Config struct {
 	LogLevel string `yaml:"log_level" env:"LOG_LEVEL" env-default:"DEBUG"`
 	Address  string `yaml:"transportation_service_address" env:"TRANSPORTATION_SERVICE_ADDRESS" env-default:"0.0.0.0:8080"`
-	Dsn      string `yaml:"dsn" env:"DSN" env-default:"user='transporation_service_user' password='transporation_service_password' host='localhost' port=5433 dbname='transporation_service' sslmode=disable"`
+	Dsn      string `yaml:"dsn" env:"DSN" env-default:"user='transporation_service_user' password='transporation_service_password' host='localhost' port=5432 dbname='transporation_service' sslmode=disable"`
 }
 
 func MustLoad() Config {

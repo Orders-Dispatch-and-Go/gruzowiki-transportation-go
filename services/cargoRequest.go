@@ -10,25 +10,35 @@ import (
 	"time"
 )
 
-type CargoRequestService struct {
-	repo CargoRequestRepo
-}
+type (
+	CargoRequestService struct {
+		repo           CargoRequestRepo
+		stationService StationService
+	}
 
-type CargoRequestRepo interface {
-	CreateCargoRequest(ctx context.Context, params pg.InsertCargoRequestParams) (*pgtype.UUID, error)
-	GetCargoRequestWithFilters(
-		ctx context.Context,
-		request models.GetCargoRequest,
-		pageNumber int,
-		pageSize int,
-	) ([]pg.CargoRequest, error)
-	GetCargoTypes(ctx context.Context) ([]pg.CargoType, error)
-	CreateCargo(ctx context.Context, cargos []models.Cargo) ([]pgtype.UUID, error)
-}
+	CargoRequestRepo interface {
+		CreateCargoRequest(ctx context.Context, params pg.InsertCargoRequestParams) (*pgtype.UUID, error)
+		GetCargoRequestWithFilters(
+			ctx context.Context,
+			request models.GetCargoRequest,
+			pageNumber int,
+			pageSize int,
+		) ([]pg.CargoRequest, error)
+		GetCargoTypes(ctx context.Context) ([]pg.CargoType, error)
+		CreateCargo(ctx context.Context, cargos []models.Cargo) ([]pgtype.UUID, error)
+	}
 
-func NewCargoRequestService(repo CargoRequestRepo) *CargoRequestService {
+	StationService interface {
+		//GetStations(ctx context.Context, ids []uuid.UUID) (*models.GetStationsResponse, error)
+		GetStations(ctx context.Context, ids []uuid.UUID) (map[uuid.UUID]models.Station, error)
+		CreateStation(ctx context.Context, station models.Station) (*models.CreateStationResponse, error)
+	}
+)
+
+func NewCargoRequestService(repo CargoRequestRepo, stationService StationService) *CargoRequestService {
 	return &CargoRequestService{
-		repo: repo,
+		repo:           repo,
+		stationService: stationService,
 	}
 }
 
@@ -46,6 +56,17 @@ func (s *CargoRequestService) SearchCargoRequests(
 
 	responseCargoRequests := make([]models.CargoRequestResponse, 0, len(pgCargoRequests))
 	for _, pgReq := range pgCargoRequests {
+		fromStationId := util.PgUuidToUuid(pgReq.FromStation)
+		toStationId := util.PgUuidToUuid(pgReq.ToStation)
+		stations, err := s.stationService.GetStations(ctx, []uuid.UUID{fromStationId, toStationId})
+
+		if err != nil {
+			return nil, err
+		}
+
+		fromStation := stations[fromStationId]
+		toStation := stations[toStationId]
+
 		id, _ := uuid.FromBytes(pgReq.ID.Bytes[:])
 		//routeId, _ := uuid.FromBytes(pgReq.RouteID.Bytes[:])
 		//tripId, _ := uuid.FromBytes(pgReq.TripID.Bytes[:])
@@ -54,8 +75,8 @@ func (s *CargoRequestService) SearchCargoRequests(
 			ID:          id.String(),
 			ConsignerID: util.PgInt4ToInt(pgReq.ConsignerID),
 			RecipientID: util.PgInt4ToInt(pgReq.RecipientID),
-			FromStation: nil,
-			ToStation:   nil,
+			FromStation: &fromStation,
+			ToStation:   &toStation,
 			CreatedAt:   util.PgInt8ToInt(pgReq.CreatedAt),
 			Deadline:    util.PgInt8ToInt(pgReq.Deadline),
 			RouteID:     nil,
@@ -70,15 +91,24 @@ func (s *CargoRequestService) SearchCargoRequests(
 	}, nil
 }
 
-func (c *CargoRequestService) CreateCargoRequest(ctx context.Context, postCargoRequestRequest models.PostCargoRequestRequest) (*models.PostCargoRequestResponse, error) {
-	id, err := c.repo.CreateCargoRequest(ctx, pg.InsertCargoRequestParams{
-		ID:          pgtype.UUID{Bytes: uuid.New(), Valid: true},
-		ConsignerID: pgtype.Int4{Int32: postCargoRequestRequest.ConsignerID, Valid: true},
-		RecipientID: pgtype.Int4{Int32: postCargoRequestRequest.RecipientID, Valid: true},
-		CreatedAt:   pgtype.Int8{Int64: time.Now().Unix(), Valid: true},
-		Deadline:    pgtype.Int8{Int64: util.ToTimestamp(postCargoRequestRequest.Deadline), Valid: true},
+func (s *CargoRequestService) CreateCargoRequest(ctx context.Context, postCargoRequestRequest models.PostCargoRequestRequest) (*models.PostCargoRequestResponse, error) {
+	createFromStationResponse, err := s.stationService.CreateStation(ctx, postCargoRequestRequest.FromStation)
+	createToStationResponse, err := s.stationService.CreateStation(ctx, postCargoRequestRequest.ToStation)
+
+	if err != nil {
+		return nil, err
+	}
+
+	id, err := s.repo.CreateCargoRequest(ctx, pg.InsertCargoRequestParams{
+		ID:          util.UuidToPgUuid(uuid.New()),
+		ConsignerID: util.Int32ToPgInt4(postCargoRequestRequest.ConsignerID),
+		RecipientID: util.Int32ToPgInt4(postCargoRequestRequest.RecipientID),
+		FromStation: util.UuidToPgUuid(createFromStationResponse.ID),
+		ToStation:   util.UuidToPgUuid(createToStationResponse.ID),
+		CreatedAt:   util.Int64ToPgInt8(time.Now().Unix()),
+		Deadline:    util.Int64ToPgInt8(util.ToTimestamp(postCargoRequestRequest.Deadline)),
 		Price:       util.ToNumeric(postCargoRequestRequest.MaxPrice),
-		Status:      pgtype.Text{String: models.StatusWaitingTripChoice, Valid: true},
+		Status:      util.GoTextToPgText(models.StatusWaitingTripChoice),
 	})
 
 	if err != nil {
@@ -88,8 +118,8 @@ func (c *CargoRequestService) CreateCargoRequest(ctx context.Context, postCargoR
 	return &models.PostCargoRequestResponse{ID: id.Bytes}, nil
 }
 
-func (c *CargoRequestService) GetCargoTypes(ctx context.Context) ([]models.CargoType, error) {
-	types, err := c.repo.GetCargoTypes(ctx)
+func (s *CargoRequestService) GetCargoTypes(ctx context.Context) ([]models.CargoType, error) {
+	types, err := s.repo.GetCargoTypes(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -105,8 +135,8 @@ func (c *CargoRequestService) GetCargoTypes(ctx context.Context) ([]models.Cargo
 	return resp, nil
 }
 
-func (c *CargoRequestService) CreateCargo(ctx context.Context, cargo []models.Cargo) ([]string, error) {
-	ids, err := c.repo.CreateCargo(ctx, cargo)
+func (s *CargoRequestService) CreateCargo(ctx context.Context, cargo []models.Cargo) ([]string, error) {
+	ids, err := s.repo.CreateCargo(ctx, cargo)
 	if err != nil {
 		return nil, err
 	}

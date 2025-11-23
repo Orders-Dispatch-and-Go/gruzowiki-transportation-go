@@ -33,8 +33,11 @@ func main() {
 	carrierService := services.NewCarrierService(carrierRepo)
 	carrierHandler := handlers.NewCarrierHandler(carrierService)
 
+	stationRepo := repositories.NewStationRepo(conn)
+	stationService := services.NewStationService(stationRepo)
+
 	cargoRequestRepo := repositories.NewCargoRequestRepo(conn)
-	cargoRequestService := services.NewCargoRequestService(cargoRequestRepo)
+	cargoRequestService := services.NewCargoRequestService(cargoRequestRepo, stationService)
 	cargoRequestHandler := handlers.NewCargoRequestController(cargoRequestService)
 
 	carRepo := repositories.NewCarRepo(conn)
