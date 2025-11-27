@@ -266,6 +266,32 @@ func (q *Queries) GetRecipient(ctx context.Context, id int32) (Recipient, error)
 	return i, err
 }
 
+const getTripByCargoRequest = `-- name: GetTripByCargoRequest :one
+SELECT t.id, t.route_id, t.from_station, t.to_station, t.started_at, t.calculate_end_at, t.actual_end_at, t.price, t.status, t.carrier, t.car
+FROM trips t
+JOIN cargo_requests c ON c.trip_id = t.id
+WHERE c.id = $1
+`
+
+func (q *Queries) GetTripByCargoRequest(ctx context.Context, id pgtype.UUID) (Trip, error) {
+	row := q.db.QueryRow(ctx, getTripByCargoRequest, id)
+	var i Trip
+	err := row.Scan(
+		&i.ID,
+		&i.RouteID,
+		&i.FromStation,
+		&i.ToStation,
+		&i.StartedAt,
+		&i.CalculateEndAt,
+		&i.ActualEndAt,
+		&i.Price,
+		&i.Status,
+		&i.Carrier,
+		&i.Car,
+	)
+	return i, err
+}
+
 const insertCargoRequest = `-- name: InsertCargoRequest :one
 insert into cargo_requests (id, consigner_id, recipient_id, from_station, to_station, created_at, deadline, route_id, trip_id, price, status)
 values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) returning id
