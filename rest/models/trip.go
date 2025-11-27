@@ -1,0 +1,16 @@
+package models
+
+import "github.com/google/uuid"
+
+type TripResponse struct {
+    ID              uuid.UUID      `json:"id"`
+    FromStation     Station `json:"fromStation"`
+    ToStation       Station `json:"toStation"`
+    StartedAt       int64          `json:"startedAt"`
+    CalculatedEndAt int64          `json:"calculatedEndAt"`
+    ActualEndAt     int64          `json:"actualEndAt"`
+    Price           string         `json:"price"`
+    Status          string         `json:"status"`
+    CarrierID       int            `json:"carrierId"`
+    CarID           int            `json:"carId"`
+}

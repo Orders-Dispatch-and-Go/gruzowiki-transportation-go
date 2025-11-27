@@ -104,3 +104,9 @@ SELECT id, type, fragile FROM cargo_types;
 INSERT INTO cargo (length, width, height, weight, cargo_type, worth, request_id)
 VALUES ($1, $2, $3, $4, $5, $6, $7)
 RETURNING id;
+
+-- name: GetTripByCargoRequest :one
+SELECT t.*
+FROM trips t
+JOIN cargo_requests c ON c.trip_id = t.id
+WHERE c.id = $1;

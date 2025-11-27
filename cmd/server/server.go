@@ -39,21 +39,28 @@ type CargoRequestHandler interface {
 	CreateCargo(c echo.Context) error
 }
 
+type TripHandler interface {
+	GetTripByCargoRequest(c echo.Context) error
+}
+
 type ServerImpl struct {
 	Address             string
 	CarrierHandler      CarrierHandler
 	CargoRequestHandler CargoRequestHandler
 	CarHandler          CarHandler
 	RecipientHandler    RecipientHandler
+	TripHandler         TripHandler
 }
 
-func NewServer(address string, carrierHandler CarrierHandler, cargoRequestHandler CargoRequestHandler, carHandler CarHandler, recipientHandler RecipientHandler) Server {
+func NewServer(address string, carrierHandler CarrierHandler, cargoRequestHandler CargoRequestHandler, carHandler CarHandler, recipientHandler RecipientHandler,
+	tripHandler TripHandler) Server {
 	return &ServerImpl{
 		Address:             address,
 		CarrierHandler:      carrierHandler,
 		CargoRequestHandler: cargoRequestHandler,
 		CarHandler:          carHandler,
 		RecipientHandler:    recipientHandler,
+		TripHandler:         tripHandler,
 	}
 }
 
@@ -93,6 +100,9 @@ func (s *ServerImpl) Start() {
 	recipients.GET("", s.RecipientHandler.ListRecipients)
 	recipients.PUT("/:id", s.RecipientHandler.UpdateRecipient)
 	recipients.DELETE("/:id", s.RecipientHandler.DeleteRecipient)
+
+	trips := e.Group("/trip")
+	trips.GET("/cargo_request/:id", s.TripHandler.GetTripByCargoRequest)
 
 	startServer(e, s.Address)
 }
