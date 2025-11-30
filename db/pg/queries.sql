@@ -110,3 +110,9 @@ SELECT t.*
 FROM trips t
 JOIN cargo_requests c ON c.trip_id = t.id
 WHERE c.id = $1;
+
+-- name: UpdateCargoRequestTrip :one
+UPDATE cargo_requests 
+SET trip_id = $2
+WHERE id = $1 
+RETURNING id;
