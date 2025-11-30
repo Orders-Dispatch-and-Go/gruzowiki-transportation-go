@@ -1,10 +1,10 @@
 package handlers
 
 import (
-	"gruzowiki/rest/models"
 	"gruzowiki/rest/terror"
 	"gruzowiki/services"
 	"net/http"
+	"strconv"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -25,23 +25,31 @@ func (h *TripHandler) GetTripByCargoRequest(c echo.Context) error {
 		return terror.NewValidationError("invalid UUID", "parsing path parameter 'id'")
 	}
 
+	pageNumber := c.QueryParam("page_number")
+    pageSize := c.QueryParam("page_size")
+    
+	if pageNumber != "" && pageSize == "" {
+		 pageNum, err := strconv.Atoi(pageNumber)
+    	if err != nil || pageNum < 1 {
+        	pageNum = 1
+    	}
+    
+    	pageSz, err := strconv.Atoi(pageSize)
+    	if err != nil || pageSz < 1 {
+        	pageSz = 10
+    	}
+
+		tripResp, err := h.service.GetTripsByCargoRequest(c.Request().Context(), cargoRequestID, pageNum, pageSz)
+		if err != nil {
+			return err
+		}
+		return c.JSON(http.StatusOK, tripResp)
+	}
+
 	tripResp, err := h.service.GetTripByCargoRequest(c.Request().Context(), cargoRequestID)
 	if err != nil {
 		return err
 	}
 
-	resp := models.TripResponse{
-		ID:              tripResp.ID,
-		FromStation:     tripResp.FromStation,
-		ToStation:       tripResp.ToStation,
-		StartedAt:       tripResp.StartedAt,
-		CalculatedEndAt: tripResp.CalculatedEndAt,
-		ActualEndAt:     tripResp.ActualEndAt,
-		Price:           tripResp.Price, 
-		Status:          tripResp.Status,
-		CarrierID:       tripResp.CarrierID,
-		CarID:           tripResp.CarID,
-	}
-
-	return c.JSON(http.StatusOK, resp)
+	return c.JSON(http.StatusOK, *tripResp)
 }

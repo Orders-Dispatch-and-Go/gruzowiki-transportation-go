@@ -266,6 +266,42 @@ func (q *Queries) GetRecipient(ctx context.Context, id int32) (Recipient, error)
 	return i, err
 }
 
+const getSuitableTripsForCargoRequest = `-- name: GetSuitableTripsForCargoRequest :many
+SELECT 
+    t.route_id
+FROM cargo_requests cr
+JOIN cargo ON cargo.request_id = cr.id
+JOIN cargo_types ct ON cargo.cargo_type = ct.id
+CROSS JOIN trips t
+JOIN cars c ON t.car = c.id
+WHERE cr.id = $1
+  AND cr.deadline >= t.calculate_end_at
+  AND cargo.weight <= c.max_weight
+  AND cargo.length <= c.length
+  AND cargo.width <= c.width
+  AND cargo.height <= c.height
+`
+
+func (q *Queries) GetSuitableTripsForCargoRequest(ctx context.Context, id pgtype.UUID) ([]pgtype.UUID, error) {
+	rows, err := q.db.Query(ctx, getSuitableTripsForCargoRequest, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []pgtype.UUID
+	for rows.Next() {
+		var route_id pgtype.UUID
+		if err := rows.Scan(&route_id); err != nil {
+			return nil, err
+		}
+		items = append(items, route_id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getTripByCargoRequest = `-- name: GetTripByCargoRequest :one
 SELECT t.id, t.route_id, t.from_station, t.to_station, t.started_at, t.calculate_end_at, t.actual_end_at, t.price, t.status, t.carrier, t.car
 FROM trips t
@@ -290,6 +326,87 @@ func (q *Queries) GetTripByCargoRequest(ctx context.Context, id pgtype.UUID) (Tr
 		&i.Car,
 	)
 	return i, err
+}
+
+const getTripsByIDsWithPagination = `-- name: GetTripsByIDsWithPagination :many
+SELECT 
+    t.id,
+    t.started_at,
+    t.calculate_end_at,
+    t.actual_end_at,
+    t.price,
+    t.status,
+    t.carrier as carrier_id,
+    t.car as car_id,
+    fs.address as from_address,
+    fs.lat as from_lat,
+    fs.lon as from_lon,
+    ts.address as to_address,
+    ts.lat as to_lat,
+    ts.lon as to_lon
+FROM trips t
+JOIN stations fs ON t.from_station = fs.id
+JOIN stations ts ON t.to_station = ts.id
+WHERE t.id = ANY($1::uuid[])
+LIMIT $2 OFFSET $3
+`
+
+type GetTripsByIDsWithPaginationParams struct {
+	Column1 []pgtype.UUID
+	Limit   int32
+	Offset  int32
+}
+
+type GetTripsByIDsWithPaginationRow struct {
+	ID             pgtype.UUID
+	StartedAt      pgtype.Int8
+	CalculateEndAt pgtype.Int8
+	ActualEndAt    pgtype.Int8
+	Price          pgtype.Numeric
+	Status         pgtype.Text
+	CarrierID      pgtype.Int4
+	CarID          pgtype.Int4
+	FromAddress    pgtype.Text
+	FromLat        pgtype.Float8
+	FromLon        pgtype.Float8
+	ToAddress      pgtype.Text
+	ToLat          pgtype.Float8
+	ToLon          pgtype.Float8
+}
+
+func (q *Queries) GetTripsByIDsWithPagination(ctx context.Context, arg GetTripsByIDsWithPaginationParams) ([]GetTripsByIDsWithPaginationRow, error) {
+	rows, err := q.db.Query(ctx, getTripsByIDsWithPagination, arg.Column1, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetTripsByIDsWithPaginationRow
+	for rows.Next() {
+		var i GetTripsByIDsWithPaginationRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.StartedAt,
+			&i.CalculateEndAt,
+			&i.ActualEndAt,
+			&i.Price,
+			&i.Status,
+			&i.CarrierID,
+			&i.CarID,
+			&i.FromAddress,
+			&i.FromLat,
+			&i.FromLon,
+			&i.ToAddress,
+			&i.ToLat,
+			&i.ToLon,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const insertCargoRequest = `-- name: InsertCargoRequest :one

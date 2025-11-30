@@ -116,3 +116,40 @@ UPDATE cargo_requests
 SET trip_id = $2
 WHERE id = $1 
 RETURNING id;
+
+-- name: GetSuitableTripsForCargoRequest :many
+SELECT 
+    t.route_id
+FROM cargo_requests cr
+JOIN cargo ON cargo.request_id = cr.id
+JOIN cargo_types ct ON cargo.cargo_type = ct.id
+CROSS JOIN trips t
+JOIN cars c ON t.car = c.id
+WHERE cr.id = $1
+  AND cr.deadline >= t.calculate_end_at
+  AND cargo.weight <= c.max_weight
+  AND cargo.length <= c.length
+  AND cargo.width <= c.width
+  AND cargo.height <= c.height;
+
+-- name: GetTripsByIDsWithPagination :many
+SELECT 
+    t.id,
+    t.started_at,
+    t.calculate_end_at,
+    t.actual_end_at,
+    t.price,
+    t.status,
+    t.carrier as carrier_id,
+    t.car as car_id,
+    fs.address as from_address,
+    fs.lat as from_lat,
+    fs.lon as from_lon,
+    ts.address as to_address,
+    ts.lat as to_lat,
+    ts.lon as to_lon
+FROM trips t
+JOIN stations fs ON t.from_station = fs.id
+JOIN stations ts ON t.to_station = ts.id
+WHERE t.id = ANY($1::uuid[])
+LIMIT $2 OFFSET $3;

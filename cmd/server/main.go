@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"gruzowiki/client"
 	"gruzowiki/config"
 	"gruzowiki/repositories"
 	"gruzowiki/rest/handlers"
@@ -29,6 +30,8 @@ func main() {
 		return
 	}
 
+	client := client.NewRoutesClient(cfg.ClinetUrl)
+
 	carrierRepo := repositories.NewCarrierRepo(conn)
 	carrierService := services.NewCarrierService(carrierRepo)
 	carrierHandler := handlers.NewCarrierHandler(carrierService)
@@ -49,7 +52,7 @@ func main() {
 	recipientHandler := handlers.NewRecipientHandler(recipientService)
 
 	tripRepo := repositories.NewTripRepo(conn)
-	tripService := services.NewTripService(tripRepo, stationRepo)
+	tripService := services.NewTripService(tripRepo, stationRepo, client)
 	tripHandler := handlers.NewTripHandler(tripService)
 
 	server := NewServer(cfg.Address, carrierHandler, cargoRequestHandler, carHandler, recipientHandler, tripHandler)
