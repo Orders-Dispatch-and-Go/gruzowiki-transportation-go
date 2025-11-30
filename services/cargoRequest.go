@@ -26,6 +26,7 @@ type (
 		) ([]pg.CargoRequest, error)
 		GetCargoTypes(ctx context.Context) ([]pg.CargoType, error)
 		CreateCargo(ctx context.Context, cargos []models.Cargo) ([]pgtype.UUID, error)
+		MarkTrip(ctx context.Context, cargoReqId string, tripId string) error
 	}
 
 	StationService interface {
@@ -147,4 +148,9 @@ func (s *CargoRequestService) CreateCargo(ctx context.Context, cargo []models.Ca
 	}
 
 	return resp, nil
+}
+
+
+func (s *CargoRequestService) MarkTrip(ctx context.Context, cargoReqId string, tripId string) error {
+	return s.repo.MarkTrip(ctx, cargoReqId, tripId)
 }

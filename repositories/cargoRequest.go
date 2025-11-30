@@ -158,3 +158,19 @@ func (c *CargoRequestRepo) CreateCargo(ctx context.Context, cargos []models.Carg
 
 	return ids, nil
 }
+
+func (c *CargoRequestRepo) MarkTrip(ctx context.Context, cargoReqId string, tripId string) error {
+	id, err := uuid.Parse(cargoReqId)
+	if err != nil {
+		return err
+	}
+	trip, err := uuid.Parse(tripId)
+	if err != nil {
+		return err
+	}
+	_, err = c.conn.Queries(ctx).UpdateCargoRequestTrip(ctx, pg.UpdateCargoRequestTripParams{
+		ID:     pgtype.UUID{Bytes: id, Valid: true},
+		TripID: pgtype.UUID{Bytes: trip, Valid: true},
+	})
+	return err
+}

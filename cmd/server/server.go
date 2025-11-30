@@ -37,6 +37,7 @@ type CargoRequestHandler interface {
 	CreateCargoCargoRequest(c echo.Context) error
 	GetCargoTypes(c echo.Context) error
 	CreateCargo(c echo.Context) error
+	MarkTrip(c echo.Context) error
 }
 
 type TripHandler interface {
@@ -82,6 +83,7 @@ func (s *ServerImpl) Start() {
 	cargoRequest := e.Group("/cargo_request")
 	cargoRequest.POST("/search/cargo_request", s.CargoRequestHandler.GetCargoRequest)
 	cargoRequest.POST("/cargo_request", s.CargoRequestHandler.CreateCargoCargoRequest)
+	cargoRequest.POST("/:cargo_requestId/trip/tripId", s.CargoRequestHandler.MarkTrip)
 
 	cargo := e.Group("/cargo")
 	cargo.GET("/types", s.CargoRequestHandler.GetCargoTypes)
