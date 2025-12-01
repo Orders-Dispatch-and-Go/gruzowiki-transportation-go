@@ -285,7 +285,7 @@ Http status: 200
 ````
 
 ### получение заявок для поездки
-Get /cargo_request/trip/{uuid}?cargoLenghtMax=float8&cargoWidthMax=float8&cargoHeightMax=float8&cargoType=int&deadline=iso8601?minPrice=int
+Get /cargo_request/trip/{uuid}?cargoLenghtMax=int&cargoWidthMax=int&cargoHeightMax=int&cargoType=int&deadline=iso8601?minPrice=int
 
 Http status: 200
 ````
