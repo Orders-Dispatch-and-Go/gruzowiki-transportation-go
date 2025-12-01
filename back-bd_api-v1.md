@@ -89,19 +89,19 @@ HttpStatus: 200
 Post /routes/trips/potential
 ````
 {
-  "cargoRequestRouteId": "uuid" // идентификатор маршрута заявки
-  "tripRouteIds": [
+  "tripRouteId": "uuid" // идентификатор маршрута поездки
+  "cargoRequestRouteIds": [
     "uuid",
     "uuid",
     ...
-  ] // список идентификаторов маршрутов поездок - кандидатов на слияние
+  ] // список идентификаторов маршрутов заявок - кандидатов на слияние
 }
 ````
 
 Http status: 200
 ````
 {
-  "tripIds": [
+  "routeIds": [
     "uuid",
     "uuid",
     ...
@@ -116,8 +116,11 @@ Http status: 200
 Post /routes/trips/merge
 ````
 {
-  "cargoRequestRouteId": "uuid",
-  "tripRouteId": "uuid"
+  "tripRouteId": "uuid",
+  "cargoRequestRouteId": [ 
+    "uuid",
+    "uuid"
+  ]
 }
 ````
 
