@@ -2,12 +2,13 @@ package services
 
 import (
 	"context"
-	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 	"gruzowiki/db/pg"
 	"gruzowiki/rest/models"
 	"gruzowiki/util"
 	"time"
+
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type (
@@ -109,7 +110,7 @@ func (s *CargoRequestService) CreateCargoRequest(ctx context.Context, postCargoR
 		CreatedAt:   util.Int64ToPgInt8(time.Now().Unix()),
 		Deadline:    util.Int64ToPgInt8(util.ToTimestamp(postCargoRequestRequest.Deadline)),
 		Price:       util.ToNumeric(postCargoRequestRequest.MaxPrice),
-		Status:      util.GoTextToPgText(models.StatusWaitingTripChoice),
+		Status:      util.GoTextToPgText(models.CargoRequestStatusPending),
 	})
 
 	if err != nil {
@@ -149,7 +150,6 @@ func (s *CargoRequestService) CreateCargo(ctx context.Context, cargo []models.Ca
 
 	return resp, nil
 }
-
 
 func (s *CargoRequestService) MarkTrip(ctx context.Context, cargoReqId string, tripId string) error {
 	return s.repo.MarkTrip(ctx, cargoReqId, tripId)

@@ -45,7 +45,6 @@ Http status: 200
     }
   ]
 }
-
 ````
 
 ### создание заявки
@@ -190,7 +189,7 @@ Post /cargo_request/{id}/trip/{id}
 Http status: 200
 
 ### получение поездки для заявки
-Get /cargo_request/{id}/trip?page_number=int&page_size=int
+Get /trip/cargo_request/{id}
 
 Http status: 200
 ````
@@ -244,6 +243,107 @@ Http status: 200
 }
 ````
 
+Http status: 200
+````
+{
+  "id": uuid
+}
+````
+
+
+## Грузоперевозчик
+
+### создание поездки
+Post /trip
+
+````
+{
+    "carrier": int,
+    "fromStation": {
+        address: string,
+        coords: {
+            lat: float,
+            lon: float
+        }
+    },
+    "toStation":  {
+        address: string,
+        coords: {
+            lat: float,
+            lon: float
+        }
+    },
+    "startedAt": "iso8601"
+}
+````
+
+Http status: 200
+````
+{
+  "id": uuid
+}
+````
+
+### получение заявок для поездки
+Get /cargo_request/trip/{uuid}
+
+````
+{
+  "cargoSizeMax": {
+    lenght: float8,
+    width: float8,
+    height: float8
+  },
+  "cargoType": int
+  "deadline": "iso8601",
+  "minPrice": int
+}
+````
+
+Http status: 200
+````
+{
+  "cargoRequests": [
+    {
+        "id": "uuid",
+        "consignerId": int,
+        "recipientId": int,
+        "createdAt": long,
+        "deadline": long,
+        "calculatedTripId": "uuid",
+        "actualTripId": "uuid",
+        "fromStation": {
+            address: string,
+            coords: {
+                lat: float,
+                lon: float
+            }
+        },
+        "toStation": {
+            address: string,
+            coords: {
+                lat: float,
+                lon: float
+            }
+        },
+        "maxPrice": "decimal(10, 2)",
+        "status": "string"
+    }
+  ]
+}
+````
+
+### подтверждение доставки груза
+PATCH /cargo_request/{uuid}/finish/code/{int}
+
+Http status: 200
+
+### завершение поездки
+PATCH /trip/{uuid}/finish/status/{tripStatus}
+
+Http status: 200
+
+
 ## Внутренние запросы (фронту не нужны)
 
 ### сохранение отправителя в системе
@@ -270,12 +370,20 @@ Post /carrier
 
 Http status: 200
 
+
 ## статусы
-статусы для заявок, грузов, поездок - констаны в string, сообщим позже 
+статусы для заявок, грузов, поездок - констаны в string
+
+### cargoRequestStatus
 ````
-WAITING_TRIP_CHOICE, WAITING_DRIVER_APPROVAL, APPROVED_BY_DRIVER
-REJECTED_BY_DRIVER, IN_DELIVERY, COMPLETED, CANCELED
+PENDING, IN_PROGRESS, COMPLETED, CANCELED
 ````
+
+### tripStatus
+````
+PENDING, IN_PROGRESS, COMPLETED, CANCELED
+````
+
 ## форматы
 ### порядок сортировки
 ````
@@ -311,3 +419,11 @@ HttpStatus: xxx
 ````
 
 errorType - константы, сообщим позже
+
+грузоперевозчик:
+начать поездку (начало-конец)
+находим подходящие заявки
+создаем поездку
+водитель получает заявки
+выбирает заявки
+список idшникок

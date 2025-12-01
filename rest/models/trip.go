@@ -2,6 +2,13 @@ package models
 
 import "github.com/google/uuid"
 
+const (
+    TripStatusPending    = "PENDING"
+    TripStatusInProgress = "IN_PROGRESS"
+    TripStatusCompleted  = "COMPLETED"
+    TripStatusCanceled   = "CANCELED"
+)
+
 type (
     TripResponse struct {
         ID              uuid.UUID  `json:"id"`

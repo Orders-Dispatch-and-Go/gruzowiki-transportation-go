@@ -2,7 +2,8 @@
 
 ### расчет маршрута
 
-Post /routes/cargo_requests
+- Post /routes/cargo_requests
+- Post /routes/trips
 ````
 {
     "fromStation": {
@@ -15,35 +16,6 @@ Post /routes/cargo_requests
     },
     "toStation":  {
         id: uuid,
-        address: string,
-        coords: {
-            lat: float,
-            lon: float
-        }
-    },
-}
-````
-
-HttpStatus: 200
-````
-{
-    "id": "uuid"
-}
-````
-
-1. id - идентификатор расчитанного маршрута
-
-Post /routes/trips
-````
-{
-    "fromStation": {
-        address: string,
-        coords: {
-            lat: float,
-            lon: float
-        }
-    },
-    "toStation":  {
         address: string,
         coords: {
             lat: float,
@@ -73,8 +45,8 @@ HttpStatus: 200
 
 обязательно возвращайте станции в порядке следования
 
-1) Get /routes/cargo_requests/{uuid}
-2) Get /routes/trips/{uuid}
+- Get /routes/cargo_requests/{uuid}
+- Get /routes/trips/{uuid}
 ````
 {
   "stations": [

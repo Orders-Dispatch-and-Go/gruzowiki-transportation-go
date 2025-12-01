@@ -6,13 +6,10 @@ import (
 )
 
 const (
-	StatusWaitingTripChoice     = "WAITING_TRIP_CHOICE"
-	StatusWaitingDriverApproval = "WAITING_DRIVER_APPROVAL"
-	StatusApprovedByDriver      = "APPROVED_BY_DRIVER"
-	StatusRejectedByDriver      = "REJECTED_BY_DRIVER"
-	StatusInDelivery            = "IN_DELIVERY"
-	StatusCompleted             = "COMPLETED"
-	StatusCanceled              = "CANCELED"
+	CargoRequestStatusPending = "PENDING"
+	CargoRequestStatusInProgress  = "IN_PROGRESS"
+	CargoRequestStatus = "COMPLETED"
+	CargoRequestStatusCanceled   = "CANCELED"
 )
 
 type (
