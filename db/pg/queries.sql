@@ -153,3 +153,6 @@ JOIN stations fs ON t.from_station = fs.id
 JOIN stations ts ON t.to_station = ts.id
 WHERE t.id = ANY($1::uuid[])
 LIMIT $2 OFFSET $3;
+
+-- name: InsertConsigner :exec
+INSERT INTO consigners (id) VALUES ($1);
