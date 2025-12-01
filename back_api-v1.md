@@ -189,7 +189,7 @@ Post /cargo_request/{id}/trip/{id}
 Http status: 200
 
 ### получение поездки для заявки
-Get /trip/cargo_request/{id}
+Post /trip/cargo_request/{id}
 
 Http status: 200
 ````
