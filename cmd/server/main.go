@@ -39,6 +39,10 @@ func main() {
 	stationRepo := repositories.NewStationRepo(conn)
 	stationService := services.NewStationService(stationRepo)
 
+	consignerRepo := repositories.NewConsignerRepo(conn)
+	consignerService := services.NewConsignerService(consignerRepo)
+	consignerHandler := handlers.NewConsignerHandler(consignerService)
+
 	cargoRequestRepo := repositories.NewCargoRequestRepo(conn)
 	cargoRequestService := services.NewCargoRequestService(cargoRequestRepo, stationService)
 	cargoRequestHandler := handlers.NewCargoRequestController(cargoRequestService)
@@ -55,7 +59,7 @@ func main() {
 	tripService := services.NewTripService(tripRepo, stationRepo, client)
 	tripHandler := handlers.NewTripHandler(tripService)
 
-	server := NewServer(cfg.Address, carrierHandler, cargoRequestHandler, carHandler, recipientHandler, tripHandler)
+	server := NewServer(cfg.Address, carrierHandler, cargoRequestHandler, carHandler, recipientHandler, tripHandler, consignerHandler)
 	server.Start()
 }
 

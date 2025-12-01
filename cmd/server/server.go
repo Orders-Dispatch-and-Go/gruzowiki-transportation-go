@@ -9,6 +9,10 @@ type Server interface {
 	Start()
 }
 
+type ConsignerHandler interface {
+    CreateConsigner(c echo.Context) error
+}
+
 type CarrierHandler interface {
 	CreateCarrier(c echo.Context) error
 	GetCarrier(c echo.Context) error
@@ -51,10 +55,11 @@ type ServerImpl struct {
 	CarHandler          CarHandler
 	RecipientHandler    RecipientHandler
 	TripHandler         TripHandler
+	ConsignerHandler    ConsignerHandler
 }
 
 func NewServer(address string, carrierHandler CarrierHandler, cargoRequestHandler CargoRequestHandler, carHandler CarHandler, recipientHandler RecipientHandler,
-	tripHandler TripHandler) Server {
+	tripHandler TripHandler, consignerHandler ConsignerHandler) Server {
 	return &ServerImpl{
 		Address:             address,
 		CarrierHandler:      carrierHandler,
@@ -62,6 +67,7 @@ func NewServer(address string, carrierHandler CarrierHandler, cargoRequestHandle
 		CarHandler:          carHandler,
 		RecipientHandler:    recipientHandler,
 		TripHandler:         tripHandler,
+		ConsignerHandler:    consignerHandler,
 	}
 }
 
@@ -74,7 +80,7 @@ func (s *ServerImpl) Start() {
 
 	e.Use(middlewares.HandleError)
 
-	carriers := e.Group("/carriers")
+	carriers := e.Group("/carrier")
 	carriers.GET("/:id", s.CarrierHandler.GetCarrier)
 	carriers.POST("", s.CarrierHandler.CreateCarrier)
 	carriers.PUT("/:id", s.CarrierHandler.UpdateCarrier)
@@ -102,6 +108,9 @@ func (s *ServerImpl) Start() {
 	recipients.GET("", s.RecipientHandler.ListRecipients)
 	recipients.PUT("/:id", s.RecipientHandler.UpdateRecipient)
 	recipients.DELETE("/:id", s.RecipientHandler.DeleteRecipient)
+
+	consigners := e.Group("/consigner")
+	consigners.POST("", s.ConsignerHandler.CreateConsigner)
 
 	trips := e.Group("/trip")
 	trips.GET("/cargo_request/:id", s.TripHandler.GetTripByCargoRequest)
