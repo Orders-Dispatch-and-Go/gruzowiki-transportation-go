@@ -923,5 +923,7 @@ gradle-app.setting
 
 # End of https://www.toptal.com/developers/gitignore/api/jetbrains+all,java,c,c++,gradle,maven,intellij,clion,composer,visualstudiocode
 
+jws-public.pem
+
 #Macos
 .DS_Store

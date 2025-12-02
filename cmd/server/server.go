@@ -10,7 +10,7 @@ type Server interface {
 }
 
 type ConsignerHandler interface {
-    CreateConsigner(c echo.Context) error
+	CreateConsigner(c echo.Context) error
 }
 
 type CarrierHandler interface {
@@ -79,6 +79,8 @@ func (s *ServerImpl) Start() {
 	e := echo.New()
 
 	e.Use(middlewares.HandleError)
+
+	e.Use(middlewares.AllowedRoles([]string{middlewares.ConsignerRole, middlewares.CarrierRole}...))
 
 	carriers := e.Group("/carrier")
 	carriers.GET("/:id", s.CarrierHandler.GetCarrier)

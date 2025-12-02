@@ -3,8 +3,10 @@ package services
 import (
 	"context"
 	"gruzowiki/db/pg"
+	"gruzowiki/rest/middlewares"
 	"gruzowiki/rest/models"
 	"gruzowiki/util"
+	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -31,7 +33,6 @@ type (
 	}
 
 	StationService interface {
-		//GetStations(ctx context.Context, ids []uuid.UUID) (*models.GetStationsResponse, error)
 		GetStations(ctx context.Context, ids []uuid.UUID) (map[uuid.UUID]models.Station, error)
 		CreateStation(ctx context.Context, station models.Station) (*models.CreateStationResponse, error)
 	}
@@ -56,6 +57,8 @@ func (s *CargoRequestService) SearchCargoRequests(
 		return nil, err
 	}
 
+	requestUserId := ctx.Value(middlewares.UserIdCtxClaim).(int)
+
 	responseCargoRequests := make([]models.CargoRequestResponse, 0, len(pgCargoRequests))
 	for _, pgReq := range pgCargoRequests {
 		fromStationId := util.PgUuidToUuid(pgReq.FromStation)
@@ -70,9 +73,14 @@ func (s *CargoRequestService) SearchCargoRequests(
 		toStation := stations[toStationId]
 
 		id, _ := uuid.FromBytes(pgReq.ID.Bytes[:])
-		//routeId, _ := uuid.FromBytes(pgReq.RouteID.Bytes[:])
-		//tripId, _ := uuid.FromBytes(pgReq.TripID.Bytes[:])
 		maxPrice := util.NumericToString(pgReq.Price)
+
+		var receiveCode *string = nil
+		if requestUserId == util.PgInt4ToInt(pgReq.ConsignerID) {
+			stringReceiveCode := strconv.Itoa(util.PgInt4ToInt(pgReq.ReceiveCode))
+			receiveCode = &stringReceiveCode
+		}
+
 		responseCargoRequests = append(responseCargoRequests, models.CargoRequestResponse{
 			ID:          id.String(),
 			ConsignerID: util.PgInt4ToInt(pgReq.ConsignerID),
@@ -85,6 +93,7 @@ func (s *CargoRequestService) SearchCargoRequests(
 			TripID:      nil,
 			Price:       maxPrice,
 			Status:      pgReq.Status.String,
+			ReceiveCode: receiveCode,
 		})
 	}
 
@@ -95,8 +104,16 @@ func (s *CargoRequestService) SearchCargoRequests(
 
 func (s *CargoRequestService) CreateCargoRequest(ctx context.Context, postCargoRequestRequest models.PostCargoRequestRequest) (*models.PostCargoRequestResponse, error) {
 	createFromStationResponse, err := s.stationService.CreateStation(ctx, postCargoRequestRequest.FromStation)
-	createToStationResponse, err := s.stationService.CreateStation(ctx, postCargoRequestRequest.ToStation)
+	if err != nil {
+		return nil, err
+	}
 
+	createToStationResponse, err := s.stationService.CreateStation(ctx, postCargoRequestRequest.ToStation)
+	if err != nil {
+		return nil, err
+	}
+
+	receiveCode, err := util.GenerateRandomReceiveCode()
 	if err != nil {
 		return nil, err
 	}
@@ -111,13 +128,14 @@ func (s *CargoRequestService) CreateCargoRequest(ctx context.Context, postCargoR
 		Deadline:    util.Int64ToPgInt8(util.ToTimestamp(postCargoRequestRequest.Deadline)),
 		Price:       util.ToNumeric(postCargoRequestRequest.MaxPrice),
 		Status:      util.GoTextToPgText(models.CargoRequestStatusPending),
+		ReceiveCode: util.Int32ToPgInt4(receiveCode),
 	})
 
 	if err != nil {
 		return nil, err
 	}
 
-	return &models.PostCargoRequestResponse{ID: id.Bytes}, nil
+	return &models.PostCargoRequestResponse{ID: id.Bytes, ReceiveCode: strconv.Itoa(int(receiveCode))}, nil
 }
 
 func (s *CargoRequestService) GetCargoTypes(ctx context.Context) ([]models.CargoType, error) {

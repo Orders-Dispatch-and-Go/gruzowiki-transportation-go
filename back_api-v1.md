@@ -41,7 +41,8 @@ Http status: 200
             }
         },
         "maxPrice": "decimal(10, 2)",
-        "status": "string"
+        "status": "string",
+        "receiveCode": "string"
     }
   ]
 }

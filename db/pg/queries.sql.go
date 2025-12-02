@@ -176,7 +176,7 @@ func (q *Queries) GetCar(ctx context.Context, id int32) (Car, error) {
 }
 
 const getCargoRequest = `-- name: GetCargoRequest :many
-select id, consigner_id, recipient_id, from_station, to_station, created_at, deadline, route_id, trip_id, price, status from cargo_requests where id = $1
+select id, consigner_id, recipient_id, from_station, to_station, created_at, deadline, route_id, trip_id, price, status, receive_code from cargo_requests where id = $1
 `
 
 func (q *Queries) GetCargoRequest(ctx context.Context, id pgtype.UUID) ([]CargoRequest, error) {
@@ -200,6 +200,7 @@ func (q *Queries) GetCargoRequest(ctx context.Context, id pgtype.UUID) ([]CargoR
 			&i.TripID,
 			&i.Price,
 			&i.Status,
+			&i.ReceiveCode,
 		); err != nil {
 			return nil, err
 		}
@@ -410,8 +411,8 @@ func (q *Queries) GetTripsByIDsWithPagination(ctx context.Context, arg GetTripsB
 }
 
 const insertCargoRequest = `-- name: InsertCargoRequest :one
-insert into cargo_requests (id, consigner_id, recipient_id, from_station, to_station, created_at, deadline, route_id, trip_id, price, status)
-values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) returning id
+insert into cargo_requests (id, consigner_id, recipient_id, from_station, to_station, created_at, deadline, route_id, trip_id, price, status, receive_code)
+values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) returning id
 `
 
 type InsertCargoRequestParams struct {
@@ -426,6 +427,7 @@ type InsertCargoRequestParams struct {
 	TripID      pgtype.UUID
 	Price       pgtype.Numeric
 	Status      pgtype.Text
+	ReceiveCode pgtype.Int4
 }
 
 func (q *Queries) InsertCargoRequest(ctx context.Context, arg InsertCargoRequestParams) (pgtype.UUID, error) {
@@ -441,6 +443,7 @@ func (q *Queries) InsertCargoRequest(ctx context.Context, arg InsertCargoRequest
 		arg.TripID,
 		arg.Price,
 		arg.Status,
+		arg.ReceiveCode,
 	)
 	var id pgtype.UUID
 	err := row.Scan(&id)

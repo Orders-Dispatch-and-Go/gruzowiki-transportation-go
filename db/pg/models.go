@@ -42,6 +42,7 @@ type CargoRequest struct {
 	TripID      pgtype.UUID
 	Price       pgtype.Numeric
 	Status      pgtype.Text
+	ReceiveCode pgtype.Int4
 }
 
 type CargoType struct {

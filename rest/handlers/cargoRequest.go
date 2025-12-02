@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"github.com/labstack/echo/v4"
+	"gruzowiki/rest/middlewares"
 	"gruzowiki/rest/models"
 	"gruzowiki/rest/terror"
 	"net/http"
@@ -49,6 +50,9 @@ func (h *CargoRequestHandler) GetCargoRequest(c echo.Context) error {
 	if err := c.Bind(&request); err != nil {
 		return terror.NewValidationError("invalid request body", err.Error())
 	}
+
+	userId := c.Get(middlewares.UserIdCtxClaim)
+	ctx = context.WithValue(ctx, middlewares.UserIdCtxClaim, userId)
 
 	response, err := h.service.SearchCargoRequests(ctx, request, pageNumber, pageSize)
 	if err != nil {
@@ -103,7 +107,7 @@ func (h *CargoRequestHandler) CreateCargo(c echo.Context) error {
 	return c.JSON(http.StatusOK, resp)
 }
 
-func (h* CargoRequestHandler) MarkTrip(c echo.Context) error {
+func (h *CargoRequestHandler) MarkTrip(c echo.Context) error {
 	ctx := c.Request().Context()
 	cargoReqId := c.Param("cargoRequestId")
 	tripId := c.Param("tripId")

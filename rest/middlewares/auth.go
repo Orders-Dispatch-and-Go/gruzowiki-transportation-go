@@ -10,6 +10,24 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+const (
+	UserRole      = "ROLE_USER"
+	ManagerRole   = "ROLE_MANAGER"
+	AdminRole     = "ROLE_ADMIN"
+	ConsignerRole = "ROLE_CONSIGNER"
+	CarrierRole   = "ROLE_CARRIER"
+
+	UserIdCtxClaim = "userId"
+	EmailCtxClaim  = "email"
+	RolesCtxClaim  = "roles"
+)
+
+type UserData struct {
+	ID        int32  `json:"id"`
+	Email     string `json:"email"`
+	FirstName string `json:"FirstName"`
+}
+
 func AllowedRoles(allowedRoles ...string) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
@@ -25,7 +43,7 @@ func AllowedRoles(allowedRoles ...string) echo.MiddlewareFunc {
 
 			tokenString := parts[1]
 
-			publicKeyData, err := os.ReadFile("public.key") //брать путь из конфига
+			publicKeyData, err := os.ReadFile("jws-public.pem") //брать путь из конфига
 			if err != nil {
 				return echo.NewHTTPError(http.StatusInternalServerError, "Failed to read public key")
 			}
@@ -55,30 +73,39 @@ func AllowedRoles(allowedRoles ...string) echo.MiddlewareFunc {
 				return echo.NewHTTPError(http.StatusUnauthorized, "Invalid token claims")
 			}
 
-			userID, ok := claims["user_id"].(string)
-			if !ok {
-				return echo.NewHTTPError(http.StatusUnauthorized, "Invalid user_id in token")
-			}
-
-			role, ok := claims["role"].(string)
-			if !ok {
-				return echo.NewHTTPError(http.StatusUnauthorized, "Invalid role in token")
-			}
-
-			roleAllowed := false
-			for _, allowedRole := range allowedRoles {
-				if role == allowedRole {
-					roleAllowed = true
-					break
+			/*
+				roleAllowed := false
+				for _, allowedRole := range allowedRoles {
+					if role == allowedRole {
+						roleAllowed = true
+						break
+					}
 				}
+
+				if !roleAllowed {
+					return echo.NewHTTPError(http.StatusForbidden, "Insufficient permissions")
+				} */
+
+			userData, ok := claims["userData"].(map[string]interface{})
+			if !ok {
+				return echo.NewHTTPError(http.StatusUnauthorized, "Invalid userData in token")
 			}
 
-			if !roleAllowed {
-				return echo.NewHTTPError(http.StatusForbidden, "Insufficient permissions")
+			fmt.Println(userData["id"])
+
+			rolesClaim, ok := claims["userAuthorities"].([]interface{})
+			if !ok {
+				return echo.NewHTTPError(http.StatusUnauthorized, "Invalid userAuthorities in token")
 			}
 
-			c.Set("user_id", userID)
-			c.Set("role", role)
+			roles := make([]string, 0)
+			for _, value := range rolesClaim {
+				roles = append(roles, value.(string))
+			}
+
+			c.Set(UserIdCtxClaim, int(userData["id"].(float64)))
+			c.Set(EmailCtxClaim, userData["email"])
+			c.Set(RolesCtxClaim, roles)
 
 			return next(c)
 		}

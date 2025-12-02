@@ -6,9 +6,9 @@ import (
 )
 
 const (
-	CargoRequestStatusPending = "PENDING"
-	CargoRequestStatusInProgress  = "IN_PROGRESS"
-	CargoRequestStatus = "COMPLETED"
+	CargoRequestStatusPending    = "PENDING"
+	CargoRequestStatusInProgress = "IN_PROGRESS"
+	CargoRequestStatus           = "COMPLETED"
 	CargoRequestStatusCanceled   = "CANCELED"
 )
 
@@ -41,7 +41,8 @@ type (
 	}
 
 	PostCargoRequestResponse struct {
-		ID uuid.UUID `json:"id"`
+		ID          uuid.UUID `json:"id"`
+		ReceiveCode string    `json:"receiveCode"`
 	}
 
 	GetCargoRequest struct {
@@ -69,6 +70,7 @@ type (
 		TripID      *string  `json:"tripId"`
 		Price       string   `json:"price"`
 		Status      string   `json:"status"`
+		ReceiveCode *string  `json:"receiveCode"`
 	}
 
 	CargoTypesResponse struct {

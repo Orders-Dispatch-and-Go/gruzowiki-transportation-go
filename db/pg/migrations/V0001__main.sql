@@ -62,7 +62,8 @@ create table cargo_requests(
     route_id uuid,
     trip_id uuid references trips(id),
     price decimal(10, 2),
-    status varchar(50)
+    status varchar(50),
+    receive_code int
 );
 
 create table cargo_types(
