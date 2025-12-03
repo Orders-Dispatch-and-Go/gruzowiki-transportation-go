@@ -65,3 +65,18 @@ func (r *TripRepo) GetTripsByIDsWithPagination(ctx context.Context, ids []string
 	}
 	return r.conn.Queries(ctx).GetTripsByIDsWithPagination(ctx, pg.GetTripsByIDsWithPaginationParams{Column1: uuids, Limit: limit, Offset: offset})
 }
+
+func (r *TripRepo) CreateTrip(ctx context.Context, fromStation uuid.UUID, toStation uuid.UUID, startedAt int64, carrier int32) (uuid.UUID, error) {
+    id, err := r.conn.Queries(ctx).InsertTrip(ctx, pg.InsertTripParams{
+        FromStation: pgtype.UUID{Bytes: fromStation, Valid: true},
+        ToStation:   pgtype.UUID{Bytes: toStation, Valid: true},
+        StartedAt:   pgtype.Int8{Int64: startedAt, Valid: true},
+        Carrier:     pgtype.Int4{Int32: carrier, Valid: true},
+    })
+
+    if err != nil {
+        return uuid.Nil, fmt.Errorf("insert trip: %w", err)
+    }
+
+    return id.Bytes, nil
+}

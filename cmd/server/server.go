@@ -1,8 +1,9 @@
 package main
 
 import (
-	"github.com/labstack/echo/v4"
 	"gruzowiki/rest/middlewares"
+
+	"github.com/labstack/echo/v4"
 )
 
 type Server interface {
@@ -46,6 +47,7 @@ type CargoRequestHandler interface {
 
 type TripHandler interface {
 	GetTripByCargoRequest(c echo.Context) error
+	CreateTrip(c echo.Context) error
 }
 
 type ServerImpl struct {
@@ -116,6 +118,7 @@ func (s *ServerImpl) Start() {
 
 	trips := e.Group("/trip")
 	trips.GET("/cargo_request/:id", s.TripHandler.GetTripByCargoRequest)
+	trips.POST("", s.TripHandler.CreateTrip)
 
 	startServer(e, s.Address)
 }

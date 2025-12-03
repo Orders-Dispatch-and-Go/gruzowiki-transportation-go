@@ -27,3 +27,21 @@ type (
         Trips []TripResponse `json:"trips"`
     }
 )
+
+type CreateTripRequest struct {
+    Carrier int32 `json:"carrier"`
+
+    FromStation StationCreate `json:"fromStation"`
+    ToStation   StationCreate `json:"toStation"`
+
+    StartedAt int64 `json:"startedAt"`
+}
+
+type StationCreate struct {
+    Address string `json:"address"`
+    Coords  Coords `json:"coords"`
+}
+
+type CreateTripResponse struct {
+    ID uuid.UUID `json:"id"`
+}

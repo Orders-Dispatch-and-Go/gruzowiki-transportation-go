@@ -5,6 +5,7 @@ import (
 	"gruzowiki/services"
 	"net/http"
 	"strconv"
+	"gruzowiki/rest/models"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -52,4 +53,18 @@ func (h *TripHandler) GetTripByCargoRequest(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, *tripResp)
+}
+
+func (h *TripHandler) CreateTrip(c echo.Context) error {
+    var req models.CreateTripRequest
+    if err := c.Bind(&req); err != nil {
+        return c.JSON(http.StatusBadRequest, map[string]string{"message": err.Error()})
+    }
+
+    id, err := h.service.CreateTrip(c.Request().Context(), req)
+    if err != nil {
+        return c.JSON(http.StatusInternalServerError, map[string]string{"message": err.Error()})
+    }
+
+    return c.JSON(http.StatusOK, map[string]string{"id": id.String()})
 }
