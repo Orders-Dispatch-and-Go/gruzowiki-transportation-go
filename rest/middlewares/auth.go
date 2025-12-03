@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"slices"
 	"strings"
 
 	"github.com/golang-jwt/jwt"
@@ -73,19 +74,6 @@ func AllowedRoles(allowedRoles ...string) echo.MiddlewareFunc {
 				return echo.NewHTTPError(http.StatusUnauthorized, "Invalid token claims")
 			}
 
-			/*
-				roleAllowed := false
-				for _, allowedRole := range allowedRoles {
-					if role == allowedRole {
-						roleAllowed = true
-						break
-					}
-				}
-
-				if !roleAllowed {
-					return echo.NewHTTPError(http.StatusForbidden, "Insufficient permissions")
-				} */
-
 			userData, ok := claims["userData"].(map[string]interface{})
 			if !ok {
 				return echo.NewHTTPError(http.StatusUnauthorized, "Invalid userData in token")
@@ -101,6 +89,18 @@ func AllowedRoles(allowedRoles ...string) echo.MiddlewareFunc {
 			roles := make([]string, 0)
 			for _, value := range rolesClaim {
 				roles = append(roles, value.(string))
+			}
+
+			roleAllowed := false
+			for _, role := range roles {
+				if slices.Contains(allowedRoles, role) {
+					roleAllowed = true
+					break
+				}
+			}
+
+			if !roleAllowed {
+				return echo.NewHTTPError(http.StatusForbidden, "Insufficient permissions")
 			}
 
 			c.Set(UserIdCtxClaim, int(userData["id"].(float64)))

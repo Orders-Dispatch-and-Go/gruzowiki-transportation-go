@@ -84,13 +84,13 @@ func (s *ServerImpl) Start() {
 
 	carriers := e.Group("/carrier")
 	carriers.GET("/:id", s.CarrierHandler.GetCarrier)
-	carriers.POST("", s.CarrierHandler.CreateCarrier)
+	carriers.POST("", s.CarrierHandler.CreateCarrier) //здесь не должно быть проверки на jwt токен
 	carriers.PUT("/:id", s.CarrierHandler.UpdateCarrier)
 	carriers.DELETE("/:id", s.CarrierHandler.DeleteCarrier)
 
 	cargoRequest := e.Group("/cargo_request")
-	cargoRequest.POST("/search/cargo_request", s.CargoRequestHandler.GetCargoRequest)
-	cargoRequest.POST("/cargo_request", s.CargoRequestHandler.CreateCargoCargoRequest)
+	cargoRequest.POST("/search", s.CargoRequestHandler.GetCargoRequest)
+	cargoRequest.POST("", s.CargoRequestHandler.CreateCargoCargoRequest)
 	cargoRequest.POST("/:cargo_requestId/trip/tripId", s.CargoRequestHandler.MarkTrip)
 
 	cargo := e.Group("/cargo")
@@ -112,7 +112,7 @@ func (s *ServerImpl) Start() {
 	recipients.DELETE("/:id", s.RecipientHandler.DeleteRecipient)
 
 	consigners := e.Group("/consigner")
-	consigners.POST("", s.ConsignerHandler.CreateConsigner)
+	consigners.POST("", s.ConsignerHandler.CreateConsigner) //здесь не должно быть проверки на jwt токен
 
 	trips := e.Group("/trip")
 	trips.GET("/cargo_request/:id", s.TripHandler.GetTripByCargoRequest)

@@ -11,7 +11,7 @@ type Config struct {
 	ClinetUrl string `yaml:"client_url" env:"CLIENT_URL" env-default:"http://localhost:8080"`
 	LogLevel  string `yaml:"log_level" env:"LOG_LEVEL" env-default:"DEBUG"`
 	Address   string `yaml:"transportation_service_address" env:"TRANSPORTATION_SERVICE_ADDRESS" env-default:"0.0.0.0:8080"`
-	Dsn       string `yaml:"dsn" env:"DSN" env-default:"user='transporation_service_user' password='transporation_service_password' host='localhost' port=5433 dbname='transporation_service' sslmode=disable"`
+	Dsn       string `yaml:"dsn" env:"DSN" env-default:"user='postgres' password='postgres' host='localhost' port=5433 dbname='postgres' sslmode=disable"`
 }
 
 func MustLoad() Config {
