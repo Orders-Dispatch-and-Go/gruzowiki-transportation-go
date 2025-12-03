@@ -156,3 +156,15 @@ LIMIT $2 OFFSET $3;
 
 -- name: InsertConsigner :exec
 INSERT INTO consigners (id) VALUES ($1);
+
+-- name: InsertTrip :one
+INSERT INTO trips (
+    from_station,
+    to_station,
+    started_at,
+    carrier
+)
+VALUES (
+    $1, $2, $3, $4
+)
+RETURNING id;

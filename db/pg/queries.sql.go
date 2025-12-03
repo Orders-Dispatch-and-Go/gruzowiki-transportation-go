@@ -482,6 +482,38 @@ func (q *Queries) InsertStation(ctx context.Context, arg InsertStationParams) (p
 	return id, err
 }
 
+const insertTrip = `-- name: InsertTrip :one
+INSERT INTO trips (
+    from_station,
+    to_station,
+    started_at,
+    carrier
+)
+VALUES (
+    $1, $2, $3, $4
+)
+RETURNING id
+`
+
+type InsertTripParams struct {
+	FromStation pgtype.UUID
+	ToStation   pgtype.UUID
+	StartedAt   pgtype.Int8
+	Carrier     pgtype.Int4
+}
+
+func (q *Queries) InsertTrip(ctx context.Context, arg InsertTripParams) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, insertTrip,
+		arg.FromStation,
+		arg.ToStation,
+		arg.StartedAt,
+		arg.Carrier,
+	)
+	var id pgtype.UUID
+	err := row.Scan(&id)
+	return id, err
+}
+
 const listCarsByOwner = `-- name: ListCarsByOwner :many
 SELECT 
     id, type, length, width, height, max_weight, number, owner

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"gruzowiki/rest/models"
 	"gruzowiki/rest/terror"
 	"gruzowiki/services"
 	"net/http"
@@ -26,18 +27,18 @@ func (h *TripHandler) GetTripByCargoRequest(c echo.Context) error {
 	}
 
 	pageNumber := c.QueryParam("page_number")
-    pageSize := c.QueryParam("page_size")
-    
+	pageSize := c.QueryParam("page_size")
+
 	if pageNumber != "" && pageSize == "" {
-		 pageNum, err := strconv.Atoi(pageNumber)
-    	if err != nil || pageNum < 1 {
-        	pageNum = 1
-    	}
-    
-    	pageSz, err := strconv.Atoi(pageSize)
-    	if err != nil || pageSz < 1 {
-        	pageSz = 10
-    	}
+		pageNum, err := strconv.Atoi(pageNumber)
+		if err != nil || pageNum < 1 {
+			pageNum = 1
+		}
+
+		pageSz, err := strconv.Atoi(pageSize)
+		if err != nil || pageSz < 1 {
+			pageSz = 10
+		}
 
 		tripResp, err := h.service.GetTripsByCargoRequest(c.Request().Context(), cargoRequestID, pageNum, pageSz)
 		if err != nil {
@@ -52,4 +53,18 @@ func (h *TripHandler) GetTripByCargoRequest(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, *tripResp)
+}
+
+func (h *TripHandler) CreateTrip(c echo.Context) error {
+	var req models.CreateTripRequest
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"message": err.Error()})
+	}
+
+	id, err := h.service.CreateTrip(c.Request().Context(), req)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, map[string]string{"id": id.String()})
 }
