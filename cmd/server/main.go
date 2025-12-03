@@ -44,7 +44,7 @@ func main() {
 	consignerHandler := handlers.NewConsignerHandler(consignerService)
 
 	cargoRequestRepo := repositories.NewCargoRequestRepo(conn)
-	cargoRequestService := services.NewCargoRequestService(cargoRequestRepo, stationService)
+	cargoRequestService := services.NewCargoRequestService(cargoRequestRepo, stationService, client)
 	cargoRequestHandler := handlers.NewCargoRequestController(cargoRequestService)
 
 	carRepo := repositories.NewCarRepo(conn)

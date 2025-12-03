@@ -17,6 +17,7 @@ type (
 	CargoRequestService struct {
 		repo           CargoRequestRepo
 		stationService StationService
+		client         CargoRequestFeignClient
 	}
 
 	CargoRequestRepo interface {
@@ -36,12 +37,21 @@ type (
 		GetStations(ctx context.Context, ids []uuid.UUID) (map[uuid.UUID]models.Station, error)
 		CreateStation(ctx context.Context, station models.Station) (*models.CreateStationResponse, error)
 	}
+
+	CargoRequestFeignClient interface {
+		CreateRouteForCargoRequest(
+			request models.PostCargoRequestRequest,
+			fromStationId uuid.UUID,
+			toStationId uuid.UUID,
+		) (*uuid.UUID, error)
+	}
 )
 
-func NewCargoRequestService(repo CargoRequestRepo, stationService StationService) *CargoRequestService {
+func NewCargoRequestService(repo CargoRequestRepo, stationService StationService, client CargoRequestFeignClient) *CargoRequestService {
 	return &CargoRequestService{
 		repo:           repo,
 		stationService: stationService,
+		client:         client,
 	}
 }
 
@@ -118,6 +128,11 @@ func (s *CargoRequestService) CreateCargoRequest(ctx context.Context, postCargoR
 		return nil, err
 	}
 
+	routeId, err := s.client.CreateRouteForCargoRequest(postCargoRequestRequest, createFromStationResponse.ID, createToStationResponse.ID)
+	if err != nil {
+		return nil, err
+	}
+
 	id, err := s.repo.CreateCargoRequest(ctx, pg.InsertCargoRequestParams{
 		ID:          util.UuidToPgUuid(uuid.New()),
 		ConsignerID: util.Int32ToPgInt4(postCargoRequestRequest.ConsignerID),
@@ -126,6 +141,7 @@ func (s *CargoRequestService) CreateCargoRequest(ctx context.Context, postCargoR
 		ToStation:   util.UuidToPgUuid(createToStationResponse.ID),
 		CreatedAt:   util.Int64ToPgInt8(time.Now().Unix()),
 		Deadline:    util.Int64ToPgInt8(util.ToTimestamp(postCargoRequestRequest.Deadline)),
+		RouteID:     util.UuidToPgUuid(*routeId),
 		Price:       util.ToNumeric(postCargoRequestRequest.MaxPrice),
 		Status:      util.GoTextToPgText(models.CargoRequestStatusPending),
 		ReceiveCode: util.Int32ToPgInt4(receiveCode),

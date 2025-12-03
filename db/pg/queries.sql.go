@@ -483,21 +483,13 @@ func (q *Queries) InsertStation(ctx context.Context, arg InsertStationParams) (p
 }
 
 const insertTrip = `-- name: InsertTrip :one
-INSERT INTO trips (
-    from_station,
-    to_station,
-    started_at,
-    carrier
-)
-VALUES (
-    $1, $2, $3, $4
-)
-RETURNING id
+INSERT INTO trips (from_station, to_station, route_id, started_at, carrier) VALUES ($1, $2, $3, $4, $5) RETURNING id
 `
 
 type InsertTripParams struct {
 	FromStation pgtype.UUID
 	ToStation   pgtype.UUID
+	RouteID     pgtype.UUID
 	StartedAt   pgtype.Int8
 	Carrier     pgtype.Int4
 }
@@ -506,6 +498,7 @@ func (q *Queries) InsertTrip(ctx context.Context, arg InsertTripParams) (pgtype.
 	row := q.db.QueryRow(ctx, insertTrip,
 		arg.FromStation,
 		arg.ToStation,
+		arg.RouteID,
 		arg.StartedAt,
 		arg.Carrier,
 	)

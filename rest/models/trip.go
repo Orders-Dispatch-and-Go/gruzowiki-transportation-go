@@ -31,15 +31,10 @@ type (
 type CreateTripRequest struct {
 	Carrier int32 `json:"carrier"`
 
-	FromStation StationCreate `json:"fromStation"`
-	ToStation   StationCreate `json:"toStation"`
+	FromStation Station `json:"fromStation"`
+	ToStation   Station `json:"toStation"`
 
 	StartedAt int64 `json:"startedAt"`
-}
-
-type StationCreate struct {
-	Address string `json:"address"`
-	Coords  Coords `json:"coords"`
 }
 
 type CreateTripResponse struct {

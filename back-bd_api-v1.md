@@ -7,7 +7,7 @@
 ````
 {
     "fromStation": {
-        id: uuid,
+        id: uuid, //id станции под которым она сохранена в сервисе грузоперевозок
         address: string,
         coords: {
             lat: float,

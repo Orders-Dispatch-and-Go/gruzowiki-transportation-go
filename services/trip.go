@@ -13,21 +13,26 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-type RouterserviceClient interface {
+type TripFeignClient interface {
 	GetPotentialTrips(cargoRequestRouteID string, tripRouteIDs []string) ([]string, error)
+	CreateRouteForTrip(
+		request models.CreateTripRequest,
+		fromStationId uuid.UUID,
+		toStationId uuid.UUID,
+	) (*uuid.UUID, error)
 }
 
 type TripService struct {
-	tripRepo            *repositories.TripRepo
-	stationRepo         *repositories.StationRepo
-	routerserviceClient RouterserviceClient
+	tripRepo    *repositories.TripRepo
+	stationRepo *repositories.StationRepo
+	client      TripFeignClient
 }
 
-func NewTripService(tripRepo *repositories.TripRepo, stationRepo *repositories.StationRepo, routerserviceClient RouterserviceClient) *TripService {
+func NewTripService(tripRepo *repositories.TripRepo, stationRepo *repositories.StationRepo, client TripFeignClient) *TripService {
 	return &TripService{
-		tripRepo:            tripRepo,
-		stationRepo:         stationRepo,
-		routerserviceClient: routerserviceClient,
+		tripRepo:    tripRepo,
+		stationRepo: stationRepo,
+		client:      client,
 	}
 }
 
@@ -51,13 +56,13 @@ func (s *TripService) GetTripByCargoRequest(ctx context.Context, cargoRequestID 
 	var fromStation, toStation models.Station
 	for _, st := range stations {
 		id := uuid.UUID(st.ID.Bytes)
-		if id == uuid.UUID(trip.FromStation.Bytes) {
+		if id == trip.FromStation.Bytes {
 			fromStation = models.Station{
 				Address: st.Address.String,
 				Coords:  models.Coords{Lat: st.Lat.Float64, Lon: st.Lon.Float64},
 			}
 		}
-		if id == uuid.UUID(trip.ToStation.Bytes) {
+		if id == trip.ToStation.Bytes {
 			toStation = models.Station{
 				Address: st.Address.String,
 				Coords:  models.Coords{Lat: st.Lat.Float64, Lon: st.Lon.Float64},
@@ -66,7 +71,7 @@ func (s *TripService) GetTripByCargoRequest(ctx context.Context, cargoRequestID 
 	}
 
 	return &models.TripResponse{
-		ID:              uuid.UUID(trip.ID.Bytes),
+		ID:              trip.ID.Bytes,
 		FromStation:     fromStation,
 		ToStation:       toStation,
 		StartedAt:       trip.StartedAt.Int64,
@@ -85,7 +90,7 @@ func (s *TripService) GetTripsByCargoRequest(ctx context.Context, cargoRequestID
 		return models.Trips{}, err
 	}
 
-	suitsTripsIds, err := s.routerserviceClient.GetPotentialTrips(cargoRequestID.String(), uuidsToStrigs(ids))
+	suitsTripsIds, err := s.client.GetPotentialTrips(cargoRequestID.String(), uuidsToStrigs(ids))
 	if err != nil {
 		return models.Trips{}, err
 	}
@@ -149,7 +154,12 @@ func (s *TripService) CreateTrip(ctx context.Context, req models.CreateTripReque
 		return uuid.Nil, fmt.Errorf("create toStation: %w", err)
 	}
 
-	tripID, err := s.tripRepo.CreateTrip(ctx, fromID.Bytes, toID.Bytes, req.StartedAt, req.Carrier)
+	routeId, err := s.client.CreateRouteForTrip(req, fromID.Bytes, toID.Bytes)
+	if err != nil {
+		return uuid.Nil, fmt.Errorf("create route: %w", err)
+	}
+
+	tripID, err := s.tripRepo.CreateTrip(ctx, fromID.Bytes, toID.Bytes, *routeId, req.StartedAt, req.Carrier)
 	if err != nil {
 		return uuid.Nil, fmt.Errorf("create trip: %w", err)
 	}
