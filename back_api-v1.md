@@ -2,7 +2,7 @@
 
 ### получение заявки, если оставить параметр null, то он не будет использоваться в фильтре
 
-Post /search/cargo_request?page_number=int&page_size=int
+Post /cargo_request/search?page_number=int&page_size=int
 ````
 {
     "id": "uuid",
@@ -147,48 +147,6 @@ Http status: 200
 }
 ````
 
-### получение поездок для заявки
-
-Get /trips/cargo_request/{id}?page_number=int&page_size=int
-
-Http status: 200
-````
-{
-  "trips": [
-    {
-      "id": "uuid",
-      "fromStation": {
-        address: string,
-        coords: {
-            lat: float,
-            lon: float
-        }
-      },
-      "toStation": {
-        address: string,
-        coords: {
-            lat: float,
-            lon: float
-        }
-      },
-      "startedAt": long,
-      "calculatedEndAt": long,
-      "actualEndAt": long,
-      "price": "decimal(10, 2)",
-      "status": "string",
-      "carrierId": int,
-      "carId": int
-    }
-  ]
-}
-````
-
-### выбор подходящей поездки
-
-Post /cargo_request/{id}/trip/{id}
-
-Http status: 200
-
 ### получение поездки для заявки
 Post /trip/cargo_request/{id}
 
@@ -292,37 +250,26 @@ Http status: 200
 ````
 {
   "cargoRequests": [
-    {
-        "id": "uuid",
-        "consignerId": int,
-        "recipientId": int,
-        "createdAt": long,
-        "deadline": long,
-        "calculatedTripId": "uuid",
-        "actualTripId": "uuid",
-        "fromStation": {
-            address: string,
-            coords: {
-                lat: float,
-                lon: float
-            }
-        },
-        "toStation": {
-            address: string,
-            coords: {
-                lat: float,
-                lon: float
-            }
-        },
-        "maxPrice": "decimal(10, 2)",
-        "status": "string"
-    }
+    "uuid",
+    "uuid",
+    ...
   ]
 }
 ````
 
 ### начать поездку
 PATCH /trip/{uuid}/start
+````
+{
+    "cargoRequests": [
+        "uuid",
+        "uuid",
+        ...
+    ]
+}
+````
+
+Http status: 200
 
 ### подтверждение доставки груза
 PATCH /cargo_request/{uuid}/finish/code/{int}
