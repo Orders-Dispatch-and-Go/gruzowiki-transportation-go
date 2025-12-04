@@ -22,10 +22,6 @@ Http status: 200
         "id": "uuid",
         "consignerId": int,
         "recipientId": int,
-        "createdAt": long,
-        "deadline": long,
-        "calculatedTripId": "uuid",
-        "actualTripId": "uuid",
         "fromStation": {
             address: string,
             coords: {
@@ -40,7 +36,11 @@ Http status: 200
                 lon: float
             }
         },
-        "maxPrice": "decimal(10, 2)",
+        "createdAt": long,
+        "deadline": long,
+        "routeId": "uuid",
+        "tripId": "uuid",
+        "price": "decimal(10, 2)",
         "status": "string",
         "receiveCode": "string"
     }
@@ -265,9 +265,32 @@ Http status: 200
 ````
 {
   "cargoRequests": [
-    "uuid",
-    "uuid",
-    ...
+    {
+        "id": "uuid",
+        "consignerId": int,
+        "recipientId": int,
+        "fromStation": {
+            address: string,
+            coords: {
+                lat: float,
+                lon: float
+            }
+        },
+        "toStation": {
+            address: string,
+            coords: {
+                lat: float,
+                lon: float
+            }
+        },
+        "createdAt": long,
+        "deadline": long,
+        "routeId": "uuid",
+        "tripId": "uuid",
+        "price": "decimal(10, 2)",
+        "status": "string",
+        "receiveCode": "string"
+    }
   ]
 }
 ````
