@@ -27,7 +27,7 @@ type CargoRequestService interface {
 	CreateCargo(ctx context.Context, cargo []models.Cargo) ([]string, error)
 	MarkTrip(ctx context.Context, cargoReqId string, tripId string) error
 	Delivered(ctx context.Context, cargoReqId string, code string) error
-	GetRequestsForTripWithRoutes(ctx context.Context, tripID uuid.UUID, filter models.GetCargoRequestsForTripFilter) (*models.PotentialRoutesResponse, error)
+	GetRequestsForTrip(ctx context.Context, tripID uuid.UUID, filter models.GetCargoRequestsForTripFilter) (*models.GetCargoRequestsForTripResponse, error)
 }
 
 func NewCargoRequestController(service CargoRequestService) *CargoRequestHandler {
@@ -93,7 +93,7 @@ func (h *CargoRequestHandler) GetCargoTypes(c echo.Context) error {
 	return c.JSON(http.StatusOK, resp)
 }
 
-func (h *CargoRequestHandler) GetPotentialCargo(c echo.Context) error {
+func (h *CargoRequestHandler) GetRequestsForTrip(c echo.Context) error {
 	ctx := c.Request().Context()
 
 	tripIDStr := c.Param("tripID")
@@ -107,7 +107,7 @@ func (h *CargoRequestHandler) GetPotentialCargo(c echo.Context) error {
 		return terror.NewValidationError("invalid request body", err.Error())
 	}
 
-	resp, err := h.service.GetRequestsForTripWithRoutes(ctx, tripID, filter)
+	resp, err := h.service.GetRequestsForTrip(ctx, tripID, filter)
 	if err != nil {
 		return err
 	}
