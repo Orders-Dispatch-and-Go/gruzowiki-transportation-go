@@ -122,9 +122,6 @@ jobs:
         script: |
           cd /home/${{ secrets.DEPLOY_USER }}/gruzowiki-transportation-go
           
-          sed -i 's|build:|# build:|g' docker-compose.yml
-          sed -i 's|dockerfile: Dockerfile|# dockerfile: Dockerfile|g' docker-compose.yml
-          sed -i '/transportation_service:/a\    image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest' docker-compose.yml
 
           cat > .env << EOF
           TRANSPORTATION_PG_HOST=transportation_db_postgres
