@@ -79,8 +79,6 @@ func AllowedRoles(allowedRoles ...string) echo.MiddlewareFunc {
 				return echo.NewHTTPError(http.StatusUnauthorized, "Invalid userData in token")
 			}
 
-			fmt.Println(userData["id"])
-
 			rolesClaim, ok := claims["userAuthorities"].([]interface{})
 			if !ok {
 				return echo.NewHTTPError(http.StatusUnauthorized, "Invalid userAuthorities in token")
@@ -103,6 +101,7 @@ func AllowedRoles(allowedRoles ...string) echo.MiddlewareFunc {
 				return echo.NewHTTPError(http.StatusForbidden, "Insufficient permissions")
 			}
 
+			fmt.Printf("User ID: %s, Email: %s, Roles: %s\n",userData["id"], userData["email"], roles)
 			c.Set(UserIdCtxClaim, int(userData["id"].(float64)))
 			c.Set(EmailCtxClaim, userData["email"])
 			c.Set(RolesCtxClaim, roles)

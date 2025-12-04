@@ -98,7 +98,7 @@ func startServer(e *echo.Echo, address string) {
 
 func (s *ServerImpl) Start() {
 	e := echo.New()
-
+	e.Use(middlewares.LoggingMiddleware)
 	e.Use(middlewares.HandleError)
 
 	postCarrier := e.Group("")

@@ -2,6 +2,7 @@ package middlewares
 
 import (
 	"errors"
+	"fmt"
 	"gruzowiki/rest/terror"
 	"net/http"
 
@@ -32,4 +33,22 @@ func HandleError(next echo.HandlerFunc) echo.HandlerFunc {
 
 		return c.JSON(code, err)
 	}
+}
+
+func LoggingMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		fmt.Println("==========================================")
+		fmt.Println("Request:")
+		fmt.Println("Method:", c.Request().Method)
+		fmt.Println("URI:", c.Request().URL.Path)
+		fmt.Println("Query:", c.Request().URL.RawQuery)
+
+  		err := next(c)
+  		if err != nil {
+			fmt.Println("Error:", err.Error())
+			return err
+  		}
+	
+  		return nil
+ 	}
 }
