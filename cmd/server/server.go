@@ -101,12 +101,14 @@ func (s *ServerImpl) Start() {
 
 	e.Use(middlewares.HandleError)
 
-	carriers := e.Group("/carrier")
+	postCarrier := e.Group("")
+	postCarrier.POST("/carrier", s.CarrierHandler.CreateCarrier)
+
+	carriers := e.Group("")
 	carriers.Use(middlewares.AllowedRoles([]string{middlewares.ConsignerRole, middlewares.CarrierRole}...))
-	carriers.GET("/:id", s.CarrierHandler.GetCarrier)
-	carriers.POST("", s.CarrierHandler.CreateCarrier)
-	carriers.PUT("/:id", s.CarrierHandler.UpdateCarrier)
-	carriers.DELETE("/:id", s.CarrierHandler.DeleteCarrier)
+	carriers.GET("/carrier/:id", s.CarrierHandler.GetCarrier)
+	carriers.PUT("/carrier/:id", s.CarrierHandler.UpdateCarrier)
+	carriers.DELETE("/carrier/:id", s.CarrierHandler.DeleteCarrier)
 
 	cargoRequest := e.Group("/cargo_request")
 	cargoRequest.Use(middlewares.AllowedRoles([]string{middlewares.ConsignerRole, middlewares.CarrierRole}...))
