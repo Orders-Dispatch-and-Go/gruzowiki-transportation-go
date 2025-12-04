@@ -42,14 +42,13 @@ services:
       - gruzowiki_network
 
   transportation_service:
-    build:
-      dockerfile: Dockerfile
+    image: ghcr.io/orders-dispatch-and-go/gruzowiki-transportation-go:latest
     container_name: "transportation-service"
     env_file:
       - .env
     environment:
-      LOG_LEVEL: ${LOG_LEVEL}
-      UPDATE_ADDRESS: ${UPDATE_ADDRESS}
+#      LOG_LEVEL: ${LOG_LEVEL}
+#      UPDATE_ADDRESS: ${UPDATE_ADDRESS}
       DSN: "user='${TRANSPORTATION_PG_USER}' password='${TRANSPORTATION_PG_PASSWORD}' host='${TRANSPORTATION_PG_HOST}' port=5432 dbname='${TRANSPORTATION_PG_DATABASE}' sslmode=disable"
     ports:
         - "${TRANSPORTATION_SERVICE_PORT}:8075"
