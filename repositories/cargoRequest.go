@@ -3,13 +3,15 @@ package repositories
 import (
 	"context"
 	"fmt"
-	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 	"gruzowiki/db/pg"
 	"gruzowiki/rest/models"
 	"gruzowiki/util"
 	"math/big"
+	"strconv"
 	"strings"
+
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type CargoRequestRepo struct {
@@ -173,4 +175,65 @@ func (c *CargoRequestRepo) MarkTrip(ctx context.Context, cargoReqId string, trip
 		TripID: pgtype.UUID{Bytes: trip, Valid: true},
 	})
 	return err
+}
+
+func (c *CargoRequestRepo) UpdateCargoRequestCode(ctx context.Context, reqId, code string) error {
+	id, err := uuid.Parse(reqId)
+	if err != nil {
+		return err
+	}
+	receiveCode, err := strconv.ParseInt(code, 10, 32)
+    if err != nil {
+		return err
+	}
+	err = c.conn.Queries(ctx).UpdateCargoRequestReceiveCode(ctx, pg.UpdateCargoRequestReceiveCodeParams{
+		ID:          pgtype.UUID{Bytes: id, Valid: true},
+		ReceiveCode: pgtype.Int4{Int32: int32(receiveCode), Valid: true},
+	})
+	return err
+}
+
+func (c *CargoRequestRepo) UpdateRoute(ctx context.Context, cargoReqId string, routeId string) error {
+	id, err := uuid.Parse(cargoReqId)
+	if err != nil {
+		return err
+	}
+	route, err := uuid.Parse(routeId)
+	if err != nil {
+		return err
+	}
+	err = c.conn.Queries(ctx).UpdateCargoRequestRoute(ctx, pg.UpdateCargoRequestRouteParams{
+		ID:     pgtype.UUID{Bytes: id, Valid: true},
+		RouteID: pgtype.UUID{Bytes: route, Valid: true},
+	})
+	return err
+}
+
+type CargoRequestPair struct {
+    CargoRequestID string
+    RouteID        string
+}
+
+func (c *CargoRequestRepo) GetCargoRequestIDAndRoute(ctx context.Context, cargoReqId string) (CargoRequestPair, error) {
+	id, err := uuid.Parse(cargoReqId)
+	if err != nil {
+		return CargoRequestPair{}, err
+	}
+	req, err := c.conn.Queries(ctx).GetCargoRequestIDAndRoute(ctx, pgtype.UUID{Bytes: id, Valid: true})
+	return CargoRequestPair{req.ID.String(), req.RouteID.String()}, err
+}
+
+func (c *CargoRequestRepo) SetTrip(ctx context.Context, cargoId, tripId string) error {
+	id, err := uuid.Parse(cargoId)
+	if err != nil {
+		return err
+	}
+	trip, err := uuid.Parse(tripId)
+	if err != nil {
+		return err
+	}
+	return c.conn.Queries(ctx).SetTripIDForCargoRequest(ctx, pg.SetTripIDForCargoRequestParams{
+		ID:     pgtype.UUID{Bytes: id, Valid: true},
+		TripID: pgtype.UUID{Bytes: trip, Valid: true},
+	})
 }

@@ -159,3 +159,38 @@ INSERT INTO consigners (id) VALUES ($1);
 
 -- name: InsertTrip :one
 INSERT INTO trips (from_station, to_station, route_id, started_at, carrier) VALUES ($1, $2, $3, $4, $5) RETURNING id;
+
+-- name: UpdateTripStatus :exec
+UPDATE trips 
+SET status = $2 
+WHERE id = $1;
+
+-- name: UpdateCargoRequestReceiveCode :exec
+UPDATE cargo_requests 
+SET receive_code = $2 
+WHERE id = $1;
+
+-- name: StartTrip :exec
+UPDATE trips 
+SET status = 'IN_PROGRESS'
+WHERE id = $1;
+
+-- name: GetCargoRequestIDAndRoute :one
+SELECT id, route_id 
+FROM cargo_requests 
+WHERE id = $1;
+
+-- name: UpdateTripRoute :exec
+UPDATE trips 
+SET route_id = $2 
+WHERE id = $1;
+
+-- name: UpdateCargoRequestRoute :exec
+UPDATE cargo_requests 
+SET route_id = $2 
+WHERE id = $1;
+
+-- name: SetTripIDForCargoRequest :exec
+UPDATE cargo_requests 
+SET trip_id = $2 
+WHERE id = $1;

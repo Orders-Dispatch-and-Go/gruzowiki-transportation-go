@@ -68,3 +68,26 @@ func (h *TripHandler) CreateTrip(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, map[string]string{"id": id.String()})
 }
+
+func (h *TripHandler) Finish(c echo.Context) error {
+	id := c.Param("id")
+	status := c.Param("status")
+
+	if err := h.service.FinishTrip(c.Request().Context(), id, status); err != nil {
+		return err
+	}
+	return c.JSON(http.StatusOK, nil)
+}
+
+func (h *TripHandler) Start(c echo.Context) error {
+	id := c.Param("id")
+	var req models.CargoRequestIdsRequest
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"message": err.Error()})
+	}
+	err := h.service.StartTrip(c.Request().Context(), id, req.Ids)
+	if err != nil {
+		return err
+	}
+	return c.JSON(http.StatusOK, nil)
+}

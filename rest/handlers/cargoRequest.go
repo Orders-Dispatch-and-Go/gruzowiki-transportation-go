@@ -25,6 +25,7 @@ type CargoRequestService interface {
 	GetCargoTypes(ctx context.Context) ([]models.CargoType, error)
 	CreateCargo(ctx context.Context, cargo []models.Cargo) ([]string, error)
 	MarkTrip(ctx context.Context, cargoReqId string, tripId string) error
+	Delivered(ctx context.Context, cargoReqId string, code string) error
 }
 
 func NewCargoRequestController(service CargoRequestService) *CargoRequestHandler {
@@ -113,6 +114,17 @@ func (h *CargoRequestHandler) MarkTrip(c echo.Context) error {
 	tripId := c.Param("tripId")
 
 	if err := h.service.MarkTrip(ctx, cargoReqId, tripId); err != nil {
+		return err
+	}
+	return c.JSON(http.StatusOK, nil)
+}
+
+func (h *CargoRequestHandler) Delivered(c echo.Context) error {
+	ctx := c.Request().Context()
+	cargoReqId := c.Param("uuid")
+	code := c.Param("code")
+
+	if err := h.service.Delivered(ctx, cargoReqId, code); err != nil {
 		return err
 	}
 	return c.JSON(http.StatusOK, nil)

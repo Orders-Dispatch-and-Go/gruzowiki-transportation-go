@@ -91,4 +91,8 @@ type (
 	IdsResponse struct {
 		Ids []string `json:"ids"`
 	}
+
+	CargoRequestIdsRequest struct {
+		Ids []string `json:"cargoRequests"`
+	}
 )

@@ -20,19 +20,22 @@ type TripFeignClient interface {
 		fromStationId uuid.UUID,
 		toStationId uuid.UUID,
 	) (*uuid.UUID, error)
+    MergeRoutes(cargoRequestRouteID, tripRouteID string) (string, error)
 }
 
 type TripService struct {
-	tripRepo    *repositories.TripRepo
-	stationRepo *repositories.StationRepo
-	client      TripFeignClient
+	tripRepo         *repositories.TripRepo
+	stationRepo      *repositories.StationRepo
+    cargoRequestRepo *repositories.CargoRequestRepo
+	client           TripFeignClient
 }
 
-func NewTripService(tripRepo *repositories.TripRepo, stationRepo *repositories.StationRepo, client TripFeignClient) *TripService {
+func NewTripService(tripRepo *repositories.TripRepo, stationRepo *repositories.StationRepo, cargoRequestRepo *repositories.CargoRequestRepo, client TripFeignClient) *TripService {
 	return &TripService{
-		tripRepo:    tripRepo,
-		stationRepo: stationRepo,
-		client:      client,
+		tripRepo:         tripRepo,
+		stationRepo:      stationRepo,
+		client:           client,
+        cargoRequestRepo: cargoRequestRepo,
 	}
 }
 
@@ -165,4 +168,41 @@ func (s *TripService) CreateTrip(ctx context.Context, req models.CreateTripReque
 	}
 
 	return tripID, nil
+}
+
+func (s *TripService) FinishTrip(ctx context.Context, tripID string, status string) error {
+    return s.tripRepo.FinishTrip(ctx, tripID, status)
+}
+
+func (s *TripService) StartTrip(ctx context.Context, id string, cargoRequestIds []string) (error) {
+    err := s.tripRepo.StartTrip(ctx, id)
+    if err != nil {
+        return err
+    }
+
+    var routeId string
+    for _, reqId := range cargoRequestIds {
+        err = s.cargoRequestRepo.SetTrip(ctx, reqId, id)
+        if err != nil {
+            return fmt.Errorf("failed to set trip id")
+        }
+        req, err := s.cargoRequestRepo.GetCargoRequestIDAndRoute(ctx, reqId)
+        if err != nil {
+            return err
+        }
+        routeId, err = s.client.MergeRoutes(req.CargoRequestID, req.RouteID)
+        if err != nil {
+            return fmt.Errorf("failed to merge route")
+        }
+        err = s.cargoRequestRepo.UpdateRoute(ctx, req.CargoRequestID, routeId)
+        if err != nil {
+            return fmt.Errorf("failed to update route in cargo request")
+        }
+    }
+    err = s.tripRepo.UpdateRout(ctx, id, routeId)
+    if err != nil {
+        return fmt.Errorf("failed to update route in trip")
+    }
+
+    return nil
 }

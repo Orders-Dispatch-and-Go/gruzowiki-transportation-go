@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"gruzowiki/db/pg"
+	"gruzowiki/rest/terror"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -80,4 +81,36 @@ func (r *TripRepo) CreateTrip(ctx context.Context, fromStation uuid.UUID, toStat
 	}
 
 	return id.Bytes, nil
+}
+
+func (r *TripRepo) FinishTrip(ctx context.Context, tripID string, status string) error {
+	id, err := uuid.Parse(tripID)
+	if err != nil {
+		terror.NewValidationError(err.Error(), "parsing path parameter 'id'")
+	}
+	err = r.conn.Queries(ctx).UpdateTripStatus(ctx, pg.UpdateTripStatusParams{ ID: pgtype.UUID{Bytes: id, Valid: true}, Status: pgtype.Text{String: status, Valid: true}})
+	if err != nil {
+		return fmt.Errorf("failed update trip status: %w", err)
+	}
+	return nil
+}
+
+func (r *TripRepo) StartTrip(ctx context.Context, tripID string) error {
+	id, err := uuid.Parse(tripID)
+	if err != nil {
+		terror.NewValidationError(err.Error(), "parsing path parameter 'id'")
+	}
+	return r.conn.Queries(ctx).StartTrip(ctx, pgtype.UUID{Bytes: id, Valid: true})
+}
+
+func (r *TripRepo) UpdateRout(ctx context.Context, tripId, routeId string) error {
+	id, err := uuid.Parse(tripId)
+	if err != nil {
+		terror.NewValidationError(err.Error(), "parsing path parameter 'id'")
+	}
+	route, err := uuid.Parse(routeId)
+	if err != nil {
+		terror.NewValidationError(err.Error(), "parsing path parameter 'id'")
+	}
+	return r.conn.Queries(ctx).UpdateTripRoute(ctx, pg.UpdateTripRouteParams{ID: pgtype.UUID{Bytes: id, Valid: true}, RouteID: pgtype.UUID{Bytes: route, Valid: true}})
 }

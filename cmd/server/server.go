@@ -43,11 +43,14 @@ type CargoRequestHandler interface {
 	GetCargoTypes(c echo.Context) error
 	CreateCargo(c echo.Context) error
 	MarkTrip(c echo.Context) error
+	Delivered(c echo.Context) error
 }
 
 type TripHandler interface {
 	GetTripByCargoRequest(c echo.Context) error
 	CreateTrip(c echo.Context) error
+	Finish(c echo.Context) error
+	Start(c echo.Context) error
 }
 
 type ServerImpl struct {
@@ -94,6 +97,7 @@ func (s *ServerImpl) Start() {
 	cargoRequest.POST("/search", s.CargoRequestHandler.GetCargoRequest)
 	cargoRequest.POST("", s.CargoRequestHandler.CreateCargoCargoRequest)
 	cargoRequest.POST("/:cargo_requestId/trip/tripId", s.CargoRequestHandler.MarkTrip)
+	cargoRequest.PATCH("/{:uuid}/finish/code/:code", s.CargoRequestHandler.Delivered)
 
 	cargo := e.Group("/cargo")
 	cargo.GET("/types", s.CargoRequestHandler.GetCargoTypes)
@@ -114,11 +118,13 @@ func (s *ServerImpl) Start() {
 	recipients.DELETE("/:id", s.RecipientHandler.DeleteRecipient)
 
 	consigners := e.Group("/consigner")
-	consigners.POST("", s.ConsignerHandler.CreateConsigner) //здесь не должно быть проверки на jwt токен
+	consigners.POST("", s.ConsignerHandler.CreateConsigner) //здесь не должно быть проверки на jwt токен (ты можешь мидлварь передать последним аргументом куда захочешь)
 
 	trips := e.Group("/trip")
 	trips.GET("/cargo_request/:id", s.TripHandler.GetTripByCargoRequest)
 	trips.POST("", s.TripHandler.CreateTrip)
+	trips.PATCH("/:id/finish/status/:status", s.TripHandler.Finish)
+	trips.PATCH("/:id/start", s.TripHandler.Start)
 
 	startServer(e, s.Address)
 }
