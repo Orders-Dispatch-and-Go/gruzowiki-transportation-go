@@ -230,6 +230,90 @@ func (q *Queries) GetCargoRequestIDAndRoute(ctx context.Context, id pgtype.UUID)
 	return i, err
 }
 
+const getCargoRequestRouteIDs = `-- name: GetCargoRequestRouteIDs :many
+SELECT id, route_id
+FROM cargo_requests
+WHERE id = ANY($1::uuid[])
+`
+
+type GetCargoRequestRouteIDsRow struct {
+	ID      pgtype.UUID
+	RouteID pgtype.UUID
+}
+
+func (q *Queries) GetCargoRequestRouteIDs(ctx context.Context, dollar_1 []pgtype.UUID) ([]GetCargoRequestRouteIDsRow, error) {
+	rows, err := q.db.Query(ctx, getCargoRequestRouteIDs, dollar_1)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetCargoRequestRouteIDsRow
+	for rows.Next() {
+		var i GetCargoRequestRouteIDsRow
+		if err := rows.Scan(&i.ID, &i.RouteID); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getCargoRequestsForTrip = `-- name: GetCargoRequestsForTrip :many
+SELECT cr.id
+FROM cargo_requests cr
+JOIN cargo c ON c.request_id = cr.id
+WHERE cr.trip_id = $1
+  AND cr.status = 'PENDING'
+  AND ($2::int IS NULL OR c.length <= $2)
+  AND ($3::int IS NULL OR c.width <= $3)
+  AND ($4::int IS NULL OR c.height <= $4)
+  AND ($5::int IS NULL OR c.cargo_type = $5)
+  AND ($6::bigint IS NULL OR cr.deadline <= $6)
+  AND ($7::decimal IS NULL OR cr.price >= $7)
+ORDER BY cr.created_at DESC
+`
+
+type GetCargoRequestsForTripParams struct {
+	TripID  pgtype.UUID
+	Column2 int32
+	Column3 int32
+	Column4 int32
+	Column5 int32
+	Column6 int64
+	Column7 pgtype.Numeric
+}
+
+func (q *Queries) GetCargoRequestsForTrip(ctx context.Context, arg GetCargoRequestsForTripParams) ([]pgtype.UUID, error) {
+	rows, err := q.db.Query(ctx, getCargoRequestsForTrip,
+		arg.TripID,
+		arg.Column2,
+		arg.Column3,
+		arg.Column4,
+		arg.Column5,
+		arg.Column6,
+		arg.Column7,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []pgtype.UUID
+	for rows.Next() {
+		var id pgtype.UUID
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getCargoTypes = `-- name: GetCargoTypes :many
 SELECT id, type, fragile FROM cargo_types
 `
@@ -345,6 +429,19 @@ func (q *Queries) GetTripByCargoRequest(ctx context.Context, id pgtype.UUID) (Tr
 		&i.Car,
 	)
 	return i, err
+}
+
+const getTripRouteID = `-- name: GetTripRouteID :one
+SELECT route_id
+FROM trips
+WHERE id = $1
+`
+
+func (q *Queries) GetTripRouteID(ctx context.Context, id pgtype.UUID) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, getTripRouteID, id)
+	var route_id pgtype.UUID
+	err := row.Scan(&route_id)
+	return route_id, err
 }
 
 const getTripsByIDsWithPagination = `-- name: GetTripsByIDsWithPagination :many

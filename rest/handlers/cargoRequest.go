@@ -8,6 +8,7 @@ import (
 	"gruzowiki/rest/terror"
 	"net/http"
 	"strconv"
+	"github.com/google/uuid"
 )
 
 type CargoRequestHandler struct {
@@ -26,6 +27,7 @@ type CargoRequestService interface {
 	CreateCargo(ctx context.Context, cargo []models.Cargo) ([]string, error)
 	MarkTrip(ctx context.Context, cargoReqId string, tripId string) error
 	Delivered(ctx context.Context, cargoReqId string, code string) error
+	GetRequestsForTripWithRoutes(ctx context.Context, tripID uuid.UUID, filter models.GetCargoRequestsForTripFilter) (*models.PotentialRoutesResponse, error)
 }
 
 func NewCargoRequestController(service CargoRequestService) *CargoRequestHandler {
@@ -87,6 +89,28 @@ func (h *CargoRequestHandler) GetCargoTypes(c echo.Context) error {
 	}
 
 	resp := models.CargoTypesResponse{CargoTypes: cargoTypes}
+
+	return c.JSON(http.StatusOK, resp)
+}
+
+func (h *CargoRequestHandler) GetPotentialCargo(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	tripIDStr := c.Param("tripID")
+	tripID, err := uuid.Parse(tripIDStr)
+	if err != nil {
+		return terror.NewValidationError("invalid tripID", tripIDStr)
+	}
+
+	var filter models.GetCargoRequestsForTripFilter
+	if err := c.Bind(&filter); err != nil {
+		return terror.NewValidationError("invalid request body", err.Error())
+	}
+
+	resp, err := h.service.GetRequestsForTripWithRoutes(ctx, tripID, filter)
+	if err != nil {
+		return err
+	}
 
 	return c.JSON(http.StatusOK, resp)
 }

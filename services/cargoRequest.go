@@ -8,6 +8,8 @@ import (
 	"gruzowiki/util"
 	"strconv"
 	"time"
+	"github.com/shopspring/decimal"
+	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -32,6 +34,18 @@ type (
 		CreateCargo(ctx context.Context, cargos []models.Cargo) ([]pgtype.UUID, error)
 		MarkTrip(ctx context.Context, cargoReqId string, tripId string) error
 		UpdateCargoRequestCode(ctx context.Context, cargoReqId string, code string) error
+		GetCargoRequestsForTrip(
+			ctx context.Context,
+			tripID pgtype.UUID,
+			maxLength *int32,
+			maxWidth *int32,
+			maxHeight *int32,
+			cargoType *int32,
+			deadline *int64,
+			minPrice *pgtype.Numeric,
+		) ([]pgtype.UUID, error)
+		GetTripRouteId(ctx context.Context, tripID pgtype.UUID) (pgtype.UUID, error)
+		GetRequestsRouteIds(ctx context.Context, ids []pgtype.UUID) ([]pg.GetCargoRequestRouteIDsRow, error)
 	}
 
 	StationService interface {
@@ -45,6 +59,7 @@ type (
 			fromStationId uuid.UUID,
 			toStationId uuid.UUID,
 		) (*uuid.UUID, error)
+		GetPotentialTrips(cargoRequestRouteID string, tripRouteIDs []string) ([]string, error)
 	}
 )
 
@@ -153,6 +168,111 @@ func (s *CargoRequestService) CreateCargoRequest(ctx context.Context, postCargoR
 	}
 
 	return &models.PostCargoRequestResponse{ID: id.Bytes, ReceiveCode: strconv.Itoa(int(receiveCode))}, nil
+}
+
+func (s *CargoRequestService) GetRequestsForTrip(
+	ctx context.Context,
+	tripID uuid.UUID,
+	filter models.GetCargoRequestsForTripFilter,
+) (*models.GetCargoRequestsForTripResponse, error) {
+
+	pgTripID := util.UuidToPgUuid(tripID)
+
+	var minPrice *pgtype.Numeric
+	if filter.MinPrice != nil {
+		d := decimal.NewFromInt(*filter.MinPrice)
+		n := util.ToNumeric(d)
+		minPrice = &n
+	}
+
+	ids, err := s.repo.GetCargoRequestsForTrip(
+		ctx,
+		pgTripID,
+		filter.CargoLengthMax,
+		filter.CargoWidthMax,
+		filter.CargoHeightMax,
+		filter.CargoType,
+		filter.Deadline,
+		minPrice,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]string, 0, len(ids))
+	for _, id := range ids {
+		u, _ := uuid.FromBytes(id.Bytes[:])
+		result = append(result, u.String())
+	}
+
+	return &models.GetCargoRequestsForTripResponse{
+		CargoRequests: result,
+	}, nil
+}
+
+func (s *CargoRequestService) GetRequestsForTripWithRoutes(
+	ctx context.Context,
+	tripID uuid.UUID,
+	filter models.GetCargoRequestsForTripFilter,
+) (*models.PotentialRoutesResponse, error) {
+
+	baseResp, err := s.GetRequestsForTrip(ctx, tripID, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(baseResp.CargoRequests) == 0 {
+		return &models.PotentialRoutesResponse{CargoRequests: []string{}}, nil
+	}
+
+	pgTripID := util.UuidToPgUuid(tripID)
+	tripRouteID, err := s.repo.GetTripRouteId(ctx, pgTripID)
+	if err != nil {
+		return nil, fmt.Errorf("get trip route id: %w", err)
+	}
+	tRid, _ := uuid.FromBytes(tripRouteID.Bytes[:])
+
+	pgIDs := make([]pgtype.UUID, 0, len(baseResp.CargoRequests))
+	for _, idStr := range baseResp.CargoRequests {
+		u, _ := uuid.Parse(idStr)
+		pgIDs = append(pgIDs, util.UuidToPgUuid(u))
+	}
+
+	reqRoutes, err := s.repo.GetRequestsRouteIds(ctx, pgIDs)
+	if err != nil {
+		return nil, fmt.Errorf("get cargo request route ids: %w", err)
+	}
+
+	cargoRouteIds := make([]string, 0, len(reqRoutes))
+	for _, row := range reqRoutes {
+		r, _ := uuid.FromBytes(row.RouteID.Bytes[:])
+		cargoRouteIds = append(cargoRouteIds, r.String())
+	}
+
+	matchingRouteIDs, err := s.client.GetPotentialTrips(tRid.String(), cargoRouteIds)
+	if err != nil {
+		return nil, fmt.Errorf("routing error: %w", err)
+	}
+
+	matchingCargoRequests := make([]string, 0, len(reqRoutes))
+	routeIDSet := make(map[string]struct{})
+	for _, rid := range matchingRouteIDs {
+		routeIDSet[rid] = struct{}{}
+	}
+
+	for _, row := range reqRoutes {
+		r, _ := uuid.FromBytes(row.RouteID.Bytes[:])
+		id, _ := uuid.FromBytes(row.ID.Bytes[:])
+		if _, ok := routeIDSet[r.String()]; ok {
+			matchingCargoRequests = append(matchingCargoRequests, id.String())
+		}
+	}
+
+	potential := &models.PotentialRoutesResponse{
+		CargoRequests: matchingCargoRequests, 
+	}
+
+	return potential, nil
 }
 
 func (s *CargoRequestService) GetCargoTypes(ctx context.Context) ([]models.CargoType, error) {
