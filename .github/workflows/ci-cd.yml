@@ -35,6 +35,7 @@ jobs:
         TRANSPORTATION_SERVICE_PORT=${{ secrets.TRANSPORTATION_SERVICE_PORT }}
         LOG_LEVEL=${{ secrets.LOG_LEVEL }}
         UPDATE_ADDRESS=${{ secrets.UPDATE_ADDRESS }}
+        TRANSPORTATION_SERVICE_ADDRESS=${{ secrets.TRANSPORTATION_SERVICE_ADDRESS }}
         EOF
 
     - name: Run tests
@@ -64,6 +65,7 @@ jobs:
         TRANSPORTATION_SERVICE_PORT=${{ secrets.TRANSPORTATION_SERVICE_PORT }}
         LOG_LEVEL=${{ secrets.LOG_LEVEL }}
         UPDATE_ADDRESS=${{ secrets.UPDATE_ADDRESS }}
+        TRANSPORTATION_SERVICE_ADDRESS=${{ secrets.TRANSPORTATION_SERVICE_ADDRESS }}
         EOF
 
     - name: Log in to Container Registry
@@ -132,6 +134,7 @@ jobs:
           TRANSPORTATION_SERVICE_PORT=${{ secrets.TRANSPORTATION_SERVICE_PORT }}
           LOG_LEVEL=${{ secrets.LOG_LEVEL }}
           UPDATE_ADDRESS=${{ secrets.UPDATE_ADDRESS }}
+          TRANSPORTATION_SERVICE_ADDRESS=${{ secrets.TRANSPORTATION_SERVICE_ADDRESS }}
           EOF
           
           docker network create gruzowiki-network 2>/dev/null || true
