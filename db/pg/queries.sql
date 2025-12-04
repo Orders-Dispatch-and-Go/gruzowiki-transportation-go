@@ -233,3 +233,9 @@ WHERE id = $1;
 SELECT id, route_id
 FROM cargo_requests
 WHERE id = ANY($1::uuid[]);
+
+-- name: GetTripByIdAndCarrier :one
+SELECT *
+FROM trips
+WHERE id = $1
+  AND carrier = $2;
