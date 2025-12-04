@@ -130,3 +130,27 @@ func (r *TripRepo) UpdateRout(ctx context.Context, tripId, routeId string) error
 	}
 	return r.conn.Queries(ctx).UpdateTripRoute(ctx, pg.UpdateTripRouteParams{ID: pgtype.UUID{Bytes: id, Valid: true}, RouteID: pgtype.UUID{Bytes: route, Valid: true}})
 }
+
+func (r *TripRepo) GetTripByIdAndCarrier(ctx context.Context, tripID uuid.UUID, carrierID int32) (*pg.Trip, error) {
+    pgID := pgtype.UUID{
+        Bytes: tripID,
+        Valid: true,
+    }
+    pgCarrier := pgtype.Int4{
+        Int32: carrierID,
+        Valid: true,
+    }
+
+    trip, err := r.conn.Queries(ctx).GetTripByIdAndCarrier(ctx, pg.GetTripByIdAndCarrierParams{
+        ID:      pgID,
+        Carrier: pgCarrier,
+    })
+    if err != nil {
+        if errors.Is(err, pgx.ErrNoRows) {
+            return nil, nil
+        }
+        return nil, fmt.Errorf("query GetTripByIdAndCarrier: %w", err)
+    }
+
+    return &trip, nil
+}

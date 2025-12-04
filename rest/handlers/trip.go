@@ -92,3 +92,29 @@ func (h *TripHandler) Start(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, nil)
 }
+
+func (h *TripHandler) GetTripByIdAndCarrier(c echo.Context) error {
+	tripIDParam := c.QueryParam("tripID")
+	carrierIDParam := c.QueryParam("carrierId")
+
+	if tripIDParam == "" || carrierIDParam == "" {
+		return terror.NewValidationError("missing query parameters", "tripID and carrierId are required")
+	}
+
+	tripID, err := uuid.Parse(tripIDParam)
+	if err != nil {
+		return terror.NewValidationError("invalid UUID", "tripID")
+	}
+
+	carrierID, err := strconv.Atoi(carrierIDParam)
+	if err != nil {
+		return terror.NewValidationError("invalid carrierId", "carrierId must be integer")
+	}
+
+	trip, err := h.service.GetTripByIdAndCarrier(c.Request().Context(), tripID, int32(carrierID))
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, trip)
+}

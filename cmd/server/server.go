@@ -52,6 +52,7 @@ type TripHandler interface {
 	CreateTrip(c echo.Context) error
 	Finish(c echo.Context) error
 	Start(c echo.Context) error
+	GetTripByIdAndCarrier(c echo.Context) error
 }
 
 type RoutesHandler interface {
@@ -137,6 +138,7 @@ func (s *ServerImpl) Start() {
 	consigners.POST("", s.ConsignerHandler.CreateConsigner) //здесь не должно быть проверки на jwt токен (ты можешь мидлварь передать последним аргументом куда захочешь)
 
 	trips := e.Group("/trip")
+	trips.GET("", s.TripHandler.GetTripByIdAndCarrier)
 	trips.GET("/cargo_request/:id", s.TripHandler.GetTripByCargoRequest)
 	trips.POST("", s.TripHandler.CreateTrip)
 	trips.PATCH("/:id/finish/status/:status", s.TripHandler.Finish)

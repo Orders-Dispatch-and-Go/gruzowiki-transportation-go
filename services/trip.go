@@ -215,3 +215,51 @@ func (s *TripService) StartTrip(ctx context.Context, id string, cargoRequestIds 
 
 	return nil
 }
+
+func (s *TripService) GetTripByIdAndCarrier(ctx context.Context, tripID uuid.UUID, carrierID int32) (*models.TripResponse, error) {
+	trip, err := s.tripRepo.GetTripByIdAndCarrier(ctx, tripID, carrierID)
+	if err != nil {
+		return nil, err
+	}
+	if trip.ID.Bytes == uuid.Nil {
+		return nil, terror.NewNotFoundError("Trip", tripID.String())
+	}
+
+	fromID := pgtype.UUID{Bytes: trip.FromStation.Bytes, Valid: true}
+	toID := pgtype.UUID{Bytes: trip.ToStation.Bytes, Valid: true}
+
+	stations, err := s.stationRepo.GetStations(ctx, []pgtype.UUID{fromID, toID})
+	if err != nil {
+		return nil, err
+	}
+
+	var fromStation, toStation models.Station
+	for _, st := range stations {
+		id := uuid.UUID(st.ID.Bytes)
+		if id == trip.FromStation.Bytes {
+			fromStation = models.Station{
+				Address: st.Address.String,
+				Coords:  models.Coords{Lat: st.Lat.Float64, Lon: st.Lon.Float64},
+			}
+		}
+		if id == trip.ToStation.Bytes {
+			toStation = models.Station{
+				Address: st.Address.String,
+				Coords:  models.Coords{Lat: st.Lat.Float64, Lon: st.Lon.Float64},
+			}
+		}
+	}
+
+	return &models.TripResponse{
+		ID:              trip.ID.Bytes,
+		FromStation:     fromStation,
+		ToStation:       toStation,
+		StartedAt:       trip.StartedAt.Int64,
+		CalculatedEndAt: trip.CalculateEndAt.Int64,
+		ActualEndAt:     trip.ActualEndAt.Int64,
+		Price:           util.NumericToString(trip.Price),
+		Status:          trip.Status.String,
+		CarrierID:       int(trip.Carrier.Int32),
+		CarID:           int(trip.Car.Int32),
+	}, nil
+}
