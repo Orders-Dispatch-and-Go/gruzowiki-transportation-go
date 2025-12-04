@@ -46,6 +46,7 @@ type (
 		) ([]pgtype.UUID, error)
 		GetTripRouteId(ctx context.Context, tripID pgtype.UUID) (pgtype.UUID, error)
 		GetRequestsRouteIds(ctx context.Context, ids []pgtype.UUID) ([]pg.GetCargoRequestRouteIDsRow, error)
+		 GetCargoRequestById(ctx context.Context, id uuid.UUID) (pg.CargoRequest, error)
 	}
 
 	StationService interface {
@@ -180,8 +181,7 @@ func (s *CargoRequestService) GetRequestsForTrip(
 
 	var minPrice *pgtype.Numeric
 	if filter.MinPrice != nil {
-		d := decimal.NewFromInt(*filter.MinPrice)
-		n := util.ToNumeric(d)
+		n := util.ToNumeric(decimal.NewFromInt(*filter.MinPrice))
 		minPrice = &n
 	}
 
@@ -199,14 +199,69 @@ func (s *CargoRequestService) GetRequestsForTrip(
 		return nil, err
 	}
 
-	result := make([]string, 0, len(ids))
-	for _, id := range ids {
-		u, _ := uuid.FromBytes(id.Bytes[:])
-		result = append(result, u.String())
+	requests := make([]models.CargoRequestResponse, 0, len(ids))
+	requestUserID := ctx.Value(middlewares.UserIdCtxClaim).(int)
+
+	for _, raw := range ids {
+		u, err := uuid.FromBytes(raw.Bytes[:])
+		if err != nil {
+			return nil, fmt.Errorf("invalid cargo request id bytes: %w", err)
+		}
+
+		pgReq, err := s.repo.GetCargoRequestById(ctx, u)
+		if err != nil {
+			return nil, fmt.Errorf("load cargo request %s: %w", u.String(), err)
+		}
+
+		var routeIDStr *string
+		if pgReq.RouteID.Valid {
+			r := util.PgUuidToUuid(pgReq.RouteID).String()
+			routeIDStr = &r
+		}
+
+		var tripIDStr *string
+		if pgReq.TripID.Valid {
+			t := util.PgUuidToUuid(pgReq.TripID).String()
+			tripIDStr = &t
+		}
+
+		var receiveCode *string
+		if pgReq.ReceiveCode.Valid && requestUserID == int(pgReq.ConsignerID.Int32) {
+			rc := strconv.Itoa(int(pgReq.ReceiveCode.Int32))
+			receiveCode = &rc
+		}
+
+		fromStationID := util.PgUuidToUuid(pgReq.FromStation)
+		toStationID := util.PgUuidToUuid(pgReq.ToStation)
+
+		stations, err := s.stationService.GetStations(ctx, []uuid.UUID{fromStationID, toStationID})
+		if err != nil {
+			return nil, err
+		}
+
+		fromStation := stations[fromStationID]
+		toStation := stations[toStationID]
+
+		req := models.CargoRequestResponse{
+			ID:          u.String(),
+			ConsignerID: int(pgReq.ConsignerID.Int32),
+			RecipientID: int(pgReq.RecipientID.Int32),
+			FromStation: &fromStation,
+			ToStation:   &toStation,
+			CreatedAt:   pgReq.CreatedAt.Int64,
+			Deadline:    pgReq.Deadline.Int64,
+			RouteID:     routeIDStr,
+			TripID:      tripIDStr,
+			Price:       util.NumericToString(pgReq.Price),
+			Status:      pgReq.Status.String,
+			ReceiveCode: receiveCode,
+		}
+
+		requests = append(requests, req)
 	}
 
 	return &models.GetCargoRequestsForTripResponse{
-		CargoRequests: result,
+		CargoRequests: requests,
 	}, nil
 }
 
@@ -233,8 +288,11 @@ func (s *CargoRequestService) GetRequestsForTripWithRoutes(
 	tRid, _ := uuid.FromBytes(tripRouteID.Bytes[:])
 
 	pgIDs := make([]pgtype.UUID, 0, len(baseResp.CargoRequests))
-	for _, idStr := range baseResp.CargoRequests {
-		u, _ := uuid.Parse(idStr)
+	for _, req := range baseResp.CargoRequests {
+		u, err := uuid.Parse(req.ID)
+		if err != nil {
+			return nil, fmt.Errorf("invalid cargo request id %q: %w", req.ID, err)
+		}
 		pgIDs = append(pgIDs, util.UuidToPgUuid(u))
 	}
 

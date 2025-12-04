@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"strconv"
 	"github.com/google/uuid"
+	"time"
 )
 
 type CargoRequestHandler struct {
@@ -103,8 +104,59 @@ func (h *CargoRequestHandler) GetRequestsForTrip(c echo.Context) error {
 	}
 
 	var filter models.GetCargoRequestsForTripFilter
-	if err := c.Bind(&filter); err != nil {
-		return terror.NewValidationError("invalid request body", err.Error())
+
+	if val := c.QueryParam("cargoLengthMax"); val != "" {
+		if i, err := strconv.Atoi(val); err == nil {
+			tmp := int32(i)
+			filter.CargoLengthMax = &tmp
+		} else {
+			return terror.NewValidationError("invalid cargoLengthMax", val)
+		}
+	}
+
+	if val := c.QueryParam("cargoWidthMax"); val != "" {
+		if i, err := strconv.Atoi(val); err == nil {
+			tmp := int32(i)
+			filter.CargoWidthMax = &tmp
+		} else {
+			return terror.NewValidationError("invalid cargoWidthMax", val)
+		}
+	}
+
+	if val := c.QueryParam("cargoHeightMax"); val != "" {
+		if i, err := strconv.Atoi(val); err == nil {
+			tmp := int32(i)
+			filter.CargoHeightMax = &tmp
+		} else {
+			return terror.NewValidationError("invalid cargoHeightMax", val)
+		}
+	}
+
+	if val := c.QueryParam("cargoType"); val != "" {
+		if i, err := strconv.Atoi(val); err == nil {
+			tmp := int32(i)
+			filter.CargoType = &tmp
+		} else {
+			return terror.NewValidationError("invalid cargoType", val)
+		}
+	}
+
+	if val := c.QueryParam("deadline"); val != "" {
+		if t, err := time.Parse(time.RFC3339, val); err == nil {
+			ts := t.Unix()
+			filter.Deadline = &ts
+		} else {
+			return terror.NewValidationError("invalid deadline", val)
+		}
+	}
+
+	if val := c.QueryParam("minPrice"); val != "" {
+		if i, err := strconv.ParseInt(val, 10, 64); err == nil {
+			tmp := i
+			filter.MinPrice = &tmp
+		} else {
+			return terror.NewValidationError("invalid minPrice", val)
+		}
 	}
 
 	resp, err := h.service.GetRequestsForTrip(ctx, tripID, filter)

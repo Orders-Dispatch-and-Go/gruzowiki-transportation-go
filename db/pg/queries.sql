@@ -81,7 +81,7 @@ SELECT id, first_name, second_name, third_name, phone, email
 FROM recipients
 ORDER BY id;
 
--- name: GetCargoRequest :many
+-- name: GetCargoRequest :one
 select * from cargo_requests where id = $1;
 
 -- name: InsertCargoRequest :one

@@ -106,8 +106,9 @@ type (
 	}
 
 	GetCargoRequestsForTripResponse struct {
-		CargoRequests []string `json:"cargoRequests"`
+    CargoRequests []CargoRequestResponse `json:"cargoRequests"`
 	}
+	
 	GetCargoRequestsForTripFilter struct {
 	CargoLengthMax *int32
 	CargoWidthMax  *int32

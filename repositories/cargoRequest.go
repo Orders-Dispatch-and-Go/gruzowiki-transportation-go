@@ -312,3 +312,17 @@ func (r *CargoRequestRepo) GetTripRouteId(
 ) (pgtype.UUID, error) {
 	return r.conn.Queries(ctx).GetTripRouteID(ctx, tripID)
 }
+
+func (c *CargoRequestRepo) GetCargoRequestById(ctx context.Context, id uuid.UUID) (pg.CargoRequest, error) {
+    pgID := pgtype.UUID{
+        Bytes: id,
+        Valid: true,
+    }
+
+    req, err := c.conn.Queries(ctx).GetCargoRequest(ctx, pgID)
+    if err != nil {
+        return pg.CargoRequest{}, err
+    }
+
+    return req, nil
+}
