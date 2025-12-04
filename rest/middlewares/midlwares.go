@@ -54,7 +54,7 @@ func LoggingMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
                 c.Request().Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
                 
                 if len(bodyBytes) > 0 {
-                    fmt.Println("Request Body:")
+                    fmt.Println("Body:")
                     if json.Valid(bodyBytes) {
                         var prettyJSON bytes.Buffer
                         if err := json.Indent(&prettyJSON, bodyBytes, "", "  "); err == nil {
