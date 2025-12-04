@@ -57,6 +57,7 @@ func (h *TripHandler) GetTripByCargoRequest(c echo.Context) error {
 
 func (h *TripHandler) CreateTrip(c echo.Context) error {
 	var req models.CreateTripRequest
+
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"message": err.Error()})
 	}

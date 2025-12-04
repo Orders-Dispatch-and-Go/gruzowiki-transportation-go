@@ -136,38 +136,47 @@ func uuidsToStrigs(ids []pgtype.UUID) []string {
 	return strs
 }
 
-func (s *TripService) CreateTrip(ctx context.Context, req models.CreateTripRequest) (uuid.UUID, error) {
+func (s *TripService) CreateTrip(ctx context.Context, req models.CreateTripRequest) (*uuid.UUID, error) {
+
 	fromID, err := s.stationRepo.InsertStation(ctx, pg.InsertStationParams{
-		ID:      util.UuidToPgUuid(uuid.New()),
-		Address: util.GoTextToPgText(req.FromStation.Address),
-		Lat:     util.Float64ToPgFloat8(req.FromStation.Coords.Lat),
-		Lon:     util.Float64ToPgFloat8(req.FromStation.Coords.Lon),
+		ID:      pgtype.UUID{Bytes: uuid.New(), Valid: true},
+		Address: pgtype.Text{String: req.FromStation.Address, Valid: true},
+		Lat:     pgtype.Float8{Float64: req.FromStation.Coords.Lat, Valid: true},
+		Lon:     pgtype.Float8{Float64: req.FromStation.Coords.Lon, Valid: true},
 	})
 	if err != nil {
-		return uuid.Nil, fmt.Errorf("create fromStation: %w", err)
+		return nil, fmt.Errorf("insert from station: %w", err)
 	}
 
 	toID, err := s.stationRepo.InsertStation(ctx, pg.InsertStationParams{
-		ID:      util.UuidToPgUuid(uuid.New()),
-		Address: util.GoTextToPgText(req.ToStation.Address),
-		Lat:     util.Float64ToPgFloat8(req.ToStation.Coords.Lat),
-		Lon:     util.Float64ToPgFloat8(req.ToStation.Coords.Lon),
+		ID:      pgtype.UUID{Bytes: uuid.New(), Valid: true},
+		Address: pgtype.Text{String: req.ToStation.Address, Valid: true},
+		Lat:     pgtype.Float8{Float64: req.ToStation.Coords.Lat, Valid: true},
+		Lon:     pgtype.Float8{Float64: req.ToStation.Coords.Lon, Valid: true},
 	})
 	if err != nil {
-		return uuid.Nil, fmt.Errorf("create toStation: %w", err)
+		return nil, fmt.Errorf("insert to station: %w", err)
 	}
 
-	routeId, err := s.client.CreateRouteForTrip(req, fromID.Bytes, toID.Bytes)
+	routeID, err := s.client.CreateRouteForTrip(req, fromID.Bytes, toID.Bytes)
 	if err != nil {
-		return uuid.Nil, fmt.Errorf("create route: %w", err)
+		return nil, fmt.Errorf("create route for trip: %w", err)
 	}
 
-	tripID, err := s.tripRepo.CreateTrip(ctx, fromID.Bytes, toID.Bytes, *routeId, req.StartedAt, req.Carrier)
+	tripID, err := s.tripRepo.CreateTrip(
+		ctx,
+		fromID.Bytes,
+		toID.Bytes,
+		*routeID,
+		req.StartedAt,
+		int32(req.Carrier),
+		nil,
+	)
 	if err != nil {
-		return uuid.Nil, fmt.Errorf("create trip: %w", err)
+		return nil, fmt.Errorf("insert trip: %w", err)
 	}
 
-	return tripID, nil
+	return &tripID, nil
 }
 
 func (s *TripService) FinishTrip(ctx context.Context, tripID string, status string) error {

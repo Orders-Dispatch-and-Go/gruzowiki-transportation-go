@@ -67,21 +67,37 @@ func (r *TripRepo) GetTripsByIDsWithPagination(ctx context.Context, ids []string
 	return r.conn.Queries(ctx).GetTripsByIDsWithPagination(ctx, pg.GetTripsByIDsWithPaginationParams{Column1: uuids, Limit: limit, Offset: offset})
 }
 
-func (r *TripRepo) CreateTrip(ctx context.Context, fromStation uuid.UUID, toStation uuid.UUID, routeId uuid.UUID, startedAt int64, carrier int32) (uuid.UUID, error) {
-	id, err := r.conn.Queries(ctx).InsertTrip(ctx, pg.InsertTripParams{
-		FromStation: pgtype.UUID{Bytes: fromStation, Valid: true},
-		ToStation:   pgtype.UUID{Bytes: toStation, Valid: true},
-		RouteID:     pgtype.UUID{Bytes: routeId, Valid: true},
-		StartedAt:   pgtype.Int8{Int64: startedAt, Valid: true},
-		Carrier:     pgtype.Int4{Int32: carrier, Valid: true},
-	})
+func (r *TripRepo) CreateTrip(ctx context.Context, fromStation uuid.UUID, toStation uuid.UUID, routeId uuid.UUID, startedAt int64, carrier int32, carID *int32,
+) (uuid.UUID, error) {
 
-	if err != nil {
-		return uuid.Nil, fmt.Errorf("insert trip: %w", err)
-	}
+    var car pgtype.Int4
+    if carID != nil {
+        car = pgtype.Int4{Int32: *carID, Valid: true}
+    } else {
+        car = pgtype.Int4{Valid: false}
+    }
 
-	return id.Bytes, nil
+    params := pg.InsertTripParams{
+        FromStation:    pgtype.UUID{Bytes: fromStation, Valid: true},
+        ToStation:      pgtype.UUID{Bytes: toStation, Valid: true},
+        RouteID:        pgtype.UUID{Bytes: routeId, Valid: true},
+        StartedAt:      pgtype.Int8{Int64: startedAt, Valid: true},
+        CalculateEndAt: pgtype.Int8{Valid: false},
+        ActualEndAt:    pgtype.Int8{Valid: false},
+        Price:          pgtype.Numeric{Valid: false},
+        Status:         pgtype.Text{String: "PENDING", Valid: true},
+        Carrier:        pgtype.Int4{Int32: carrier, Valid: true},
+        Car:            car,
+    }
+
+    id, err := r.conn.Queries(ctx).InsertTrip(ctx, params)
+    if err != nil {
+        return uuid.Nil, fmt.Errorf("insert trip: %w", err)
+    }
+
+    return id.Bytes, nil
 }
+
 
 func (r *TripRepo) FinishTrip(ctx context.Context, tripID string, status string) error {
 	id, err := uuid.Parse(tripID)

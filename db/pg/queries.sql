@@ -158,7 +158,22 @@ LIMIT $2 OFFSET $3;
 INSERT INTO consigners (id) VALUES ($1);
 
 -- name: InsertTrip :one
-INSERT INTO trips (from_station, to_station, route_id, started_at, carrier) VALUES ($1, $2, $3, $4, $5) RETURNING id;
+INSERT INTO trips (
+    from_station,
+    to_station,
+    route_id,
+    started_at,
+    calculate_end_at,
+    actual_end_at,
+    price,
+    status,
+    carrier,
+    car
+)
+VALUES (
+    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10
+)
+RETURNING id;
 
 -- name: UpdateTripStatus :exec
 UPDATE trips 
