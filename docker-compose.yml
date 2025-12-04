@@ -42,8 +42,7 @@ services:
       - gruzowiki_network
 
   transportation_service:
-    build:
-      dockerfile: Dockerfile
+    image: ghcr.io/orders-dispatch-and-go/gruzowiki-transportation-go:latest
     container_name: "transportation-service"
     env_file:
       - .env
