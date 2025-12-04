@@ -190,7 +190,7 @@ func (s *TripService) StartTrip(ctx context.Context, id string, cargoRequestIds 
         if err != nil {
             return err
         }
-        routeId, err = s.client.MergeRoutes(req.CargoRequestID, req.RouteID)
+        routeId, err = s.client.MergeRoutes(req.CargoRequestID, id)
         if err != nil {
             return fmt.Errorf("failed to merge route")
         }
