@@ -99,25 +99,27 @@ func (s *ServerImpl) Start() {
 
 	e.Use(middlewares.HandleError)
 
-	//e.Use(middlewares.AllowedRoles([]string{middlewares.ConsignerRole, middlewares.CarrierRole}...))
-
 	carriers := e.Group("/carrier")
+	carriers.Use(middlewares.AllowedRoles([]string{middlewares.ConsignerRole, middlewares.CarrierRole}...))
 	carriers.GET("/:id", s.CarrierHandler.GetCarrier)
-	carriers.POST("", s.CarrierHandler.CreateCarrier) //здесь не должно быть проверки на jwt токен
+	carriers.POST("", s.CarrierHandler.CreateCarrier)
 	carriers.PUT("/:id", s.CarrierHandler.UpdateCarrier)
 	carriers.DELETE("/:id", s.CarrierHandler.DeleteCarrier)
 
 	cargoRequest := e.Group("/cargo_request")
+	cargoRequest.Use(middlewares.AllowedRoles([]string{middlewares.ConsignerRole, middlewares.CarrierRole}...))
 	cargoRequest.POST("/search", s.CargoRequestHandler.GetCargoRequest)
 	cargoRequest.POST("", s.CargoRequestHandler.CreateCargoCargoRequest)
 	cargoRequest.POST("/:cargo_requestId/trip/tripId", s.CargoRequestHandler.MarkTrip)
 	cargoRequest.PATCH("/{:uuid}/finish/code/:code", s.CargoRequestHandler.Delivered)
 
 	cargo := e.Group("/cargo")
+	cargo.Use(middlewares.AllowedRoles([]string{middlewares.ConsignerRole, middlewares.CarrierRole}...))
 	cargo.GET("/types", s.CargoRequestHandler.GetCargoTypes)
 	cargo.POST("", s.CargoRequestHandler.CreateCargo)
 
 	cars := e.Group("/cars")
+	cars.Use(middlewares.AllowedRoles([]string{middlewares.ConsignerRole, middlewares.CarrierRole}...))
 	cars.POST("", s.CarHandler.CreateCar)
 	cars.GET("/:id", s.CarHandler.GetCar)
 	cars.PUT("/:id", s.CarHandler.UpdateCar)
@@ -125,6 +127,7 @@ func (s *ServerImpl) Start() {
 	cars.GET("/owner/:ownerId", s.CarHandler.ListCarsByOwner)
 
 	recipients := e.Group("/recipients")
+	recipients.Use(middlewares.AllowedRoles([]string{middlewares.ConsignerRole, middlewares.CarrierRole}...))
 	recipients.POST("", s.RecipientHandler.CreateRecipient)
 	recipients.GET("/:id", s.RecipientHandler.GetRecipient)
 	recipients.GET("", s.RecipientHandler.ListRecipients)
@@ -132,7 +135,7 @@ func (s *ServerImpl) Start() {
 	recipients.DELETE("/:id", s.RecipientHandler.DeleteRecipient)
 
 	consigners := e.Group("/consigner")
-	consigners.POST("", s.ConsignerHandler.CreateConsigner) //здесь не должно быть проверки на jwt токен (ты можешь мидлварь передать последним аргументом куда захочешь)
+	consigners.POST("", s.ConsignerHandler.CreateConsigner)
 
 	trips := e.Group("/trip")
 	trips.GET("/cargo_request/:id", s.TripHandler.GetTripByCargoRequest)
@@ -142,6 +145,7 @@ func (s *ServerImpl) Start() {
 
 	routes := e.Group("/routes")
 	routes.Use(middlewares.AllowedRoles([]string{middlewares.ConsignerRole, middlewares.CarrierRole}...))
+	routes.GET("/cargo_request/:uuid", s.RoutesHandler.GetRouteForCargoRequest)
 
 	startServer(e, s.Address)
 }
