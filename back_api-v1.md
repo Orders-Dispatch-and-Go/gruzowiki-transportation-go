@@ -178,12 +178,15 @@ Http status: 200
 }
 ````
 
+### получение маршрута для заявки
 ### получение маршрута для поездки
-Get /route/trip/{uuid}
+- Get /routes/cargo_request/{uuid}
+- Get /routes/trip/{uuid}
 
 Http status: 200
 ````
 {
+  "id": "uuid",
   "stations": [
     {
       "station": {
@@ -202,13 +205,25 @@ Http status: 200
 }
 ````
 
+### получение точек маршрута для заявки
+### получение точек маршрута для поездки
+- Get /route/cargo_request/{uuid}
+- Get /route/trip/{uuid}
+
 Http status: 200
 ````
 {
-  "id": uuid
+  "points": [
+    float, float,
+    float, float,
+    ...
+  ]
 }
 ````
 
+точки будут передаваться парно, т.е.
+- 1 число - lat первой точки, 2 число - lon первой точки
+- 3 число - lat второй точки, 4 число - lon второй точки
 
 ## Грузоперевозчик
 

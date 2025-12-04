@@ -75,59 +75,55 @@ func (c *FeignClient) GetPotentialTrips(cargoRequestRouteID string, tripRouteIDs
 }
 
 func (c *FeignClient) MergeRoutes(cargoRequestRouteID, tripRouteID string) (string, error) {
-    requestBody := map[string]string{
-        "cargoRequestRouteId": cargoRequestRouteID,
-        "tripRouteId":         tripRouteID,
-    }
+	requestBody := map[string]string{
+		"cargoRequestRouteId": cargoRequestRouteID,
+		"tripRouteId":         tripRouteID,
+	}
 
-    jsonData, err := json.Marshal(requestBody)
-    if err != nil {
-        return "", fmt.Errorf("failed to marshal request: %w", err)
-    }
+	jsonData, err := json.Marshal(requestBody)
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal request: %w", err)
+	}
 
-    url := c.baseURL + "/routes/trips/merge"
+	url := c.baseURL + "/routes/trips/merge"
 
-    req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
-    if err != nil {
-        return "", fmt.Errorf("failed to create request: %w", err)
-    }
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return "", fmt.Errorf("failed to create request: %w", err)
+	}
 
-    req.Header.Set("Content-Type", "application/json")
-    req.Header.Set("Accept", "application/json")
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
 
-    resp, err := c.httpClient.Do(req)
-    if err != nil {
-        return "", fmt.Errorf("failed to make request: %w", err)
-    }
-    defer resp.Body.Close()
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("failed to make request: %w", err)
+	}
+	defer resp.Body.Close()
 
-    if resp.StatusCode != http.StatusOK {
-        body, _ := io.ReadAll(resp.Body)
-        return "", fmt.Errorf("unexpected status code %d: %s", resp.StatusCode, string(body))
-    }
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return "", fmt.Errorf("unexpected status code %d: %s", resp.StatusCode, string(body))
+	}
 
-    var response struct {
-        RouteID string `json:"routeId"`
-    }
-    
-    if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
-        return "", fmt.Errorf("failed to decode response: %w", err)
-    }
+	var response struct {
+		RouteID string `json:"routeId"`
+	}
 
-    return response.RouteID, nil
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		return "", fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	return response.RouteID, nil
 }
-
 
 func (c *FeignClient) CreateRouteForCargoRequest(
 	request models.PostCargoRequestRequest,
 	fromStationId uuid.UUID,
 	toStationId uuid.UUID,
 ) (*uuid.UUID, error) {
-
 	url := c.baseURL + "/routes/cargo_requests"
-
 	response, err := c.CreateRoute(url, request.FromStation, request.ToStation, fromStationId, toStationId)
-
 	if err != nil {
 		return nil, err
 	}
@@ -140,11 +136,8 @@ func (c *FeignClient) CreateRouteForTrip(
 	fromStationId uuid.UUID,
 	toStationId uuid.UUID,
 ) (*uuid.UUID, error) {
-
 	url := c.baseURL + "/routes/trips"
-
 	response, err := c.CreateRoute(url, request.FromStation, request.ToStation, fromStationId, toStationId)
-
 	if err != nil {
 		return nil, err
 	}
@@ -202,4 +195,54 @@ func (c *FeignClient) CreateRoute(
 	}
 
 	return &response.ID, nil
+}
+
+func (c *FeignClient) GetRouteForCargoRequest(cargoRequestRouteID uuid.UUID) (*models.GetTripRouteResponse, error) {
+	url := c.baseURL + "/routes/cargo_requests/"
+	response, err := c.GetRoute(url, cargoRequestRouteID)
+	if err != nil {
+		return nil, err
+	}
+
+	return response, nil
+}
+
+func (c *FeignClient) GetRouteForTrip(tripRouteId uuid.UUID) (*models.GetTripRouteResponse, error) {
+	url := c.baseURL + "/routes/trips/"
+	response, err := c.GetRoute(url, tripRouteId)
+	if err != nil {
+		return nil, err
+	}
+
+	return response, nil
+}
+
+func (c *FeignClient) GetRoute(url string, routeId uuid.UUID) (*models.GetTripRouteResponse, error) {
+	url += routeId.String()
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to make request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("unexpected status code %d: %s", resp.StatusCode, string(body))
+	}
+
+	var response models.GetTripRouteResponse
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		return nil, fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	return &response, nil
 }
