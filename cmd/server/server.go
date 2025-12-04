@@ -53,6 +53,10 @@ type TripHandler interface {
 	Start(c echo.Context) error
 }
 
+type RoutesHandler interface {
+	GetRouteForCargoRequest(c echo.Context) error
+}
+
 type ServerImpl struct {
 	Address             string
 	CarrierHandler      CarrierHandler
@@ -61,10 +65,19 @@ type ServerImpl struct {
 	RecipientHandler    RecipientHandler
 	TripHandler         TripHandler
 	ConsignerHandler    ConsignerHandler
+	RoutesHandler       RoutesHandler
 }
 
-func NewServer(address string, carrierHandler CarrierHandler, cargoRequestHandler CargoRequestHandler, carHandler CarHandler, recipientHandler RecipientHandler,
-	tripHandler TripHandler, consignerHandler ConsignerHandler) Server {
+func NewServer(
+	address string,
+	carrierHandler CarrierHandler,
+	cargoRequestHandler CargoRequestHandler,
+	carHandler CarHandler,
+	recipientHandler RecipientHandler,
+	tripHandler TripHandler,
+	consignerHandler ConsignerHandler,
+	routesHandler RoutesHandler,
+) Server {
 	return &ServerImpl{
 		Address:             address,
 		CarrierHandler:      carrierHandler,
@@ -73,6 +86,7 @@ func NewServer(address string, carrierHandler CarrierHandler, cargoRequestHandle
 		RecipientHandler:    recipientHandler,
 		TripHandler:         tripHandler,
 		ConsignerHandler:    consignerHandler,
+		RoutesHandler:       routesHandler,
 	}
 }
 
@@ -125,6 +139,9 @@ func (s *ServerImpl) Start() {
 	trips.POST("", s.TripHandler.CreateTrip)
 	trips.PATCH("/:id/finish/status/:status", s.TripHandler.Finish)
 	trips.PATCH("/:id/start", s.TripHandler.Start)
+
+	routes := e.Group("/routes")
+	routes.Use(middlewares.AllowedRoles([]string{middlewares.ConsignerRole, middlewares.CarrierRole}...))
 
 	startServer(e, s.Address)
 }

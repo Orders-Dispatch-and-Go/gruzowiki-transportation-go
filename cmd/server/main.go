@@ -56,10 +56,22 @@ func main() {
 	recipientHandler := handlers.NewRecipientHandler(recipientService)
 
 	tripRepo := repositories.NewTripRepo(conn)
-	tripService := services.NewTripService(tripRepo, stationRepo, cargoRequestRepo,client)
+	tripService := services.NewTripService(tripRepo, stationRepo, cargoRequestRepo, client)
 	tripHandler := handlers.NewTripHandler(tripService)
 
-	server := NewServer(cfg.Address, carrierHandler, cargoRequestHandler, carHandler, recipientHandler, tripHandler, consignerHandler)
+	routesService := services.NewRouteService(client, cargoRequestService, tripService)
+	routesHandler := handlers.NewRouteHandler(routesService)
+
+	server := NewServer(
+		cfg.Address,
+		carrierHandler,
+		cargoRequestHandler,
+		carHandler,
+		recipientHandler,
+		tripHandler,
+		consignerHandler,
+		routesHandler,
+	)
 	server.Start()
 }
 
