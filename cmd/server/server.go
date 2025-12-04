@@ -111,7 +111,7 @@ func (s *ServerImpl) Start() {
 	cargoRequest.Use(middlewares.AllowedRoles([]string{middlewares.ConsignerRole, middlewares.CarrierRole}...))
 	cargoRequest.POST("/search", s.CargoRequestHandler.GetCargoRequest)
 	cargoRequest.POST("", s.CargoRequestHandler.CreateCargoCargoRequest)
-	cargoRequest.POST("/:cargo_requestId/trip/tripId", s.CargoRequestHandler.MarkTrip)
+	cargoRequest.POST("/:cargo_request/:cargoRequestId/trip/:tripId", s.CargoRequestHandler.MarkTrip)
 	cargoRequest.PATCH("/{:uuid}/finish/code/:code", s.CargoRequestHandler.Delivered)
 	cargoRequest.GET("/trip/:tripID", s.CargoRequestHandler.GetRequestsForTrip)
 
