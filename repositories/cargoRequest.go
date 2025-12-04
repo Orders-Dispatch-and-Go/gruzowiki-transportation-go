@@ -237,3 +237,78 @@ func (c *CargoRequestRepo) SetTrip(ctx context.Context, cargoId, tripId string) 
 		TripID: pgtype.UUID{Bytes: trip, Valid: true},
 	})
 }
+
+func (r *CargoRequestRepo) GetCargoRequestsForTrip(
+	ctx context.Context,
+	tripID pgtype.UUID,
+	maxLength *int32,
+	maxWidth *int32,
+	maxHeight *int32,
+	cargoType *int32,
+	deadline *int64,
+	minPrice *pgtype.Numeric,
+) ([]pgtype.UUID, error) {
+
+	arg := pg.GetCargoRequestsForTripParams{
+		TripID:  tripID,
+		Column2: 0,
+		Column3: 0,
+		Column4: 0,
+		Column5: 0,
+		Column6: 0,
+		Column7: pgtype.Numeric{},
+	}
+
+	if maxLength != nil {
+		arg.Column2 = *maxLength
+	} else {
+		arg.Column2 = 0
+	}
+
+	if maxWidth != nil {
+		arg.Column3 = *maxWidth
+	} else {
+		arg.Column3 = 0
+	}
+
+	if maxHeight != nil {
+		arg.Column4 = *maxHeight
+	} else {
+		arg.Column4 = 0
+	}
+
+	if cargoType != nil {
+		arg.Column5 = *cargoType
+	} else {
+		arg.Column5 = 0
+	}
+
+	if deadline != nil {
+		arg.Column6 = *deadline
+	} else {
+		arg.Column6 = 0
+	}
+
+	if minPrice != nil {
+		arg.Column7 = *minPrice
+	} else {
+		arg.Column7 = pgtype.Numeric{Valid: false}
+	}
+
+	return r.conn.Queries(ctx).GetCargoRequestsForTrip(ctx, arg)
+}
+
+func (r *CargoRequestRepo) GetRequestsRouteIds(
+	ctx context.Context,
+	ids []pgtype.UUID,
+) ([]pg.GetCargoRequestRouteIDsRow, error) {
+
+	return r.conn.Queries(ctx).GetCargoRequestRouteIDs(ctx, ids)
+}
+
+func (r *CargoRequestRepo) GetTripRouteId(
+	ctx context.Context,
+	tripID pgtype.UUID,
+) (pgtype.UUID, error) {
+	return r.conn.Queries(ctx).GetTripRouteID(ctx, tripID)
+}
