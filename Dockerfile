@@ -3,7 +3,7 @@ FROM golang:1.23-alpine AS builder
 
 WORKDIR /app
 RUN apk add --no-cache git ca-certificates
-COPY go.mod go.sum jws-public.pew ./
+COPY go.mod go.sum jws-public.pem ./
 RUN go mod download
 COPY . .
 
