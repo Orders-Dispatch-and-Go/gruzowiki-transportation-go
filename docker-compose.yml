@@ -47,8 +47,8 @@ services:
     env_file:
       - .env
     environment:
-#      LOG_LEVEL: ${LOG_LEVEL}
-      CLIENT_URL: ${CLIENT_URL}
+      RUST_CLIENT_URL: ${RUST_CLIENT_URL}
+      AUTH_CLIENT_URL: ${AUTH_CLIENT_URL}
       DSN: "user='${TRANSPORTATION_PG_USER}' password='${TRANSPORTATION_PG_PASSWORD}' host='${TRANSPORTATION_PG_HOST}' port=5432 dbname='${TRANSPORTATION_PG_DATABASE}' sslmode=disable"
     ports:
         - "${TRANSPORTATION_SERVICE_PORT}:8075"
