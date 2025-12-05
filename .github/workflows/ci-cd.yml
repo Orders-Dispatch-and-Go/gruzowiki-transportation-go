@@ -23,6 +23,10 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Create jws-public.pem file
+      run: |
+        echo "${{ secrets.JWS_PUBLIC_PEM }}" > jws-public.pem
+
     - name: Create environment file
       run: |
         cat > .env << EOF
