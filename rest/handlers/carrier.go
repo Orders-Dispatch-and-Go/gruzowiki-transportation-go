@@ -34,7 +34,6 @@ func (h *CarrierHandler) CreateCarrier(c echo.Context) error {
 			"binding CreateCarrierRequest",
 		)
 	}
-	fmt.Println("REQ:", req)
 
 	resp, err := h.service.CreateCarrier(c.Request().Context(), req.ID, req.DriverCategory)
 	if err != nil {

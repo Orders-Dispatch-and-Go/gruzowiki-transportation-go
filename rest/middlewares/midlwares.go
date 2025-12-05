@@ -44,11 +44,8 @@ func HandleError(next echo.HandlerFunc) echo.HandlerFunc {
 
 func LoggingMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		fmt.Println("==========================================")
-		fmt.Println("Request:")
-		fmt.Println("Method:", c.Request().Method)
-		fmt.Println("URI:", c.Request().URL.Path)
-		fmt.Println("Query:", c.Request().URL.RawQuery)
+		fmt.Printf("\nRequest Handle: %s %s", c.Request().Method, c.Request().URL.Path)
+		fmt.Println("\nQuery:", c.Request().URL.RawQuery)
 
 		if c.Request().Body != nil {
 			bodyBytes, err := io.ReadAll(c.Request().Body)
