@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"fmt"
 	"gruzowiki/rest/models"
 	"gruzowiki/rest/terror"
 	"net/http"
