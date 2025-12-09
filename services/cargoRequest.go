@@ -153,9 +153,11 @@ func (s *CargoRequestService) CreateCargoRequest(ctx context.Context, postCargoR
 		return nil, err
 	}
 
+	requestUserId := ctx.Value(middlewares.UserIdCtxClaim).(int)
+
 	id, err := s.repo.CreateCargoRequest(ctx, pg.InsertCargoRequestParams{
 		ID:          util.UuidToPgUuid(uuid.New()),
-		ConsignerID: util.Int32ToPgInt4(postCargoRequestRequest.ConsignerID),
+		ConsignerID: util.Int32ToPgInt4(int32(requestUserId)),
 		RecipientID: util.Int32ToPgInt4(postCargoRequestRequest.RecipientID),
 		FromStation: util.UuidToPgUuid(createFromStationResponse.ID),
 		ToStation:   util.UuidToPgUuid(createToStationResponse.ID),

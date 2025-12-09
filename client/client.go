@@ -58,11 +58,12 @@ func (c *FeignClient) GetPotentialTrips(cargoRequestRouteID string, tripRouteIDs
 
 	err = c.logFeignClientRequest(url, requestBody)
 	if err != nil {
-		fmt.Println("failed to log request in feign client request:", err)
 		return nil, err
 	}
 
 	resp, err := c.httpClient.Do(req)
+	err = c.logFeignClientResponse(resp)
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to make request: %w", err)
 	}
@@ -104,11 +105,12 @@ func (c *FeignClient) MergeRoutes(cargoRequestRouteID, tripRouteID string) (stri
 
 	err = c.logFeignClientRequest(url, requestBody)
 	if err != nil {
-		fmt.Println("failed to log request in feign client request:", err)
 		return "", err
 	}
 
 	resp, err := c.httpClient.Do(req)
+	err = c.logFeignClientResponse(resp)
+
 	if err != nil {
 		return "", fmt.Errorf("failed to make request: %w", err)
 	}
@@ -193,11 +195,12 @@ func (c *FeignClient) CreateRoute(
 
 	err = c.logFeignClientRequest(url, requestBody)
 	if err != nil {
-		fmt.Println("failed to log request in feign client request:", err)
 		return nil, err
 	}
 
 	resp, err := c.httpClient.Do(req)
+	err = c.logFeignClientResponse(resp)
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to make request: %w", err)
 	}
@@ -249,11 +252,12 @@ func (c *FeignClient) GetRoute(url string, routeId uuid.UUID) (*models.GetTripRo
 
 	err = c.logFeignClientRequest(url, nil)
 	if err != nil {
-		fmt.Println("failed to log request in feign client request:", err)
 		return nil, err
 	}
 
 	resp, err := c.httpClient.Do(req)
+	err = c.logFeignClientResponse(resp)
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to make request: %w", err)
 	}
@@ -272,16 +276,32 @@ func (c *FeignClient) GetRoute(url string, routeId uuid.UUID) (*models.GetTripRo
 	return &response, nil
 }
 
-func (c *FeignClient) logFeignClientRequest(url string, body interface{}) error {
-	if body != nil {
-		jsonData, err := json.Marshal(body)
+func (c *FeignClient) logFeignClientRequest(url string, request interface{}) error {
+	if request != nil {
+		jsonData, err := json.Marshal(request)
 		if err != nil {
+			fmt.Println("failed to log request in feign client request:", err)
 			return err
 		}
 		jsonDataString := string(jsonData)
 		oneLine := strings.ReplaceAll(jsonDataString, "\n", "")
 		oneLine = strings.ReplaceAll(oneLine, " ", "")
 		fmt.Printf("\nFeign Client Request: %s\nFeign client Request Body: %s", url, oneLine)
+	}
+	return nil
+}
+
+func (c *FeignClient) logFeignClientResponse(response *http.Response) error {
+	fmt.Printf("\nFeign Client Response Status:%s", response.Status)
+	if response.Body != nil {
+		bodyBytes, err := io.ReadAll(response.Body)
+		if err != nil {
+			fmt.Println("failed to read feing client response body:", err)
+			return err
+		}
+		bodyString := string(bodyBytes)
+		fmt.Printf("\nFeign Client Response Body:%s", bodyString)
+		response.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 	}
 	return nil
 }
