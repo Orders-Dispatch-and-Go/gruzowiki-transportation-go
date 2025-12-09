@@ -23,6 +23,10 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Create jws-public.pem file
+      run: |
+        echo "${{ secrets.JWS_PUBLIC_PEM }}" > jws-public.pem
+
     - name: Create environment file
       run: |
         cat > .env << EOF
@@ -33,8 +37,9 @@ jobs:
         TRANSPORTATION_PG_PASSWORD=${{ secrets.TRANSPORTATION_PG_PASSWORD }}
         TRANSPORTATION_SERVICE_PORT=${{ secrets.TRANSPORTATION_SERVICE_PORT }}
         LOG_LEVEL=${{ secrets.LOG_LEVEL }}
-        CLIENT_URL=${{ secrets.CLIENT_URL }}
-
+        
+        RUST_CLIENT_URL=${{ secrets.RUST_CLIENT_URL }}
+        AUTH_CLIENT_URL=${{ secrets.AUTH_CLIENT_URL }}
         TRANSPORTATION_SERVICE_ADDRESS=${{ secrets.TRANSPORTATION_SERVICE_ADDRESS }}
         EOF
 
@@ -100,7 +105,9 @@ jobs:
           TRANSPORTATION_PG_PASSWORD=${{ secrets.TRANSPORTATION_PG_PASSWORD }}
           TRANSPORTATION_SERVICE_PORT=${{ secrets.TRANSPORTATION_SERVICE_PORT }}
           LOG_LEVEL=${{ secrets.LOG_LEVEL }}
-          CLIENT_URL=${{ secrets.CLIENT_URL }}
+
+          RUST_CLIENT_URL=${{ secrets.RUST_CLIENT_URL }}
+          AUTH_CLIENT_URL=${{ secrets.AUTH_CLIENT_URL }}
 
           TRANSPORTATION_SERVICE_ADDRESS=${{ secrets.TRANSPORTATION_SERVICE_ADDRESS }}
           EOF
