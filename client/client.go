@@ -277,6 +277,8 @@ func (c *FeignClient) GetRoute(url string, routeId uuid.UUID) (*models.GetTripRo
 }
 
 func (c *FeignClient) logFeignClientRequest(url string, request interface{}) error {
+	fmt.Printf("\nFeign Client Request Url: %s", url)
+	var body = "nil"
 	if request != nil {
 		jsonData, err := json.Marshal(request)
 		if err != nil {
@@ -284,10 +286,10 @@ func (c *FeignClient) logFeignClientRequest(url string, request interface{}) err
 			return err
 		}
 		jsonDataString := string(jsonData)
-		oneLine := strings.ReplaceAll(jsonDataString, "\n", "")
-		oneLine = strings.ReplaceAll(oneLine, " ", "")
-		fmt.Printf("\nFeign Client Request: %s\nFeign client Request Body: %s", url, oneLine)
+		body := strings.ReplaceAll(jsonDataString, "\n", "")
+		body = strings.ReplaceAll(body, " ", "")
 	}
+	fmt.Printf("\nFeign Client Request Body: %s", body)
 	return nil
 }
 
@@ -300,7 +302,7 @@ func (c *FeignClient) logFeignClientResponse(response *http.Response) error {
 			return err
 		}
 		bodyString := string(bodyBytes)
-		fmt.Printf("\nFeign Client Response Body:%s", bodyString)
+		fmt.Printf("\nFeign Client Response Body: %s", bodyString)
 		response.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 	}
 	return nil
