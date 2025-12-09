@@ -229,7 +229,6 @@ Http status: 200
 
 ### создание поездки
 Post /trip
-
 ````
 {
     "carrier": int,
@@ -247,7 +246,7 @@ Post /trip
             lon: float
         }
     },
-    "startedAt": "iso8601"
+    "startedAt": "iso8601"![img.png](img.png)
 }
 ````
 

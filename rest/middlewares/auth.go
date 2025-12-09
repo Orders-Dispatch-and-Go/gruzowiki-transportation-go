@@ -2,13 +2,11 @@ package middlewares
 
 import (
 	"fmt"
+	"github.com/labstack/echo/v4"
 	"net/http"
-	"os"
-	"slices"
 	"strings"
 
-	"github.com/golang-jwt/jwt"
-	"github.com/labstack/echo/v4"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 const (
@@ -23,11 +21,22 @@ const (
 	RolesCtxClaim  = "roles"
 )
 
-type UserData struct {
-	ID        int32  `json:"id"`
-	Email     string `json:"email"`
-	FirstName string `json:"FirstName"`
-}
+type (
+	JWTUserData struct {
+		ID        int    `json:"id"`
+		Email     string `json:"email"`
+		FirstName string `json:"firstName"`
+	}
+
+	JWTPayload struct {
+		Sub             string      `json:"sub"`
+		UserAuthorities []string    `json:"userAuthorities"`
+		UserData        JWTUserData `json:"userData"`
+		IssuedAt        int64       `json:"issuedAt"`
+		ExpiresAt       int64       `json:"expiresAt"`
+		jwt.RegisteredClaims
+	}
+)
 
 func AllowedRoles(allowedRoles ...string) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
@@ -44,7 +53,7 @@ func AllowedRoles(allowedRoles ...string) echo.MiddlewareFunc {
 
 			tokenString := parts[1]
 
-			publicKeyData, err := os.ReadFile("jws-public.pem") //брать путь из конфига
+			/*publicKeyData, err := os.ReadFile("jws-public.pem") //брать путь из конфига
 			if err != nil {
 				return echo.NewHTTPError(http.StatusInternalServerError, "Failed to read public key")
 			}
@@ -82,9 +91,18 @@ func AllowedRoles(allowedRoles ...string) echo.MiddlewareFunc {
 			rolesClaim, ok := claims["userAuthorities"].([]interface{})
 			if !ok {
 				return echo.NewHTTPError(http.StatusUnauthorized, "Invalid userAuthorities in token")
+			}*/
+
+			/*jwtParts := strings.Split(tokenString, ".")
+			stringPayload := jwtParts[1]*/
+
+			claims := &JWTPayload{}
+			_, _, err := jwt.NewParser(jwt.WithoutClaimsValidation()).ParseUnverified(tokenString, claims)
+			if err != nil {
+				return echo.NewHTTPError(http.StatusUnauthorized, "Invalid token claims")
 			}
 
-			roles := make([]string, 0)
+			/*roles := make([]string, 0)
 			for _, value := range rolesClaim {
 				roles = append(roles, value.(string))
 			}
@@ -99,12 +117,12 @@ func AllowedRoles(allowedRoles ...string) echo.MiddlewareFunc {
 
 			if !roleAllowed {
 				return echo.NewHTTPError(http.StatusForbidden, "Insufficient permissions")
-			}
+			}*/
 
-			fmt.Printf("User ID: %s, Email: %s, Roles: %s\n",userData["id"], userData["email"], roles)
-			c.Set(UserIdCtxClaim, int(userData["id"].(float64)))
-			c.Set(EmailCtxClaim, userData["email"])
-			c.Set(RolesCtxClaim, roles)
+			fmt.Printf("UserJwtClaims: User ID: %d, Email: %s, Roles: %s\n", claims.UserData.ID, claims.UserData.Email, claims.UserAuthorities)
+			c.Set(UserIdCtxClaim, claims.UserData.ID)
+			c.Set(EmailCtxClaim, claims.UserData.Email)
+			c.Set(RolesCtxClaim, claims.UserAuthorities)
 
 			return next(c)
 		}

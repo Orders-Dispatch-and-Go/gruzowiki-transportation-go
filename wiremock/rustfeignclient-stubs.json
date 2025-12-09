@@ -1,0 +1,111 @@
+{
+  "mappings": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/routes/cargo_requests",
+        "bodyPatterns": [
+          { "matchesJsonPath": "$.fromStation.id" },
+          { "matchesJsonPath": "$.fromStation.address" },
+          { "matchesJsonPath": "$.fromStation.coords.lat" },
+          { "matchesJsonPath": "$.fromStation.coords.lon" },
+          { "matchesJsonPath": "$.toStation.id" },
+          { "matchesJsonPath": "$.toStation.address" },
+          { "matchesJsonPath": "$.toStation.coords.lat" },
+          { "matchesJsonPath": "$.toStation.coords.lon" }
+        ]
+      },
+      "response": {
+        "status": 200,
+        "jsonBody": {
+          "id": "06774fdc-74b4-4e3d-83d6-b731573f0df1"
+        },
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      }
+    },
+
+    {
+      "request": {
+        "method": "POST",
+        "url": "/routes/trips",
+        "bodyPatterns": [
+          { "matchesJsonPath": "$.fromStation.id" },
+          { "matchesJsonPath": "$.fromStation.address" },
+          { "matchesJsonPath": "$.fromStation.coords.lat" },
+          { "matchesJsonPath": "$.fromStation.coords.lon" },
+          { "matchesJsonPath": "$.toStation.id" },
+          { "matchesJsonPath": "$.toStation.address" },
+          { "matchesJsonPath": "$.toStation.coords.lat" },
+          { "matchesJsonPath": "$.toStation.coords.lon" }
+        ]
+      },
+      "response": {
+        "status": 200,
+        "jsonBody": {
+          "id": "5a1e90b2-843e-444a-8f52-3721a63299f6"
+        },
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      }
+    },
+
+    {
+      "request": {
+        "method": "GET",
+        "urlPattern": "/routes/cargo_requests/[0-9a-fA-F\\-]{36}"
+      },
+      "response": {
+        "status": 200,
+        "jsonBody": {
+          "stations": [
+            {
+              "station": {
+                "address": "Some address",
+                "coords": {
+                  "lat": 55.751244,
+                  "lon": 37.618423
+                }
+              },
+              "distance": 123,
+              "tripTime": 1767543210000
+            }
+          ]
+        },
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      }
+    },
+
+    {
+      "request": {
+        "method": "GET",
+        "urlPattern": "/routes/trips/[0-9a-fA-F\\-]{36}"
+      },
+      "response": {
+        "status": 200,
+        "jsonBody": {
+          "stations": [
+            {
+              "station": {
+                "address": "Another address",
+                "coords": {
+                  "lat": 59.9342802,
+                  "lon": 30.3350986
+                }
+              },
+              "distance": 88,
+              "tripTime": 1767545550000
+            }
+          ]
+        },
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      }
+    }
+  ]
+}

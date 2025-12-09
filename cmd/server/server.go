@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"gruzowiki/config"
 	"gruzowiki/rest/middlewares"
 
 	"github.com/labstack/echo/v4"
@@ -61,6 +63,7 @@ type RoutesHandler interface {
 
 type ServerImpl struct {
 	Address             string
+	Config              config.Config
 	CarrierHandler      CarrierHandler
 	CargoRequestHandler CargoRequestHandler
 	CarHandler          CarHandler
@@ -72,6 +75,7 @@ type ServerImpl struct {
 
 func NewServer(
 	address string,
+	config config.Config,
 	carrierHandler CarrierHandler,
 	cargoRequestHandler CargoRequestHandler,
 	carHandler CarHandler,
@@ -82,6 +86,7 @@ func NewServer(
 ) Server {
 	return &ServerImpl{
 		Address:             address,
+		Config:              config,
 		CarrierHandler:      carrierHandler,
 		CargoRequestHandler: cargoRequestHandler,
 		CarHandler:          carHandler,
@@ -92,7 +97,9 @@ func NewServer(
 	}
 }
 
-func startServer(e *echo.Echo, address string) {
+func (s *ServerImpl) startServer(e *echo.Echo, address string) {
+	fmt.Printf("server configuration:")
+	fmt.Printf("\nauth client: %s\nrust client: %s\n", s.Config.AuthClientUrl, s.Config.RustClientUrl)
 	e.Logger.Fatal(e.Start(address))
 }
 
@@ -153,5 +160,5 @@ func (s *ServerImpl) Start() {
 	routes.Use(middlewares.AllowedRoles([]string{middlewares.ConsignerRole, middlewares.CarrierRole}...))
 	routes.GET("/cargo_request/:uuid", s.RoutesHandler.GetRouteForCargoRequest)
 
-	startServer(e, s.Address)
+	s.startServer(e, s.Address)
 }

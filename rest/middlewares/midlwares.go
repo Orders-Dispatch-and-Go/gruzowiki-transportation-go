@@ -2,14 +2,13 @@ package middlewares
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/labstack/echo/v4"
 	"gruzowiki/rest/terror"
 	"io"
 	"net/http"
-
-	"github.com/labstack/echo/v4"
+	"strings"
 )
 
 func HandleError(next echo.HandlerFunc) echo.HandlerFunc {
@@ -46,8 +45,9 @@ func LoggingMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		fmt.Printf("\nRequest Handle: %s %s", c.Request().Method, c.Request().URL.Path)
 		fmt.Println("\nQuery:", c.Request().URL.RawQuery)
+		//fmt.Println("Body:", c.Request().Body)
 
-		if c.Request().Body != nil {
+		/*if c.Request().Body != nil {
 			bodyBytes, err := io.ReadAll(c.Request().Body)
 			if err != nil {
 				fmt.Println("Error reading request body:", err)
@@ -68,7 +68,19 @@ func LoggingMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 					}
 				}
 			}
+		}*/
+
+		if c.Request().Body != nil {
+			bodyBytes, err := io.ReadAll(c.Request().Body)
+			if err != nil {
+				return err
+			}
+			oneLine := strings.ReplaceAll(string(bodyBytes), "\n", "")
+			oneLine = strings.ReplaceAll(oneLine, " ", "")
+			fmt.Println("Request body:", oneLine)
+			c.Request().Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 		}
+
 		err := next(c)
 		if err != nil {
 			fmt.Println("Error:", err.Error())

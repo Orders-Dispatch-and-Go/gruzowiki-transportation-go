@@ -30,7 +30,7 @@ func main() {
 		return
 	}
 
-	client := client.NewRoutesClient(cfg.ClinetUrl)
+	client := client.NewRoutesClient(cfg.RustClientUrl)
 
 	carrierRepo := repositories.NewCarrierRepo(conn)
 	carrierService := services.NewCarrierService(carrierRepo)
@@ -64,6 +64,7 @@ func main() {
 
 	server := NewServer(
 		cfg.Address,
+		cfg,
 		carrierHandler,
 		cargoRequestHandler,
 		carHandler,
@@ -72,6 +73,7 @@ func main() {
 		consignerHandler,
 		routesHandler,
 	)
+
 	server.Start()
 }
 
