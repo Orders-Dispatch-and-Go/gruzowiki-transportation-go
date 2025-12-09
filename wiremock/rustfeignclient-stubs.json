@@ -106,6 +106,29 @@
           "Content-Type": "application/json"
         }
       }
+    },
+
+    {
+      "request": {
+        "method": "POST",
+        "url": "/routes/trips/potential",
+        "bodyPatterns": [
+          { "matchesJsonPath": "$.tripRouteId" },
+          { "matchesJsonPath": "$.cargoRequestRouteIds[*]" }
+        ]
+      },
+      "response": {
+        "status": 200,
+        "jsonBody": {
+          "routeIds": [
+            "f1b38f4d-d40a-4daa-a733-16fe4dc3a3f2",
+            "7aaa3249-2729-4768-a2e5-8e689b0e3704"
+          ]
+        },
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      }
     }
   ]
 }

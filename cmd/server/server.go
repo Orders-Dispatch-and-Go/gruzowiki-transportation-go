@@ -114,8 +114,8 @@ func (s *ServerImpl) Start() {
 	carriers := e.Group("")
 	carriers.Use(middlewares.AllowedRoles([]string{middlewares.ConsignerRole, middlewares.CarrierRole}...))
 	carriers.GET("/carrier/:id", s.CarrierHandler.GetCarrier)
-	carriers.PUT("/carrier/:id", s.CarrierHandler.UpdateCarrier)
-	carriers.DELETE("/carrier/:id", s.CarrierHandler.DeleteCarrier)
+	//carriers.PUT("/carrier/:id", s.CarrierHandler.UpdateCarrier)
+	//carriers.DELETE("/carrier/:id", s.CarrierHandler.DeleteCarrier)
 
 	cargoRequest := e.Group("/cargo_request")
 	cargoRequest.Use(middlewares.AllowedRoles([]string{middlewares.ConsignerRole, middlewares.CarrierRole}...))
@@ -134,8 +134,8 @@ func (s *ServerImpl) Start() {
 	cars.Use(middlewares.AllowedRoles([]string{middlewares.ConsignerRole, middlewares.CarrierRole}...))
 	cars.POST("", s.CarHandler.CreateCar)
 	cars.GET("/:id", s.CarHandler.GetCar)
-	cars.PUT("/:id", s.CarHandler.UpdateCar)
-	cars.DELETE("/:id", s.CarHandler.DeleteCar)
+	//cars.PUT("/:id", s.CarHandler.UpdateCar)
+	//cars.DELETE("/:id", s.CarHandler.DeleteCar)
 	cars.GET("/owner/:ownerId", s.CarHandler.ListCarsByOwner)
 
 	recipients := e.Group("/recipients")

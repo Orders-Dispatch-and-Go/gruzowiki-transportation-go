@@ -49,7 +49,6 @@ Http status: 200
 ````
 
 ### создание заявки
-
 Post /cargo_request
 ````
 {
@@ -98,7 +97,6 @@ Http status: 200
 ````
 
 ### создание груза
-
 Post /cargo
 ````
 {
@@ -128,7 +126,6 @@ Http status: 200
 ````
 
 ### создание получателя
-
 Post /recipients
 ````
 {
@@ -148,7 +145,7 @@ Http status: 200
 ````
 
 ### получение поездки для заявки
-Post /trip/cargo_request/{id}
+Get /trip/cargo_request/{id}
 
 Http status: 200
 ````
@@ -344,7 +341,6 @@ Post /carrier
 ````
 
 Http status: 200
-
 
 ## статусы
 статусы для заявок, грузов, поездок - констаны в string
