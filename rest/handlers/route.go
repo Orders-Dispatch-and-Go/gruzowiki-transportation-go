@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
+	"gruzowiki/rest/middlewares"
 	"gruzowiki/rest/models"
 	"gruzowiki/rest/terror"
 	"net/http"
@@ -31,6 +32,9 @@ func (h *RouteHandler) GetRouteForCargoRequest(c echo.Context) error {
 	if err != nil {
 		return terror.NewValidationError("invalid UUID", "parsing path parameter 'uuid'")
 	}
+
+	userId := c.Get(middlewares.UserIdCtxClaim)
+	ctx = context.WithValue(ctx, middlewares.UserIdCtxClaim, userId)
 
 	response, err := h.service.GetRouteForCargoRequest(ctx, cargoRequestID)
 	if err != nil {

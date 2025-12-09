@@ -315,7 +315,6 @@ PATCH /trip/{uuid}/finish/status/{tripStatus}
 
 Http status: 200
 
-
 ## Внутренние запросы (фронту не нужны)
 
 ### сохранение отправителя в системе

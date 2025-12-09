@@ -2,13 +2,13 @@ package handlers
 
 import (
 	"context"
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"gruzowiki/rest/middlewares"
 	"gruzowiki/rest/models"
 	"gruzowiki/rest/terror"
 	"net/http"
 	"strconv"
-	"github.com/google/uuid"
 	"time"
 )
 
@@ -74,6 +74,9 @@ func (h *CargoRequestHandler) CreateCargoCargoRequest(c echo.Context) error {
 		return terror.NewValidationError("invalid request body", err.Error())
 	}
 
+	userId := c.Get(middlewares.UserIdCtxClaim)
+	ctx = context.WithValue(ctx, middlewares.UserIdCtxClaim, userId)
+
 	response, err := h.service.CreateCargoRequest(ctx, request)
 	if err != nil {
 		return err
@@ -102,6 +105,9 @@ func (h *CargoRequestHandler) GetRequestsForTrip(c echo.Context) error {
 	if err != nil {
 		return terror.NewValidationError("invalid tripID", tripIDStr)
 	}
+
+	userId := c.Get(middlewares.UserIdCtxClaim)
+	ctx = context.WithValue(ctx, middlewares.UserIdCtxClaim, userId)
 
 	var filter models.GetCargoRequestsForTripFilter
 
