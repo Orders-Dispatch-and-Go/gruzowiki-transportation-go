@@ -2,14 +2,14 @@ package services
 
 import (
 	"context"
+	"fmt"
+	"github.com/shopspring/decimal"
 	"gruzowiki/db/pg"
 	"gruzowiki/rest/middlewares"
 	"gruzowiki/rest/models"
 	"gruzowiki/util"
 	"strconv"
 	"time"
-	"github.com/shopspring/decimal"
-	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -46,7 +46,7 @@ type (
 		) ([]pgtype.UUID, error)
 		GetTripRouteId(ctx context.Context, tripID pgtype.UUID) (pgtype.UUID, error)
 		GetRequestsRouteIds(ctx context.Context, ids []pgtype.UUID) ([]pg.GetCargoRequestRouteIDsRow, error)
-		 GetCargoRequestById(ctx context.Context, id uuid.UUID) (pg.CargoRequest, error)
+		GetCargoRequestById(ctx context.Context, id uuid.UUID) (pg.CargoRequest, error)
 	}
 
 	StationService interface {
@@ -102,6 +102,9 @@ func (s *CargoRequestService) SearchCargoRequests(
 		id, _ := uuid.FromBytes(pgReq.ID.Bytes[:])
 		maxPrice := util.NumericToString(pgReq.Price)
 
+		routeId := util.PgUuidToUuid(pgReq.RouteID).String()
+		tripId := util.PgUuidToUuid(pgReq.TripID).String()
+
 		var receiveCode *string = nil
 		if requestUserId == util.PgInt4ToInt(pgReq.ConsignerID) {
 			stringReceiveCode := strconv.Itoa(util.PgInt4ToInt(pgReq.ReceiveCode))
@@ -116,8 +119,8 @@ func (s *CargoRequestService) SearchCargoRequests(
 			ToStation:   &toStation,
 			CreatedAt:   util.PgInt8ToInt(pgReq.CreatedAt),
 			Deadline:    util.PgInt8ToInt(pgReq.Deadline),
-			RouteID:     nil,
-			TripID:      nil,
+			RouteID:     &routeId,
+			TripID:      &tripId,
 			Price:       maxPrice,
 			Status:      pgReq.Status.String,
 			ReceiveCode: receiveCode,
@@ -327,7 +330,7 @@ func (s *CargoRequestService) GetRequestsForTripWithRoutes(
 	}
 
 	potential := &models.PotentialRoutesResponse{
-		CargoRequests: matchingCargoRequests, 
+		CargoRequests: matchingCargoRequests,
 	}
 
 	return potential, nil

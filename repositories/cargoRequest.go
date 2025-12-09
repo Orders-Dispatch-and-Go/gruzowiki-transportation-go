@@ -60,6 +60,7 @@ func (c *CargoRequestRepo) GetCargoRequestWithFilters(
 			&i.TripID,
 			&i.Price,
 			&i.Status,
+			&i.ReceiveCode,
 		); err != nil {
 			return nil, err
 		}
@@ -183,7 +184,7 @@ func (c *CargoRequestRepo) UpdateCargoRequestCode(ctx context.Context, reqId, co
 		return err
 	}
 	receiveCode, err := strconv.ParseInt(code, 10, 32)
-    if err != nil {
+	if err != nil {
 		return err
 	}
 	err = c.conn.Queries(ctx).UpdateCargoRequestReceiveCode(ctx, pg.UpdateCargoRequestReceiveCodeParams{
@@ -203,15 +204,15 @@ func (c *CargoRequestRepo) UpdateRoute(ctx context.Context, cargoReqId string, r
 		return err
 	}
 	err = c.conn.Queries(ctx).UpdateCargoRequestRoute(ctx, pg.UpdateCargoRequestRouteParams{
-		ID:     pgtype.UUID{Bytes: id, Valid: true},
+		ID:      pgtype.UUID{Bytes: id, Valid: true},
 		RouteID: pgtype.UUID{Bytes: route, Valid: true},
 	})
 	return err
 }
 
 type CargoRequestPair struct {
-    CargoRequestID string
-    RouteID        string
+	CargoRequestID string
+	RouteID        string
 }
 
 func (c *CargoRequestRepo) GetCargoRequestIDAndRoute(ctx context.Context, cargoReqId string) (CargoRequestPair, error) {
@@ -314,15 +315,15 @@ func (r *CargoRequestRepo) GetTripRouteId(
 }
 
 func (c *CargoRequestRepo) GetCargoRequestById(ctx context.Context, id uuid.UUID) (pg.CargoRequest, error) {
-    pgID := pgtype.UUID{
-        Bytes: id,
-        Valid: true,
-    }
+	pgID := pgtype.UUID{
+		Bytes: id,
+		Valid: true,
+	}
 
-    req, err := c.conn.Queries(ctx).GetCargoRequest(ctx, pgID)
-    if err != nil {
-        return pg.CargoRequest{}, err
-    }
+	req, err := c.conn.Queries(ctx).GetCargoRequest(ctx, pgID)
+	if err != nil {
+		return pg.CargoRequest{}, err
+	}
 
-    return req, nil
+	return req, nil
 }

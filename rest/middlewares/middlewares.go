@@ -45,30 +45,6 @@ func LoggingMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		fmt.Printf("\nRequest Handle: %s %s", c.Request().Method, c.Request().URL.Path)
 		fmt.Println("\nQuery:", c.Request().URL.RawQuery)
-		//fmt.Println("Body:", c.Request().Body)
-
-		/*if c.Request().Body != nil {
-			bodyBytes, err := io.ReadAll(c.Request().Body)
-			if err != nil {
-				fmt.Println("Error reading request body:", err)
-			} else {
-				c.Request().Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
-
-				if len(bodyBytes) > 0 {
-					fmt.Println("Body:")
-					if json.Valid(bodyBytes) {
-						var prettyJSON bytes.Buffer
-						if err := json.Indent(&prettyJSON, bodyBytes, "", "  "); err == nil {
-							fmt.Println(prettyJSON.String())
-						} else {
-							fmt.Println(string(bodyBytes))
-						}
-					} else {
-						fmt.Println(string(bodyBytes))
-					}
-				}
-			}
-		}*/
 
 		if c.Request().Body != nil {
 			bodyBytes, err := io.ReadAll(c.Request().Body)

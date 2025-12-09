@@ -17,6 +17,7 @@ func (e ErrorResponse) getType() string {
 
 type NotFoundError struct {
 	ErrorResponse
+	string
 }
 
 type ValidationError struct {
@@ -30,7 +31,7 @@ type InternalServerError struct {
 func NewNotFoundError(objectType string, findByField string) NotFoundError {
 	msg := fmt.Sprintf("Object of type %s not found by %s", objectType, findByField)
 	return NotFoundError{
-		ErrorResponse{
+		ErrorResponse: ErrorResponse{
 			Type:    TypeNotFoundError,
 			Message: msg,
 		},
