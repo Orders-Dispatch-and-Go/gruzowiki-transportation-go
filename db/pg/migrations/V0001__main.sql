@@ -83,11 +83,11 @@ create table cargo(
     worth decimal(10, 2),
     request_id uuid references cargo_requests(id)
 );
-
+/*
 insert into carriers(id, driver_category) values (2, 'cat1');
 
 insert into carriers(id, driver_category) values (1, 'b');
 
 insert into consigners(id) values (1);
 insert into recipients(id, first_name, second_name, third_name, phone, email)
-values (1, 'fn', 'sn', 'tn', '1234', 'email');
+values (1, 'fn', 'sn', 'tn', '1234', 'email');*/

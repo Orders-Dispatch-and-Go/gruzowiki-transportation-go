@@ -361,7 +361,7 @@ func (s *CargoRequestService) CreateCargo(ctx context.Context, cargo []models.Ca
 		return nil, err
 	}
 
-	resp := make([]string, 0, len(ids))
+	resp := make([]string, len(ids))
 	for i, _ := range ids {
 		resp[i] = uuid.UUID(ids[i].Bytes).String()
 	}
