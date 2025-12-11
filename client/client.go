@@ -288,7 +288,7 @@ func (c *FeignClient) logFeignClientRequest(url string, request interface{}) err
 			return err
 		}
 		jsonDataString := string(jsonData)
-		body := strings.ReplaceAll(jsonDataString, "\n", "")
+		body = strings.ReplaceAll(jsonDataString, "\n", "")
 		body = strings.ReplaceAll(body, " ", "")
 	}
 	fmt.Printf("\nFeign Client Request Body: %s", body)
