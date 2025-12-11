@@ -14,7 +14,7 @@ type (
 		ID              uuid.UUID `json:"id"`
 		FromStation     Station   `json:"fromStation"`
 		ToStation       Station   `json:"toStation"`
-		StartedAt       int64     `json:"startedAt"`
+		StartedAt       string     `json:"startedAt"`
 		CalculatedEndAt int64     `json:"calculatedEndAt"`
 		ActualEndAt     int64     `json:"actualEndAt"`
 		Price           string    `json:"price"`
@@ -34,7 +34,7 @@ type CreateTripRequest struct {
 	FromStation Station `json:"fromStation"`
 	ToStation   Station `json:"toStation"`
 
-	StartedAt int64 `json:"startedAt"`
+	StartedAt string `json:"startedAt"`
 }
 
 type CreateTripResponse struct {
