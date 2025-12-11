@@ -77,7 +77,7 @@ func (s *TripService) GetTripByCargoRequest(ctx context.Context, cargoRequestID 
 		ID:              trip.ID.Bytes,
 		FromStation:     fromStation,
 		ToStation:       toStation,
-		StartedAt:       trip.StartedAt.Int64,
+		StartedAt:       strconv.FormatInt(trip.StartedAt.Int64, 10),
 		CalculatedEndAt: trip.CalculateEndAt.Int64,
 		ActualEndAt:     trip.ActualEndAt.Int64,
 		Price:           util.NumericToString(trip.Price),
@@ -115,7 +115,7 @@ func (s *TripService) GetTripsByCargoRequest(ctx context.Context, cargoRequestID
 				Address: trip.ToAddress.String,
 				Coords:  models.Coords{Lat: trip.ToLat.Float64, Lon: trip.ToLon.Float64},
 			},
-			StartedAt:       trip.StartedAt.Int64,
+			StartedAt:       strconv.FormatInt(trip.StartedAt.Int64, 10),
 			CalculatedEndAt: trip.CalculateEndAt.Int64,
 			ActualEndAt:     trip.ActualEndAt.Int64,
 			Price:           util.NumericToString(trip.Price),
@@ -163,12 +163,14 @@ func (s *TripService) CreateTrip(ctx context.Context, req models.CreateTripReque
 		return nil, fmt.Errorf("create route for trip: %w", err)
 	}
 
+	startedAtInt := util.ToTimestamp(req.StartedAt)
+
 	tripID, err := s.tripRepo.CreateTrip(
 		ctx,
 		fromID.Bytes,
 		toID.Bytes,
 		*routeID,
-		req.StartedAt,
+		startedAtInt,
 		req.Carrier,
 		nil,
 	)
@@ -261,7 +263,7 @@ func (s *TripService) GetTripByIdAndCarrier(ctx context.Context, tripID uuid.UUI
 		ID:              trip.ID.Bytes,
 		FromStation:     fromStation,
 		ToStation:       toStation,
-		StartedAt:       trip.StartedAt.Int64,
+		StartedAt:       strconv.FormatInt(trip.StartedAt.Int64, 10),
 		CalculatedEndAt: trip.CalculateEndAt.Int64,
 		ActualEndAt:     trip.ActualEndAt.Int64,
 		Price:           util.NumericToString(trip.Price),
