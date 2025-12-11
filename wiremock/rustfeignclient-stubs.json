@@ -129,6 +129,28 @@
           "Content-Type": "application/json"
         }
       }
+    },
+
+    {
+      "request": {
+        "method": "POST",
+        "url": "/routes/trips/merge",
+        "bodyPatterns": [
+          {
+            "matchesJsonPath": "$.tripRouteId"
+          },
+          {
+            "matchesJsonPath": "$.cargoRequestRouteId"
+          }
+        ]
+      },
+      "response": {
+        "status": 200,
+        "jsonBody": {
+          "routeId": "d7c26ca0-f0d3-4ea4-8ef9-9dfddc2e2101"
+        }
+      }
     }
+
   ]
 }

@@ -20,7 +20,7 @@ type TripFeignClient interface {
 		fromStationId uuid.UUID,
 		toStationId uuid.UUID,
 	) (*uuid.UUID, error)
-	MergeRoutes(cargoRequestRouteID, tripRouteID string) (string, error)
+	MergeRoutes(tripRouteID string, cargoRequestRouteIDs []string) (uuid.UUID, error)
 }
 
 type TripService struct {
@@ -106,7 +106,7 @@ func (s *TripService) GetTripsByCargoRequest(ctx context.Context, cargoRequestID
 	resp := models.Trips{Trips: make([]models.TripResponse, 0, 0)}
 	for _, trip := range trips {
 		resp.Trips = append(resp.Trips, models.TripResponse{
-			ID: uuid.UUID(trip.ID.Bytes),
+			ID: trip.ID.Bytes,
 			FromStation: models.Station{
 				Address: trip.FromAddress.String,
 				Coords:  models.Coords{Lat: trip.FromLat.Float64, Lon: trip.FromLon.Float64},
@@ -183,34 +183,41 @@ func (s *TripService) FinishTrip(ctx context.Context, tripID string, status stri
 	return s.tripRepo.FinishTrip(ctx, tripID, status)
 }
 
-func (s *TripService) StartTrip(ctx context.Context, id string, cargoRequestIds []string) error {
-	err := s.tripRepo.StartTrip(ctx, id)
+func (s *TripService) StartTrip(ctx context.Context, tripId string, cargoRequestIds []string) error {
+	cargoRequestRoutes := make([]pg.CargoRequest, len(cargoRequestIds))
+	for _, cargoRequestId := range cargoRequestIds {
+		cargoRequestUUID, err := uuid.Parse(cargoRequestId)
+		if err != nil {
+			return terror.NewValidationError("cannot parse cargo request uuid", "cargoRequestId")
+		}
+		cargoRequest, err := s.cargoRequestRepo.GetCargoRequestById(ctx, cargoRequestUUID)
+		if err != nil {
+			return err
+		}
+		cargoRequestRoutes = append(cargoRequestRoutes, cargoRequest)
+	}
+
+	cargoRequestRouteIDs := make([]string, len(cargoRequestRoutes))
+	for _, cargoRequestRoute := range cargoRequestRoutes {
+		cargoRequestRouteIDs = append(cargoRequestRouteIDs, cargoRequestRoute.RouteID.String())
+	}
+
+	tripRouteId, err := s.client.MergeRoutes(tripId, cargoRequestRouteIDs)
 	if err != nil {
 		return err
 	}
 
-	var routeId string
-	for _, reqId := range cargoRequestIds {
-		err = s.cargoRequestRepo.SetTrip(ctx, reqId, id)
-		if err != nil {
-			return fmt.Errorf("failed to set trip id")
-		}
-		req, err := s.cargoRequestRepo.GetCargoRequestIDAndRoute(ctx, reqId)
+	for _, cargoRequest := range cargoRequestRoutes {
+		err = s.cargoRequestRepo.UpdateCargoRequestOnStartTrip(
+			ctx,
+			uuid.MustParse(cargoRequest.ID.String()),
+			uuid.MustParse(tripId),
+			tripRouteId,
+			models.CargoRequestStatusInProgress,
+		)
 		if err != nil {
 			return err
 		}
-		routeId, err = s.client.MergeRoutes(req.CargoRequestID, id)
-		if err != nil {
-			return fmt.Errorf("failed to merge route")
-		}
-		err = s.cargoRequestRepo.UpdateRoute(ctx, req.CargoRequestID, routeId)
-		if err != nil {
-			return fmt.Errorf("failed to update route in cargo request")
-		}
-	}
-	err = s.tripRepo.UpdateRout(ctx, id, routeId)
-	if err != nil {
-		return fmt.Errorf("failed to update route in trip")
 	}
 
 	return nil

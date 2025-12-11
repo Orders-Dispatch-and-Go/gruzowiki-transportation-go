@@ -210,6 +210,12 @@ UPDATE cargo_requests
 SET trip_id = $2 
 WHERE id = $1;
 
+-- name: SetRouteIDForCargoRequest :exec
+update cargo_requests set route_id = $2 where id = $1;
+
+-- name: UpdateCargoRequestOnStartTrip :exec
+update cargo_requests set route_id = $2, trip_id = $3, status = $4 where id = $1;
+
 -- name: GetCargoRequestsForTrip :many
 SELECT cr.id
 FROM cargo_requests cr

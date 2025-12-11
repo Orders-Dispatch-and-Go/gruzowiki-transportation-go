@@ -22,4 +22,9 @@ type (
 	CreateRouteResponseBody struct {
 		ID uuid.UUID `json:"id"`
 	}
+
+	MergeCargoRequestIntoTripRoute struct {
+		TripRouteID         string   `json:"tripRouteId"`
+		CargoRequestRouteID []string `json:"cargoRequestRouteId"`
+	}
 )

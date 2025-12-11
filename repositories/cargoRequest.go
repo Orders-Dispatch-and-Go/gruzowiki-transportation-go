@@ -224,22 +224,30 @@ func (c *CargoRequestRepo) GetCargoRequestIDAndRoute(ctx context.Context, cargoR
 	return CargoRequestPair{req.ID.String(), req.RouteID.String()}, err
 }
 
-func (c *CargoRequestRepo) SetTrip(ctx context.Context, cargoId, tripId string) error {
-	id, err := uuid.Parse(cargoId)
-	if err != nil {
-		return err
-	}
-	trip, err := uuid.Parse(tripId)
-	if err != nil {
-		return err
-	}
-	return c.conn.Queries(ctx).SetTripIDForCargoRequest(ctx, pg.SetTripIDForCargoRequestParams{
-		ID:     pgtype.UUID{Bytes: id, Valid: true},
-		TripID: pgtype.UUID{Bytes: trip, Valid: true},
+func (c *CargoRequestRepo) SetRouteID(ctx context.Context, cargoRequestId uuid.UUID, routeID uuid.UUID) error {
+	return c.conn.Queries(ctx).SetRouteIDForCargoRequest(ctx, pg.SetRouteIDForCargoRequestParams{
+		ID:      pgtype.UUID{Bytes: cargoRequestId, Valid: true},
+		RouteID: pgtype.UUID{Bytes: routeID, Valid: true},
 	})
 }
 
-func (r *CargoRequestRepo) GetCargoRequestsForTrip(
+func (c *CargoRequestRepo) SetTrip(ctx context.Context, cargoRequestId uuid.UUID, tripId uuid.UUID) error {
+	return c.conn.Queries(ctx).SetTripIDForCargoRequest(ctx, pg.SetTripIDForCargoRequestParams{
+		ID:     pgtype.UUID{Bytes: cargoRequestId, Valid: true},
+		TripID: pgtype.UUID{Bytes: tripId, Valid: true},
+	})
+}
+
+func (c *CargoRequestRepo) UpdateCargoRequestOnStartTrip(ctx context.Context, cargoRequestId uuid.UUID, tripId uuid.UUID, routeId uuid.UUID, status string) error {
+	return c.conn.Queries(ctx).UpdateCargoRequestOnStartTrip(ctx, pg.UpdateCargoRequestOnStartTripParams{
+		ID:      pgtype.UUID{Bytes: cargoRequestId, Valid: true},
+		TripID:  pgtype.UUID{Bytes: tripId, Valid: true},
+		RouteID: pgtype.UUID{Bytes: routeId, Valid: true},
+		Status:  pgtype.Text{String: status},
+	})
+}
+
+func (c *CargoRequestRepo) GetCargoRequestsForTrip(
 	ctx context.Context,
 	tripID pgtype.UUID,
 	maxLength *int32,
@@ -296,22 +304,22 @@ func (r *CargoRequestRepo) GetCargoRequestsForTrip(
 		arg.Column7 = pgtype.Numeric{Valid: false}
 	}
 
-	return r.conn.Queries(ctx).GetCargoRequestsForTrip(ctx, arg)
+	return c.conn.Queries(ctx).GetCargoRequestsForTrip(ctx, arg)
 }
 
-func (r *CargoRequestRepo) GetRequestsRouteIds(
+func (c *CargoRequestRepo) GetRequestsRouteIds(
 	ctx context.Context,
 	ids []pgtype.UUID,
 ) ([]pg.GetCargoRequestRouteIDsRow, error) {
 
-	return r.conn.Queries(ctx).GetCargoRequestRouteIDs(ctx, ids)
+	return c.conn.Queries(ctx).GetCargoRequestRouteIDs(ctx, ids)
 }
 
-func (r *CargoRequestRepo) GetTripRouteId(
+func (c *CargoRequestRepo) GetTripRouteId(
 	ctx context.Context,
 	tripID pgtype.UUID,
 ) (pgtype.UUID, error) {
-	return r.conn.Queries(ctx).GetTripRouteID(ctx, tripID)
+	return c.conn.Queries(ctx).GetTripRouteID(ctx, tripID)
 }
 
 func (c *CargoRequestRepo) GetCargoRequestById(ctx context.Context, id uuid.UUID) (pg.CargoRequest, error) {

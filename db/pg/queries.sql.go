@@ -785,6 +785,20 @@ func (q *Queries) SelectStations(ctx context.Context, arg SelectStationsParams) 
 	return items, nil
 }
 
+const setRouteIDForCargoRequest = `-- name: SetRouteIDForCargoRequest :exec
+update cargo_requests set route_id = $2 where id = $1
+`
+
+type SetRouteIDForCargoRequestParams struct {
+	ID      pgtype.UUID
+	RouteID pgtype.UUID
+}
+
+func (q *Queries) SetRouteIDForCargoRequest(ctx context.Context, arg SetRouteIDForCargoRequestParams) error {
+	_, err := q.db.Exec(ctx, setRouteIDForCargoRequest, arg.ID, arg.RouteID)
+	return err
+}
+
 const setTripIDForCargoRequest = `-- name: SetTripIDForCargoRequest :exec
 UPDATE cargo_requests 
 SET trip_id = $2 
@@ -851,6 +865,27 @@ func (q *Queries) UpdateCar(ctx context.Context, arg UpdateCarParams) (int32, er
 	var id int32
 	err := row.Scan(&id)
 	return id, err
+}
+
+const updateCargoRequestOnStartTrip = `-- name: UpdateCargoRequestOnStartTrip :exec
+update cargo_requests set route_id = $2, trip_id = $3, status = $4 where id = $1
+`
+
+type UpdateCargoRequestOnStartTripParams struct {
+	ID      pgtype.UUID
+	RouteID pgtype.UUID
+	TripID  pgtype.UUID
+	Status  pgtype.Text
+}
+
+func (q *Queries) UpdateCargoRequestOnStartTrip(ctx context.Context, arg UpdateCargoRequestOnStartTripParams) error {
+	_, err := q.db.Exec(ctx, updateCargoRequestOnStartTrip,
+		arg.ID,
+		arg.RouteID,
+		arg.TripID,
+		arg.Status,
+	)
+	return err
 }
 
 const updateCargoRequestReceiveCode = `-- name: UpdateCargoRequestReceiveCode :exec
