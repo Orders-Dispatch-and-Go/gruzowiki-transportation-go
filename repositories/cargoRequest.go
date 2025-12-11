@@ -249,7 +249,7 @@ func (c *CargoRequestRepo) UpdateCargoRequestOnStartTrip(ctx context.Context, ca
 
 func (c *CargoRequestRepo) GetCargoRequestsForTrip(
 	ctx context.Context,
-	tripID pgtype.UUID,
+	_ pgtype.UUID,
 	maxLength *int32,
 	maxWidth *int32,
 	maxHeight *int32,
@@ -258,14 +258,14 @@ func (c *CargoRequestRepo) GetCargoRequestsForTrip(
 	minPrice *pgtype.Numeric,
 ) ([]pgtype.UUID, error) {
 
-	arg := pg.GetCargoRequestsForTripParams{
-		TripID:  tripID,
-		Column2: 0,
-		Column3: 0,
-		Column4: 0,
-		Column5: 0,
-		Column6: 0,
-		Column7: pgtype.Numeric{},
+	/*arg := pg.GetCargoRequestsForTripParams{
+		//TripID:  tripID,
+		Column2: nil,
+		//Column3: 0,
+		//Column4: 0,
+		//Column5: 0,
+		//Column6: 0,
+		//Column7: pgtype.Numeric{},
 	}
 
 	if maxLength != nil {
@@ -301,10 +301,43 @@ func (c *CargoRequestRepo) GetCargoRequestsForTrip(
 	if minPrice != nil {
 		arg.Column7 = *minPrice
 	} else {
-		arg.Column7 = pgtype.Numeric{Valid: false}
-	}
+		arg.Column7 = pgtype.Numeric{Valid: false
+	}}*/
 
-	return c.conn.Queries(ctx).GetCargoRequestsForTrip(ctx, arg)
+	const getCargoRequestsForTrip = `
+		select distinct crid from (
+			SELECT cr.id crid FROM cargo_requests cr 
+			    JOIN cargo c ON c.request_id = cr.id
+			WHERE cr.trip_id is NULL AND cr.status = 'PENDING'
+			  AND ($1::int IS NULL OR c.length <= $1)
+			  AND ($2::int IS NULL OR c.width <= $2)
+			  AND ($3::int IS NULL OR c.height <= $3)
+			  AND ($4::int IS NULL OR c.cargo_type = $4)
+			  AND ($5::bigint IS NULL OR cr.deadline <= $5)
+			  AND ($6::decimal IS NULL OR cr.price >= $6)
+			ORDER BY cr.created_at DESC
+		)
+	`
+
+	rows, err := c.conn.Queries(ctx).RawQuery(ctx, getCargoRequestsForTrip, maxLength, maxWidth, maxHeight, cargoType, deadline, minPrice)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []pgtype.UUID
+	for rows.Next() {
+		var id pgtype.UUID
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+
+	//return c.conn.Queries(ctx).GetCargoRequestsForTrip(ctx, arg)
 }
 
 func (c *CargoRequestRepo) GetRequestsRouteIds(

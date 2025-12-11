@@ -29,6 +29,11 @@ type CargoRequestService interface {
 	MarkTrip(ctx context.Context, cargoReqId string, tripId string) error
 	Delivered(ctx context.Context, cargoReqId string, code string) error
 	GetRequestsForTrip(ctx context.Context, tripID uuid.UUID, filter models.GetCargoRequestsForTripFilter) (*models.GetCargoRequestsForTripResponse, error)
+	GetRequestsForTripWithRoutes(
+		ctx context.Context,
+		tripID uuid.UUID,
+		filter models.GetCargoRequestsForTripFilter,
+	) (*models.PotentialRoutesResponse, error)
 }
 
 func NewCargoRequestController(service CargoRequestService) *CargoRequestHandler {
@@ -165,7 +170,7 @@ func (h *CargoRequestHandler) GetRequestsForTrip(c echo.Context) error {
 		}
 	}
 
-	resp, err := h.service.GetRequestsForTrip(ctx, tripID, filter)
+	resp, err := h.service.GetRequestsForTripWithRoutes(ctx, tripID, filter)
 	if err != nil {
 		return err
 	}

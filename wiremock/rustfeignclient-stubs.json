@@ -150,6 +150,33 @@
           "routeId": "d7c26ca0-f0d3-4ea4-8ef9-9dfddc2e2101"
         }
       }
+    },
+
+    {
+      "request": {
+        "method": "POST",
+        "url": "/routes/trips/potential",
+        "bodyPatterns": [
+          {
+            "matchesJsonPath": "$.tripRouteId"
+          },
+          {
+            "matchesJsonPath": "$.cargoRequestRouteIds"
+          }
+        ]
+      },
+      "response": {
+        "status": 200,
+        "jsonBody": {
+          "routeIds": [
+            "11111111-1111-1111-1111-111111111111",
+            "22222222-2222-2222-2222-222222222222"
+          ]
+        },
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      }
     }
 
   ]

@@ -254,23 +254,23 @@ FROM cargo_requests cr
 JOIN cargo c ON c.request_id = cr.id
 WHERE cr.trip_id = $1
   AND cr.status = 'PENDING'
-  AND ($2::int IS NULL OR c.length <= $2)
-  AND ($3::int IS NULL OR c.width <= $3)
-  AND ($4::int IS NULL OR c.height <= $4)
-  AND ($5::int IS NULL OR c.cargo_type = $5)
-  AND ($6::bigint IS NULL OR cr.deadline <= $6)
-  AND ($7::decimal IS NULL OR cr.price >= $7)
+  AND ($2 IS NULL OR c.length <= $2)
+  AND ($3 IS NULL OR c.width <= $3)
+  AND ($4 IS NULL OR c.height <= $4)
+  AND ($5 IS NULL OR c.cargo_type = $5)
+  AND ($6 IS NULL OR cr.deadline <= $6)
+  AND ($7 IS NULL OR cr.price >= $7)
 ORDER BY cr.created_at DESC
 `
 
 type GetCargoRequestsForTripParams struct {
 	TripID  pgtype.UUID
-	Column2 int32
-	Column3 int32
-	Column4 int32
-	Column5 int32
-	Column6 int64
-	Column7 pgtype.Numeric
+	Column2 interface{}
+	Column3 interface{}
+	Column4 interface{}
+	Column5 interface{}
+	Column6 interface{}
+	Column7 interface{}
 }
 
 func (q *Queries) GetCargoRequestsForTrip(ctx context.Context, arg GetCargoRequestsForTripParams) ([]pgtype.UUID, error) {
