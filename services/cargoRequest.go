@@ -60,7 +60,7 @@ type (
 
 	CargoRequestFeignClient interface {
 		CreateRouteForCargoRequest(request models.PostCargoRequestRequest, fromStationId uuid.UUID, toStationId uuid.UUID) (*uuid.UUID, error)
-		GetPotentialTrips(cargoRequestRouteID string, tripRouteIDs []string) ([]string, error)
+		GetPotentialTrips(tripRouteID string, cargoRequestRouteIDs []string) ([]string, error)
 	}
 )
 

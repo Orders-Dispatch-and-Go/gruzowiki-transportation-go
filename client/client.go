@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/google/uuid"
 	"gruzowiki/rest/models"
 	"io"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type FeignClient struct {
@@ -27,18 +28,18 @@ func NewRoutesClient(baseURL string) *FeignClient {
 }
 
 type PotentialRoutesRequest struct {
-	CargoRequestRouteID string   `json:"cargoRequestRouteId"`
-	TripRouteIDs        []string `json:"tripRouteIds"`
+	TripRouteID          string   `json:"tripRouteId"`
+	CargoRequestRouteIDs []string `json:"cargoRequestRouteIds"`
 }
 
 type PotentialRoutesResponse struct {
-	TripIDs []string `json:"tripIds"`
+	RouteIDs []string `json:"routeIds"`
 }
 
-func (c *FeignClient) GetPotentialTrips(cargoRequestRouteID string, tripRouteIDs []string) ([]string, error) {
+func (c *FeignClient) GetPotentialTrips(tripRouteID string, cargoRequestRouteIDs []string) ([]string, error) {
 	requestBody := PotentialRoutesRequest{
-		CargoRequestRouteID: cargoRequestRouteID,
-		TripRouteIDs:        tripRouteIDs,
+		TripRouteID:          tripRouteID,
+		CargoRequestRouteIDs: cargoRequestRouteIDs,
 	}
 
 	jsonData, err := json.Marshal(requestBody)
@@ -79,7 +80,7 @@ func (c *FeignClient) GetPotentialTrips(cargoRequestRouteID string, tripRouteIDs
 		return nil, fmt.Errorf("failed to decode response: %w", err)
 	}
 
-	return response.TripIDs, nil
+	return response.RouteIDs, nil
 }
 
 func (c *FeignClient) MergeRoutes(tripRouteID string, cargoRequestRouteIDs []string) (uuid.UUID, error) {

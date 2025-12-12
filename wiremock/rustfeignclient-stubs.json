@@ -44,7 +44,7 @@
       "response": {
         "status": 200,
         "jsonBody": {
-          "id": "5a1e90b2-843e-444a-8f52-3721a63299f7"
+          "id": "5a1e90b2-843e-444a-8f52-3721a63299f6"
         },
         "headers": {
           "Content-Type": "application/json"
@@ -107,30 +107,6 @@
         }
       }
     },
-
-    {
-      "request": {
-        "method": "POST",
-        "url": "/routes/trips/potential",
-        "bodyPatterns": [
-          { "matchesJsonPath": "$.tripRouteId" },
-          { "matchesJsonPath": "$.cargoRequestRouteIds[*]" }
-        ]
-      },
-      "response": {
-        "status": 200,
-        "jsonBody": {
-          "routeIds": [
-            "5a1e90b2-843e-444a-8f52-3721a63299f6",
-            "7aaa3249-2729-4768-a2e5-8e689b0e3704"
-          ]
-        },
-        "headers": {
-          "Content-Type": "application/json"
-        }
-      }
-    },
-
     {
       "request": {
         "method": "POST",
@@ -160,16 +136,14 @@
           {
             "matchesJsonPath": "$.tripRouteId"
           },
-          {
-            "matchesJsonPath": "$.cargoRequestRouteIds"
-          }
+          { "matchesJsonPath": "$.cargoRequestRouteIds[*]" }
         ]
       },
       "response": {
         "status": 200,
         "jsonBody": {
           "routeIds": [
-            "11111111-1111-1111-1111-111111111111",
+            "5a1e90b2-843e-444a-8f52-3721a63299f6",
             "22222222-2222-2222-2222-222222222222"
           ]
         },
