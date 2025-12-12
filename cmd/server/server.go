@@ -59,6 +59,7 @@ type TripHandler interface {
 
 type RoutesHandler interface {
 	GetRouteForCargoRequest(c echo.Context) error
+	GetRouteForTrip(c echo.Context) error
 }
 
 type ServerImpl struct {
@@ -105,7 +106,7 @@ func (s *ServerImpl) startServer(e *echo.Echo, address string) {
 
 func (s *ServerImpl) Start() {
 	e := echo.New()
-	//e.Use(middlewares.LoggingMiddleware)
+	e.Use(middlewares.LoggingMiddleware)
 	e.Use(middlewares.HandleError)
 
 	postCarrier := e.Group("")
@@ -159,6 +160,7 @@ func (s *ServerImpl) Start() {
 	routes := e.Group("/routes")
 	routes.Use(middlewares.AllowedRoles([]string{middlewares.ConsignerRole, middlewares.CarrierRole}...))
 	routes.GET("/cargo_request/:uuid", s.RoutesHandler.GetRouteForCargoRequest)
+	routes.GET("/trip/:uuid", s.RoutesHandler.GetRouteForTrip)
 
 	s.startServer(e, s.Address)
 }

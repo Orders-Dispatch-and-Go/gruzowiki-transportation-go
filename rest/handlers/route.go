@@ -17,6 +17,7 @@ type (
 
 	RouteService interface {
 		GetRouteForCargoRequest(ctx context.Context, cargoRequestId uuid.UUID) (*models.GetTripRouteResponse, error)
+		GetRouteForTrip(ctx context.Context, tripId uuid.UUID) (*models.GetTripRouteResponse, error)
 	}
 )
 
@@ -37,6 +38,26 @@ func (h *RouteHandler) GetRouteForCargoRequest(c echo.Context) error {
 	ctx = context.WithValue(ctx, middlewares.UserIdCtxClaim, userId)
 
 	response, err := h.service.GetRouteForCargoRequest(ctx, cargoRequestID)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, response)
+}
+
+func (h *RouteHandler) GetRouteForTrip(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	idParam := c.Param("uuid")
+	tripId, err := uuid.Parse(idParam)
+	if err != nil {
+		return terror.NewValidationError("invalid UUID", "parsing path parameter 'uuid'")
+	}
+
+	userId := c.Get(middlewares.UserIdCtxClaim)
+	ctx = context.WithValue(ctx, middlewares.UserIdCtxClaim, userId)
+
+	response, err := h.service.GetRouteForTrip(ctx, tripId)
 	if err != nil {
 		return err
 	}
