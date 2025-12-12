@@ -2,14 +2,15 @@ package handlers
 
 import (
 	"context"
-	"github.com/google/uuid"
-	"github.com/labstack/echo/v4"
 	"gruzowiki/rest/middlewares"
 	"gruzowiki/rest/models"
 	"gruzowiki/rest/terror"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
 )
 
 type CargoRequestHandler struct {
@@ -28,12 +29,11 @@ type CargoRequestService interface {
 	CreateCargo(ctx context.Context, cargo []models.Cargo) ([]string, error)
 	MarkTrip(ctx context.Context, cargoReqId string, tripId string) error
 	Delivered(ctx context.Context, cargoReqId string, code string) error
-	GetRequestsForTrip(ctx context.Context, tripID uuid.UUID, filter models.GetCargoRequestsForTripFilter) (*models.GetCargoRequestsForTripResponse, error)
 	GetRequestsForTripWithRoutes(
 		ctx context.Context,
 		tripID uuid.UUID,
 		filter models.GetCargoRequestsForTripFilter,
-	) (*models.PotentialRoutesResponse, error)
+	) (*models.GetCargoRequestsForTripResponse, error)
 }
 
 func NewCargoRequestController(service CargoRequestService) *CargoRequestHandler {

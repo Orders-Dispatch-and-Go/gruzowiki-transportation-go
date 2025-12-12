@@ -217,17 +217,17 @@ update cargo_requests set route_id = $2 where id = $1;
 update cargo_requests set route_id = $2, trip_id = $3, status = $4 where id = $1;
 
 -- name: GetCargoRequestsForTrip :many
-SELECT cr.id
+SELECT DISTINCT cr.id
 FROM cargo_requests cr
-JOIN cargo c ON c.request_id = cr.id
-WHERE cr.trip_id = $1
+         JOIN cargo c ON c.request_id = cr.id
+WHERE cr.trip_id IS NULL
   AND cr.status = 'PENDING'
-  AND ($2 IS NULL OR c.length <= $2)
-  AND ($3 IS NULL OR c.width <= $3)
-  AND ($4 IS NULL OR c.height <= $4)
-  AND ($5 IS NULL OR c.cargo_type = $5)
-  AND ($6 IS NULL OR cr.deadline <= $6)
-  AND ($7 IS NULL OR cr.price >= $7)
+  AND (sqlc.narg(max_length)::int IS NULL OR c.length <= sqlc.narg(max_length))
+  AND (sqlc.narg(max_width)::int IS NULL OR c.width  <= sqlc.narg(max_width))
+  AND (sqlc.narg(max_height)::int IS NULL OR c.height <= sqlc.narg(max_height))
+  AND (sqlc.narg(cargo_type)::int IS NULL OR c.cargo_type = sqlc.narg(cargo_type))
+  AND (sqlc.narg(deadline)::bigint IS NULL OR cr.deadline <= sqlc.narg(deadline))
+  AND (sqlc.narg(min_price)::numeric IS NULL OR cr.price >= sqlc.narg(min_price))
 ORDER BY cr.created_at DESC;
 
 -- name: GetTripRouteID :one

@@ -1,0 +1,5 @@
+dsn: "user='postgres' password='postgres' host='localhost' port=5433 dbname='postgres' sslmode=disable"
+transportation_service_address: ":8081"
+auth_client_url: "http://localhost:8080"
+rust_client_url: "http://localhost:8082"
+log_level: "DEBUG"

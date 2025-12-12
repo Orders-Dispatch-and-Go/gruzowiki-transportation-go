@@ -249,7 +249,6 @@ func (c *CargoRequestRepo) UpdateCargoRequestOnStartTrip(ctx context.Context, ca
 
 func (c *CargoRequestRepo) GetCargoRequestsForTrip(
 	ctx context.Context,
-	_ pgtype.UUID,
 	maxLength *int32,
 	maxWidth *int32,
 	maxHeight *int32,
@@ -258,93 +257,51 @@ func (c *CargoRequestRepo) GetCargoRequestsForTrip(
 	minPrice *pgtype.Numeric,
 ) ([]pgtype.UUID, error) {
 
-	/*arg := pg.GetCargoRequestsForTripParams{
-		//TripID:  tripID,
-		Column2: nil,
-		//Column3: 0,
-		//Column4: 0,
-		//Column5: 0,
-		//Column6: 0,
-		//Column7: pgtype.Numeric{},
-	}
+	arg := pg.GetCargoRequestsForTripParams{}
 
 	if maxLength != nil {
-		arg.Column2 = *maxLength
+		arg.MaxLength = pgtype.Int4{Int32: *maxLength, Valid: true}
 	} else {
-		arg.Column2 = 0
+		arg.MaxLength = pgtype.Int4{Valid: false}
 	}
 
 	if maxWidth != nil {
-		arg.Column3 = *maxWidth
+		arg.MaxWidth = pgtype.Int4{Int32: *maxWidth, Valid: true}
 	} else {
-		arg.Column3 = 0
+		arg.MaxWidth = pgtype.Int4{Valid: false}
 	}
 
 	if maxHeight != nil {
-		arg.Column4 = *maxHeight
+		arg.MaxHeight = pgtype.Int4{Int32: *maxHeight, Valid: true}
 	} else {
-		arg.Column4 = 0
+		arg.MaxHeight = pgtype.Int4{Valid: false}
 	}
 
 	if cargoType != nil {
-		arg.Column5 = *cargoType
+		arg.CargoType = pgtype.Int4{Int32: *cargoType, Valid: true}
 	} else {
-		arg.Column5 = 0
+		arg.CargoType = pgtype.Int4{Valid: false}
 	}
 
 	if deadline != nil {
-		arg.Column6 = *deadline
+		arg.Deadline = pgtype.Int8{Int64: *deadline, Valid: true}
 	} else {
-		arg.Column6 = 0
+		arg.Deadline = pgtype.Int8{Valid: false}
 	}
 
 	if minPrice != nil {
-		arg.Column7 = *minPrice
+		arg.MinPrice = *minPrice
 	} else {
-		arg.Column7 = pgtype.Numeric{Valid: false
-	}}*/
-
-	const getCargoRequestsForTrip = `
-		select distinct crid from (
-			SELECT cr.id crid FROM cargo_requests cr 
-			    JOIN cargo c ON c.request_id = cr.id
-			WHERE cr.trip_id is NULL AND cr.status = 'PENDING'
-			  AND ($1::int IS NULL OR c.length <= $1)
-			  AND ($2::int IS NULL OR c.width <= $2)
-			  AND ($3::int IS NULL OR c.height <= $3)
-			  AND ($4::int IS NULL OR c.cargo_type = $4)
-			  AND ($5::bigint IS NULL OR cr.deadline <= $5)
-			  AND ($6::decimal IS NULL OR cr.price >= $6)
-			ORDER BY cr.created_at DESC
-		)
-	`
-
-	rows, err := c.conn.Queries(ctx).RawQuery(ctx, getCargoRequestsForTrip, maxLength, maxWidth, maxHeight, cargoType, deadline, minPrice)
-	if err != nil {
-		return nil, err
+		arg.MinPrice = pgtype.Numeric{Valid: false}
 	}
-	defer rows.Close()
-	var items []pgtype.UUID
-	for rows.Next() {
-		var id pgtype.UUID
-		if err := rows.Scan(&id); err != nil {
-			return nil, err
-		}
-		items = append(items, id)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
 
-	//return c.conn.Queries(ctx).GetCargoRequestsForTrip(ctx, arg)
+	return c.conn.Queries(ctx).GetCargoRequestsForTrip(ctx, arg)
 }
 
 func (c *CargoRequestRepo) GetRequestsRouteIds(
 	ctx context.Context,
 	ids []pgtype.UUID,
 ) ([]pg.GetCargoRequestRouteIDsRow, error) {
-
 	return c.conn.Queries(ctx).GetCargoRequestRouteIDs(ctx, ids)
 }
 

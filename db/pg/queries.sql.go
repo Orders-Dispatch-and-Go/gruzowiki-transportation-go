@@ -249,39 +249,37 @@ func (q *Queries) GetCargoRequestRouteIDs(ctx context.Context, dollar_1 []pgtype
 }
 
 const getCargoRequestsForTrip = `-- name: GetCargoRequestsForTrip :many
-SELECT cr.id
+SELECT DISTINCT cr.id
 FROM cargo_requests cr
-JOIN cargo c ON c.request_id = cr.id
-WHERE cr.trip_id = $1
+         JOIN cargo c ON c.request_id = cr.id
+WHERE cr.trip_id IS NULL
   AND cr.status = 'PENDING'
-  AND ($2 IS NULL OR c.length <= $2)
-  AND ($3 IS NULL OR c.width <= $3)
-  AND ($4 IS NULL OR c.height <= $4)
-  AND ($5 IS NULL OR c.cargo_type = $5)
-  AND ($6 IS NULL OR cr.deadline <= $6)
-  AND ($7 IS NULL OR cr.price >= $7)
+  AND ($1::int IS NULL OR c.length <= $1)
+  AND ($2::int IS NULL OR c.width  <= $2)
+  AND ($3::int IS NULL OR c.height <= $3)
+  AND ($4::int IS NULL OR c.cargo_type = $4)
+  AND ($5::bigint IS NULL OR cr.deadline <= $5)
+  AND ($6::numeric IS NULL OR cr.price >= $6)
 ORDER BY cr.created_at DESC
 `
 
 type GetCargoRequestsForTripParams struct {
-	TripID  pgtype.UUID
-	Column2 interface{}
-	Column3 interface{}
-	Column4 interface{}
-	Column5 interface{}
-	Column6 interface{}
-	Column7 interface{}
+	MaxLength pgtype.Int4
+	MaxWidth  pgtype.Int4
+	MaxHeight pgtype.Int4
+	CargoType pgtype.Int4
+	Deadline  pgtype.Int8
+	MinPrice  pgtype.Numeric
 }
 
 func (q *Queries) GetCargoRequestsForTrip(ctx context.Context, arg GetCargoRequestsForTripParams) ([]pgtype.UUID, error) {
 	rows, err := q.db.Query(ctx, getCargoRequestsForTrip,
-		arg.TripID,
-		arg.Column2,
-		arg.Column3,
-		arg.Column4,
-		arg.Column5,
-		arg.Column6,
-		arg.Column7,
+		arg.MaxLength,
+		arg.MaxWidth,
+		arg.MaxHeight,
+		arg.CargoType,
+		arg.Deadline,
+		arg.MinPrice,
 	)
 	if err != nil {
 		return nil, err

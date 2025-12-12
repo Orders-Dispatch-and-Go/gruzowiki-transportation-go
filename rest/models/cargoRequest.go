@@ -97,8 +97,8 @@ type (
 	}
 
 	PotentialRoutesRequest struct {
-	TripRouteId          string   `json:"tripRouteId"`
-	CargoRequestRouteIds []string `json:"cargoRequestRouteIds"`
+		TripRouteId          string   `json:"tripRouteId"`
+		CargoRequestRouteIds []string `json:"cargoRequestRouteIds"`
 	}
 
 	PotentialRoutesResponse struct {
@@ -106,15 +106,15 @@ type (
 	}
 
 	GetCargoRequestsForTripResponse struct {
-    CargoRequests []CargoRequestResponse `json:"cargoRequests"`
+		CargoRequests []CargoRequestResponse `json:"cargoRequests"`
 	}
-	
+
 	GetCargoRequestsForTripFilter struct {
-	CargoLengthMax *int32
-	CargoWidthMax  *int32
-	CargoHeightMax *int32
-	CargoType      *int32
-	Deadline       *int64
-	MinPrice       *int64
-}
+		CargoLengthMax *int32
+		CargoWidthMax  *int32
+		CargoHeightMax *int32
+		CargoType      *int32
+		Deadline       *int64
+		MinPrice       *int64
+	}
 )

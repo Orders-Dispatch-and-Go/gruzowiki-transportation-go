@@ -2,14 +2,16 @@ package services
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"github.com/shopspring/decimal"
 	"gruzowiki/db/pg"
 	"gruzowiki/rest/middlewares"
 	"gruzowiki/rest/models"
 	"gruzowiki/util"
 	"strconv"
 	"time"
+
+	"github.com/shopspring/decimal"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -36,7 +38,6 @@ type (
 		UpdateCargoRequestCode(ctx context.Context, cargoReqId string, code string) error
 		GetCargoRequestsForTrip(
 			ctx context.Context,
-			tripID pgtype.UUID,
 			maxLength *int32,
 			maxWidth *int32,
 			maxHeight *int32,
@@ -45,7 +46,10 @@ type (
 			minPrice *pgtype.Numeric,
 		) ([]pgtype.UUID, error)
 		GetTripRouteId(ctx context.Context, tripID pgtype.UUID) (pgtype.UUID, error)
-		GetRequestsRouteIds(ctx context.Context, ids []pgtype.UUID) ([]pg.GetCargoRequestRouteIDsRow, error)
+		GetRequestsRouteIds(
+			ctx context.Context,
+			ids []pgtype.UUID,
+		) ([]pg.GetCargoRequestRouteIDsRow, error)
 		GetCargoRequestById(ctx context.Context, id uuid.UUID) (pg.CargoRequest, error)
 	}
 
@@ -55,11 +59,7 @@ type (
 	}
 
 	CargoRequestFeignClient interface {
-		CreateRouteForCargoRequest(
-			request models.PostCargoRequestRequest,
-			fromStationId uuid.UUID,
-			toStationId uuid.UUID,
-		) (*uuid.UUID, error)
+		CreateRouteForCargoRequest(request models.PostCargoRequestRequest, fromStationId uuid.UUID, toStationId uuid.UUID) (*uuid.UUID, error)
 		GetPotentialTrips(cargoRequestRouteID string, tripRouteIDs []string) ([]string, error)
 	}
 )
@@ -176,23 +176,20 @@ func (s *CargoRequestService) CreateCargoRequest(ctx context.Context, postCargoR
 	return &models.PostCargoRequestResponse{ID: id.Bytes, ReceiveCode: strconv.Itoa(int(receiveCode))}, nil
 }
 
-func (s *CargoRequestService) GetRequestsForTrip(
+func (s *CargoRequestService) GetRequestsForTripWithRoutes(
 	ctx context.Context,
 	tripID uuid.UUID,
 	filter models.GetCargoRequestsForTripFilter,
 ) (*models.GetCargoRequestsForTripResponse, error) {
-
-	pgTripID := util.UuidToPgUuid(tripID)
-
 	var minPrice *pgtype.Numeric
 	if filter.MinPrice != nil {
 		n := util.ToNumeric(decimal.NewFromInt(*filter.MinPrice))
 		minPrice = &n
 	}
 
+	//получили тут id заявок, который нам подходят по фильтрам
 	ids, err := s.repo.GetCargoRequestsForTrip(
 		ctx,
-		pgTripID,
 		filter.CargoLengthMax,
 		filter.CargoWidthMax,
 		filter.CargoHeightMax,
@@ -201,21 +198,95 @@ func (s *CargoRequestService) GetRequestsForTrip(
 		minPrice,
 	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("get cargo requests by params: %w", err)
 	}
 
-	requests := make([]models.CargoRequestResponse, 0, len(ids))
-	requestUserID := ctx.Value(middlewares.UserIdCtxClaim).(int)
+	// если ничего не найдено - выходим
+	if len(ids) == 0 {
+		return &models.GetCargoRequestsForTripResponse{CargoRequests: []models.CargoRequestResponse{}}, nil
+	}
 
-	for _, raw := range ids {
-		u, err := uuid.FromBytes(raw.Bytes[:])
-		if err != nil {
-			return nil, fmt.Errorf("invalid cargo request id bytes: %w", err)
+	//получаем по tripId из query - id маршрута для передачи в rust potential
+	pgTripID := util.UuidToPgUuid(tripID)
+	tripRoutePg, err := s.repo.GetTripRouteId(ctx, pgTripID)
+	if err != nil {
+		return nil, fmt.Errorf("get trip route id: %w", err)
+	}
+
+	if !tripRoutePg.Valid {
+		return nil, errors.New("trip has no route_id")
+	}
+
+	tRidUuid, err := uuid.FromBytes(tripRoutePg.Bytes[:])
+	if err != nil {
+		return nil, fmt.Errorf("invalid trip route id bytes: %w", err)
+	}
+
+	//получаем id маршрутов для отфильтрованных заявок для передачи в rust potential
+	reqRoutes, err := s.repo.GetRequestsRouteIds(ctx, ids)
+	if err != nil {
+		return nil, fmt.Errorf("get cargo request route ids: %w", err)
+	}
+	if len(reqRoutes) == 0 {
+		return &models.GetCargoRequestsForTripResponse{CargoRequests: []models.CargoRequestResponse{}}, nil
+	}
+
+	//делаем мапу routeToReqs для соответствия id заявки - id маршрута. Т.к после получения id маршрутов из potential
+	//надо убрать ненужные маршруты и соотвествующие им отфильтрованные заявки
+	routeIDs := make([]string, 0, len(reqRoutes))
+	routeToReqs := make(map[string][]uuid.UUID, len(reqRoutes))
+
+	for _, row := range reqRoutes {
+		if !row.RouteID.Valid || row.RouteID.Bytes == [16]byte{} {
+			continue
 		}
-
-		pgReq, err := s.repo.GetCargoRequestById(ctx, u)
+		rID, err := uuid.FromBytes(row.RouteID.Bytes[:])
 		if err != nil {
-			return nil, fmt.Errorf("load cargo request %s: %w", u.String(), err)
+			continue
+		}
+		routeIDs = append(routeIDs, rID.String())
+
+		if row.ID.Valid {
+			reqID, err := uuid.FromBytes(row.ID.Bytes[:])
+			if err == nil {
+				routeToReqs[rID.String()] = append(routeToReqs[rID.String()], reqID)
+			}
+		}
+	}
+
+	//идем к rust potential получать нужные нам заявки по географии
+	matchingRouteIDs, err := s.client.GetPotentialTrips(tRidUuid.String(), routeIDs)
+	if err != nil {
+		return nil, fmt.Errorf("routing error: %w", err)
+	}
+	if len(matchingRouteIDs) == 0 {
+		return &models.GetCargoRequestsForTripResponse{CargoRequests: []models.CargoRequestResponse{}}, nil
+	}
+
+	routeSet := make(map[string]struct{}, len(matchingRouteIDs))
+	for _, rid := range matchingRouteIDs {
+		routeSet[rid] = struct{}{}
+	}
+
+	requestsToLoad := make([]uuid.UUID, 0)
+	for routeID, reqs := range routeToReqs {
+		if _, ok := routeSet[routeID]; !ok {
+			continue
+		}
+		for _, rid := range reqs {
+			requestsToLoad = append(requestsToLoad, rid)
+		}
+	}
+
+	if len(requestsToLoad) == 0 {
+		return &models.GetCargoRequestsForTripResponse{CargoRequests: []models.CargoRequestResponse{}}, nil
+	}
+
+	finalRequests := make([]models.CargoRequestResponse, 0, len(requestsToLoad))
+	for _, reqID := range requestsToLoad { //подгружаем нужные нам заявки по id
+		pgReq, err := s.repo.GetCargoRequestById(ctx, reqID)
+		if err != nil {
+			return nil, fmt.Errorf("load cargo request %s: %w", reqID.String(), err)
 		}
 
 		var routeIDStr *string
@@ -231,7 +302,7 @@ func (s *CargoRequestService) GetRequestsForTrip(
 		}
 
 		var receiveCode *string
-		if pgReq.ReceiveCode.Valid && requestUserID == int(pgReq.ConsignerID.Int32) {
+		if pgReq.ReceiveCode.Valid {
 			rc := strconv.Itoa(int(pgReq.ReceiveCode.Int32))
 			receiveCode = &rc
 		}
@@ -248,7 +319,7 @@ func (s *CargoRequestService) GetRequestsForTrip(
 		toStation := stations[toStationID]
 
 		req := models.CargoRequestResponse{
-			ID:          u.String(),
+			ID:          reqID.String(),
 			ConsignerID: int(pgReq.ConsignerID.Int32),
 			RecipientID: int(pgReq.RecipientID.Int32),
 			FromStation: &fromStation,
@@ -262,80 +333,12 @@ func (s *CargoRequestService) GetRequestsForTrip(
 			ReceiveCode: receiveCode,
 		}
 
-		requests = append(requests, req)
+		finalRequests = append(finalRequests, req)
 	}
 
 	return &models.GetCargoRequestsForTripResponse{
-		CargoRequests: requests,
+		CargoRequests: finalRequests,
 	}, nil
-}
-
-func (s *CargoRequestService) GetRequestsForTripWithRoutes(
-	ctx context.Context,
-	tripID uuid.UUID,
-	filter models.GetCargoRequestsForTripFilter,
-) (*models.PotentialRoutesResponse, error) {
-
-	baseResp, err := s.GetRequestsForTrip(ctx, tripID, filter)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(baseResp.CargoRequests) == 0 {
-		return &models.PotentialRoutesResponse{CargoRequests: []string{}}, nil
-	}
-
-	pgTripID := util.UuidToPgUuid(tripID)
-	tripRouteID, err := s.repo.GetTripRouteId(ctx, pgTripID)
-	if err != nil {
-		return nil, fmt.Errorf("get trip route id: %w", err)
-	}
-	tRid, _ := uuid.FromBytes(tripRouteID.Bytes[:])
-
-	pgIDs := make([]pgtype.UUID, 0, len(baseResp.CargoRequests))
-	for _, req := range baseResp.CargoRequests {
-		u, err := uuid.Parse(req.ID)
-		if err != nil {
-			return nil, fmt.Errorf("invalid cargo request id %q: %w", req.ID, err)
-		}
-		pgIDs = append(pgIDs, util.UuidToPgUuid(u))
-	}
-
-	reqRoutes, err := s.repo.GetRequestsRouteIds(ctx, pgIDs)
-	if err != nil {
-		return nil, fmt.Errorf("get cargo request route ids: %w", err)
-	}
-
-	cargoRouteIds := make([]string, 0, len(reqRoutes))
-	for _, row := range reqRoutes {
-		r, _ := uuid.FromBytes(row.RouteID.Bytes[:])
-		cargoRouteIds = append(cargoRouteIds, r.String())
-	}
-
-	matchingRouteIDs, err := s.client.GetPotentialTrips(tRid.String(), cargoRouteIds)
-	if err != nil {
-		return nil, fmt.Errorf("routing error: %w", err)
-	}
-
-	matchingCargoRequests := make([]string, 0, len(reqRoutes))
-	routeIDSet := make(map[string]struct{})
-	for _, rid := range matchingRouteIDs {
-		routeIDSet[rid] = struct{}{}
-	}
-
-	for _, row := range reqRoutes {
-		r, _ := uuid.FromBytes(row.RouteID.Bytes[:])
-		id, _ := uuid.FromBytes(row.ID.Bytes[:])
-		if _, ok := routeIDSet[r.String()]; ok {
-			matchingCargoRequests = append(matchingCargoRequests, id.String())
-		}
-	}
-
-	potential := &models.PotentialRoutesResponse{
-		CargoRequests: matchingCargoRequests,
-	}
-
-	return potential, nil
 }
 
 func (s *CargoRequestService) GetCargoTypes(ctx context.Context) ([]models.CargoType, error) {
