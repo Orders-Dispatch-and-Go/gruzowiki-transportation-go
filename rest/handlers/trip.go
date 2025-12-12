@@ -90,7 +90,7 @@ func (h *TripHandler) Start(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	return c.JSON(http.StatusOK, nil)
+	return c.NoContent(http.StatusOK)
 }
 
 func (h *TripHandler) GetTripByIdAndCarrier(c echo.Context) error {

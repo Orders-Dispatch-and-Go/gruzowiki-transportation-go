@@ -245,3 +245,6 @@ SELECT *
 FROM trips
 WHERE id = $1
   AND carrier = $2;
+
+-- name: GetTripById :many
+select * from trips where id = $1;

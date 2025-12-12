@@ -416,6 +416,42 @@ func (q *Queries) GetTripByCargoRequest(ctx context.Context, id pgtype.UUID) (Tr
 	return i, err
 }
 
+const getTripById = `-- name: GetTripById :many
+select id, route_id, from_station, to_station, started_at, calculate_end_at, actual_end_at, price, status, carrier, car from trips where id = $1
+`
+
+func (q *Queries) GetTripById(ctx context.Context, id pgtype.UUID) ([]Trip, error) {
+	rows, err := q.db.Query(ctx, getTripById, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Trip
+	for rows.Next() {
+		var i Trip
+		if err := rows.Scan(
+			&i.ID,
+			&i.RouteID,
+			&i.FromStation,
+			&i.ToStation,
+			&i.StartedAt,
+			&i.CalculateEndAt,
+			&i.ActualEndAt,
+			&i.Price,
+			&i.Status,
+			&i.Carrier,
+			&i.Car,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getTripByIdAndCarrier = `-- name: GetTripByIdAndCarrier :one
 SELECT id, route_id, from_station, to_station, started_at, calculate_end_at, actual_end_at, price, status, carrier, car
 FROM trips

@@ -243,7 +243,7 @@ func (c *CargoRequestRepo) UpdateCargoRequestOnStartTrip(ctx context.Context, ca
 		ID:      pgtype.UUID{Bytes: cargoRequestId, Valid: true},
 		TripID:  pgtype.UUID{Bytes: tripId, Valid: true},
 		RouteID: pgtype.UUID{Bytes: routeId, Valid: true},
-		Status:  pgtype.Text{String: status},
+		Status:  pgtype.Text{String: status, Valid: true},
 	})
 }
 

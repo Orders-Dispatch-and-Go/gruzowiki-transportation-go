@@ -31,13 +31,74 @@ type TripService struct {
 	client           TripFeignClient
 }
 
-func NewTripService(tripRepo *repositories.TripRepo, stationRepo *repositories.StationRepo, cargoRequestRepo *repositories.CargoRequestRepo, client TripFeignClient) *TripService {
+func NewTripService(
+	tripRepo *repositories.TripRepo,
+	stationRepo *repositories.StationRepo,
+	cargoRequestRepo *repositories.CargoRequestRepo,
+	client TripFeignClient,
+) *TripService {
 	return &TripService{
 		tripRepo:         tripRepo,
 		stationRepo:      stationRepo,
 		client:           client,
 		cargoRequestRepo: cargoRequestRepo,
 	}
+}
+
+func (s *TripService) GetTripById(ctx context.Context, tripId uuid.UUID) (models.TripResponse, error) {
+	pgTrip, err := s.tripRepo.GetTripById(ctx, tripId)
+	if err != nil {
+		return models.TripResponse{}, err
+	}
+
+	if pgTrip == nil {
+		return models.TripResponse{}, terror.NewNotFoundError("trip", tripId.String())
+	}
+
+	trip := models.TripResponse{
+		ID:          pgTrip.ID.Bytes,
+		RouteID:     util.PgUuidToGoUuidPointer(pgTrip.RouteID),
+		FromStation: models.Station{},
+		ToStation:   models.Station{},
+		//StartedAt:   pgTrip.StartedAt.Int64,
+		ActualEndAt: pgTrip.ActualEndAt.Int64,
+		Price:       util.NumericToString(pgTrip.Price),
+		Status:      pgTrip.Status.String,
+		CarrierID:   int(pgTrip.Carrier.Int32),
+		CarID:       int(pgTrip.Car.Int32),
+	}
+
+	if util.PgUuidToGoUuidPointer(pgTrip.FromStation) != nil && util.PgUuidToGoUuidPointer(pgTrip.ToStation) != nil {
+		stations, err := s.stationRepo.GetStations(ctx, []pgtype.UUID{
+			pgTrip.FromStation,
+			pgTrip.ToStation,
+		})
+		if err != nil {
+			return models.TripResponse{}, err
+		}
+
+		var fromStation, toStation models.Station
+		for _, st := range stations {
+			id := uuid.UUID(st.ID.Bytes)
+			if id == pgTrip.FromStation.Bytes {
+				fromStation = models.Station{
+					Address: st.Address.String,
+					Coords:  models.Coords{Lat: st.Lat.Float64, Lon: st.Lon.Float64},
+				}
+			}
+			if id == pgTrip.ToStation.Bytes {
+				toStation = models.Station{
+					Address: st.Address.String,
+					Coords:  models.Coords{Lat: st.Lat.Float64, Lon: st.Lon.Float64},
+				}
+			}
+		}
+
+		trip.FromStation = fromStation
+		trip.ToStation = toStation
+	}
+
+	return trip, nil
 }
 
 func (s *TripService) GetTripByCargoRequest(ctx context.Context, cargoRequestID uuid.UUID) (*models.TripResponse, error) {
@@ -183,11 +244,14 @@ func (s *TripService) CreateTrip(ctx context.Context, req models.CreateTripReque
 }
 
 func (s *TripService) FinishTrip(ctx context.Context, tripID string, status string) error {
-	return s.tripRepo.FinishTrip(ctx, tripID, status)
+	if status != models.TripStatusCompleted && status != models.TripStatusCanceled {
+		return terror.NewValidationError("you cannot complete the trip with the transferred status", "status")
+	}
+	return s.tripRepo.UpdateTripStatus(ctx, tripID, status)
 }
 
 func (s *TripService) StartTrip(ctx context.Context, tripId string, cargoRequestIds []string) error {
-	cargoRequestRoutes := make([]pg.CargoRequest, len(cargoRequestIds))
+	cargoRequestRoutes := make([]pg.CargoRequest, 0, len(cargoRequestIds))
 	for _, cargoRequestId := range cargoRequestIds {
 		cargoRequestUUID, err := uuid.Parse(cargoRequestId)
 		if err != nil {
@@ -200,7 +264,7 @@ func (s *TripService) StartTrip(ctx context.Context, tripId string, cargoRequest
 		cargoRequestRoutes = append(cargoRequestRoutes, cargoRequest)
 	}
 
-	cargoRequestRouteIDs := make([]string, len(cargoRequestRoutes))
+	cargoRequestRouteIDs := make([]string, 0, len(cargoRequestRoutes))
 	for _, cargoRequestRoute := range cargoRequestRoutes {
 		cargoRequestRouteIDs = append(cargoRequestRouteIDs, cargoRequestRoute.RouteID.String())
 	}
@@ -210,6 +274,8 @@ func (s *TripService) StartTrip(ctx context.Context, tripId string, cargoRequest
 		return err
 	}
 
+	s.tripRepo.UpdateTripStatus(ctx, tripId, models.TripStatusInProgress)
+	s.tripRepo.UpdateRout(ctx, tripId, tripRouteId.String())
 	for _, cargoRequest := range cargoRequestRoutes {
 		err = s.cargoRequestRepo.UpdateCargoRequestOnStartTrip(
 			ctx,
