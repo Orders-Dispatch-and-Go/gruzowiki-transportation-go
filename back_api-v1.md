@@ -1,7 +1,6 @@
 ## Api грузовиков
 
 ### получение заявки, если оставить параметр null, то он не будет использоваться в фильтре
-
 Post /cargo_request/search?page_number=int&page_size=int
 ````
 {
@@ -224,6 +223,41 @@ Http status: 200
 
 ## Грузоперевозчик
 
+### Получение поездки по перевозчику
+если параметр не передан, то он не будет использоваться в запросе
+
+Get /trip?tripId=uuid&carrierId=int
+
+Http status: 200
+````
+{
+    "id": "uuid,
+    "route_id": "uuid",
+    "fromStation": {
+        address: string,
+        coords: {
+            lat: float,
+            lon: float
+        }
+    },
+    "toStation":  {
+        address: string,
+        coords: {
+            lat: float,
+            lon: float
+        }
+    },
+    "startedAt": utc,
+    "calculatedEndAt": utc,
+    "actualEndAt": utc,
+    "price": decimal(10, 2),
+    "status": "string",
+    "carrierId": int,
+    "carId": int
+}
+
+````
+
 ### создание поездки
 Post /trip
 ````
@@ -318,7 +352,6 @@ Http status: 200
 ## Внутренние запросы (фронту не нужны)
 
 ### сохранение отправителя в системе
-
 Post /consigner
 ````
 {
@@ -330,7 +363,6 @@ Post /consigner
 Http status: 200
 
 ### сохранение водителя в системе
-
 Post /carrier
 ````
 {
