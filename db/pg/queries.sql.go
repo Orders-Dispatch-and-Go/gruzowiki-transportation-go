@@ -249,9 +249,9 @@ func (q *Queries) GetCargoRequestRouteIDs(ctx context.Context, dollar_1 []pgtype
 }
 
 const getCargoRequestsForTrip = `-- name: GetCargoRequestsForTrip :many
-SELECT DISTINCT cr.id
+SELECT DISTINCT ON (cr.id) cr.id
 FROM cargo_requests cr
-         JOIN cargo c ON c.request_id = cr.id
+    JOIN cargo c ON c.request_id = cr.id
 WHERE cr.trip_id IS NULL
   AND cr.status = 'PENDING'
   AND ($1::int IS NULL OR c.length <= $1)
@@ -260,7 +260,7 @@ WHERE cr.trip_id IS NULL
   AND ($4::int IS NULL OR c.cargo_type = $4)
   AND ($5::bigint IS NULL OR cr.deadline <= $5)
   AND ($6::numeric IS NULL OR cr.price >= $6)
-ORDER BY cr.created_at DESC
+ORDER BY cr.id, cr.created_at DESC
 `
 
 type GetCargoRequestsForTripParams struct {

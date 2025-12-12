@@ -111,8 +111,8 @@ func (h *CargoRequestHandler) GetRequestsForTrip(c echo.Context) error {
 		return terror.NewValidationError("invalid tripID", tripIDStr)
 	}
 
-	userId := c.Get(middlewares.UserIdCtxClaim)
-	ctx = context.WithValue(ctx, middlewares.UserIdCtxClaim, userId)
+	//userId := c.Get(middlewares.UserIdCtxClaim)
+	//ctx = context.WithValue(ctx, middlewares.UserIdCtxClaim, userId)
 
 	var filter models.GetCargoRequestsForTripFilter
 
