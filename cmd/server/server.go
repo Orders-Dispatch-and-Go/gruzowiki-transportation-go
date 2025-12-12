@@ -122,7 +122,7 @@ func (s *ServerImpl) Start() {
 	cargoRequest.POST("/search", s.CargoRequestHandler.GetCargoRequest)
 	cargoRequest.POST("", s.CargoRequestHandler.CreateCargoCargoRequest)
 	cargoRequest.POST("/:cargo_request/:cargoRequestId/trip/:tripId", s.CargoRequestHandler.MarkTrip)
-	cargoRequest.PATCH("/{:uuid}/finish/code/:code", s.CargoRequestHandler.Delivered)
+	cargoRequest.PATCH("/:uuid/finish/code/:code", s.CargoRequestHandler.Delivered)
 	cargoRequest.GET("/trip/:tripID", s.CargoRequestHandler.GetRequestsForTrip)
 
 	cargo := e.Group("/cargo")
