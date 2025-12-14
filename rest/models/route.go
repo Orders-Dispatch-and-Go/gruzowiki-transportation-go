@@ -6,6 +6,7 @@ type (
 	GetTripRouteResponse struct {
 		ID       uuid.UUID          `json:"id"`
 		Stations []TripStationPoint `json:"stations"`
+		Points   []float64          `json:"points"`
 	}
 
 	TripStationPoint struct {

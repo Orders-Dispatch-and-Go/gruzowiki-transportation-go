@@ -69,6 +69,8 @@ HttpStatus: 200
 
 1) Get /routes/cargo_requests/{uuid}/points
 2) Get /routes/trips/{uuid}/points
+
+Http status: 200
 ````
 {
   "points": [

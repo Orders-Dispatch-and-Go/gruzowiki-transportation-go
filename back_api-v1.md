@@ -176,8 +176,8 @@ Http status: 200
 
 ### получение маршрута для заявки
 ### получение маршрута для поездки
-- Get /routes/cargo_request/{uuid}
-- Get /routes/trip/{uuid}
+- Get /routes/cargo_request/{uuid}?withPoints=boolean
+- Get /routes/trip/{uuid}?withPoints=boolean
 
 Http status: 200
 ````
@@ -197,18 +197,7 @@ Http status: 200
       "arrivalAt": long,
       "departureTime": long
     }
-  ]
-}
-````
-
-### получение точек маршрута для заявки
-### получение точек маршрута для поездки
-- Get /route/cargo_request/{uuid}
-- Get /route/trip/{uuid}
-
-Http status: 200
-````
-{
+  ],
   "points": [
     float, float,
     float, float,

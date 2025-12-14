@@ -107,6 +107,7 @@
         }
       }
     },
+
     {
       "request": {
         "method": "POST",
@@ -149,6 +150,46 @@
         },
         "headers": {
           "Content-Type": "application/json"
+        }
+      }
+    },
+
+    {
+      "request": {
+        "method": "GET",
+        "urlPattern": "/routes/cargo_request/[0-9a-fA-F\\-]{36}/points"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "jsonBody": {
+          "points": [
+            [55.7558, 37.6176],
+            [56.3287, 44.002],
+            [59.9343, 30.3351]
+          ]
+        }
+      }
+    },
+
+    {
+      "request": {
+        "method": "GET",
+        "urlPattern": "/routes/trip/[0-9a-fA-F\\-]{36}/points"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "jsonBody": {
+          "points": [
+            [55.7558, 37.6176],
+            [56.3287, 44.002],
+            [59.9343, 30.3351]
+          ]
         }
       }
     }

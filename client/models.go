@@ -1,6 +1,9 @@
 package client
 
-import "github.com/google/uuid"
+import (
+	"github.com/google/uuid"
+	"gruzowiki/rest/models"
+)
 
 type (
 	StationDTO struct {
@@ -26,5 +29,22 @@ type (
 	MergeCargoRequestIntoTripRoute struct {
 		TripRouteID         string   `json:"tripRouteId"`
 		CargoRequestRouteID []string `json:"cargoRequestRouteId"`
+	}
+
+	GetTripRouteResponse struct {
+		ID       uuid.UUID          `json:"id"`
+		Stations []TripStationPoint `json:"stations"`
+	}
+
+	TripStationPoint struct {
+		Station       models.Station `json:"station"`
+		Distance      int            `json:"distance"`
+		OrderNum      int            `json:"orderNum"`
+		ArrivalAt     int64          `json:"arrivalAt"`
+		DepartureTime int64          `json:"departureTime"`
+	}
+
+	GetRoutePointsResponse struct {
+		Points [][]float64 `json:"points"`
 	}
 )

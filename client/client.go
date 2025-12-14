@@ -228,7 +228,6 @@ func (c *FeignClient) GetRouteForCargoRequest(cargoRequestRouteID uuid.UUID) (*m
 	if err != nil {
 		return nil, err
 	}
-
 	return response, nil
 }
 
@@ -238,7 +237,6 @@ func (c *FeignClient) GetRouteForTrip(tripRouteId uuid.UUID) (*models.GetTripRou
 	if err != nil {
 		return nil, err
 	}
-
 	return response, nil
 }
 
@@ -272,6 +270,61 @@ func (c *FeignClient) GetRoute(url string, routeId uuid.UUID) (*models.GetTripRo
 	}
 
 	var response models.GetTripRouteResponse
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		return nil, fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	return &response, nil
+}
+
+func (c *FeignClient) GetPointsForCargoRequest(cargoRequestRouteID uuid.UUID) (*GetRoutePointsResponse, error) {
+	url := c.baseURL + "/routes/cargo_request/"
+	response, err := c.GetPoints(url, cargoRequestRouteID)
+	if err != nil {
+		return nil, err
+	}
+	return response, nil
+}
+
+func (c *FeignClient) GetPointsForTrip(cargoRequestRouteID uuid.UUID) (*GetRoutePointsResponse, error) {
+	url := c.baseURL + "/routes/trip/"
+	response, err := c.GetPoints(url, cargoRequestRouteID)
+	if err != nil {
+		return nil, err
+	}
+	return response, nil
+}
+
+func (c *FeignClient) GetPoints(url string, routeId uuid.UUID) (*GetRoutePointsResponse, error) {
+	url += routeId.String() + "/points"
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
+
+	err = c.logFeignClientRequest(url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := c.httpClient.Do(req)
+	err = c.logFeignClientResponse(resp)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to make request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("unexpected status code %d: %s", resp.StatusCode, string(body))
+	}
+
+	var response GetRoutePointsResponse
 	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
 		return nil, fmt.Errorf("failed to decode response: %w", err)
 	}
