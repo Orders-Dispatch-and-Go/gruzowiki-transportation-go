@@ -15,7 +15,7 @@ type (
 		RouteID         *uuid.UUID `json:"route_id"`
 		FromStation     Station    `json:"fromStation"`
 		ToStation       Station    `json:"toStation"`
-		StartedAt       string     `json:"startedAt"`
+		StartedAt       int64      `json:"startedAt"`
 		CalculatedEndAt int64      `json:"calculatedEndAt"`
 		ActualEndAt     int64      `json:"actualEndAt"`
 		Price           string     `json:"price"`

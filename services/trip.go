@@ -8,7 +8,6 @@ import (
 	"gruzowiki/rest/models"
 	"gruzowiki/rest/terror"
 	"gruzowiki/util"
-	"strconv"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -139,7 +138,7 @@ func (s *TripService) GetTripByCargoRequest(ctx context.Context, cargoRequestID 
 		ID:              trip.ID.Bytes,
 		FromStation:     fromStation,
 		ToStation:       toStation,
-		StartedAt:       strconv.FormatInt(trip.StartedAt.Int64, 10),
+		StartedAt:       trip.StartedAt.Int64,
 		CalculatedEndAt: trip.CalculateEndAt.Int64,
 		ActualEndAt:     trip.ActualEndAt.Int64,
 		Price:           util.NumericToString(trip.Price),
@@ -177,7 +176,7 @@ func (s *TripService) GetTripsByCargoRequest(ctx context.Context, cargoRequestID
 				Address: trip.ToAddress.String,
 				Coords:  models.Coords{Lat: trip.ToLat.Float64, Lon: trip.ToLon.Float64},
 			},
-			StartedAt:       strconv.FormatInt(trip.StartedAt.Int64, 10),
+			StartedAt:       trip.StartedAt.Int64,
 			CalculatedEndAt: trip.CalculateEndAt.Int64,
 			ActualEndAt:     trip.ActualEndAt.Int64,
 			Price:           util.NumericToString(trip.Price),
@@ -292,17 +291,28 @@ func (s *TripService) StartTrip(ctx context.Context, tripId string, cargoRequest
 	return nil
 }
 
-func (s *TripService) GetTripByIdAndCarrier(ctx context.Context, tripID uuid.UUID, carrierID int32) (*models.TripResponse, error) {
+func (s *TripService) GetTripByIdAndCarrier(
+	ctx context.Context,
+	tripID *uuid.UUID,
+	carrierID *int32,
+) (*models.TripResponse, error) {
+
 	trip, err := s.tripRepo.GetTripByIdAndCarrier(ctx, tripID, carrierID)
 	if err != nil {
 		return nil, err
 	}
-	if trip.ID.Bytes == uuid.Nil {
-		return nil, terror.NewNotFoundError("Trip", tripID.String())
+	if trip == nil {
+		return nil, terror.NewNotFoundError("Trip", "")
 	}
 
-	fromID := pgtype.UUID{Bytes: trip.FromStation.Bytes, Valid: true}
-	toID := pgtype.UUID{Bytes: trip.ToStation.Bytes, Valid: true}
+	fromID := pgtype.UUID{
+		Bytes: trip.FromStation.Bytes,
+		Valid: true,
+	}
+	toID := pgtype.UUID{
+		Bytes: trip.ToStation.Bytes,
+		Valid: true,
+	}
 
 	stations, err := s.stationRepo.GetStations(ctx, []pgtype.UUID{fromID, toID})
 	if err != nil {
@@ -310,27 +320,37 @@ func (s *TripService) GetTripByIdAndCarrier(ctx context.Context, tripID uuid.UUI
 	}
 
 	var fromStation, toStation models.Station
+
 	for _, st := range stations {
 		id := uuid.UUID(st.ID.Bytes)
+
 		if id == trip.FromStation.Bytes {
 			fromStation = models.Station{
 				Address: st.Address.String,
-				Coords:  models.Coords{Lat: st.Lat.Float64, Lon: st.Lon.Float64},
+				Coords: models.Coords{
+					Lat: st.Lat.Float64,
+					Lon: st.Lon.Float64,
+				},
 			}
 		}
+
 		if id == trip.ToStation.Bytes {
 			toStation = models.Station{
 				Address: st.Address.String,
-				Coords:  models.Coords{Lat: st.Lat.Float64, Lon: st.Lon.Float64},
+				Coords: models.Coords{
+					Lat: st.Lat.Float64,
+					Lon: st.Lon.Float64,
+				},
 			}
 		}
 	}
 
 	return &models.TripResponse{
 		ID:              trip.ID.Bytes,
+		RouteID:         util.PgUuidToGoUuidPointer(trip.RouteID),
 		FromStation:     fromStation,
 		ToStation:       toStation,
-		StartedAt:       strconv.FormatInt(trip.StartedAt.Int64, 10),
+		StartedAt:       trip.StartedAt.Int64,
 		CalculatedEndAt: trip.CalculateEndAt.Int64,
 		ActualEndAt:     trip.ActualEndAt.Int64,
 		Price:           util.NumericToString(trip.Price),

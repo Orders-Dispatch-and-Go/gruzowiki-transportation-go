@@ -94,32 +94,31 @@ func (h *TripHandler) Start(c echo.Context) error {
 }
 
 func (h *TripHandler) GetTripByIdAndCarrier(c echo.Context) error {
+	ctx := c.Request().Context()
+
 	tripIDParam := c.QueryParam("tripId")
 	carrierIDParam := c.QueryParam("carrierId")
 
-	if tripIDParam == "" && carrierIDParam == "" {
-		return terror.NewValidationError("missing query parameters", "one of tripID or carrierId are required")
-	}
-
-	var tripID uuid.UUID
+	var tripID *uuid.UUID
 	if tripIDParam != "" {
-		tripID2, err := uuid.Parse(tripIDParam)
-		tripID = tripID2
+		id, err := uuid.Parse(tripIDParam)
 		if err != nil {
-			return terror.NewValidationError("invalid UUID", "tripID")
+			return terror.NewValidationError("invalid tripId", "must be uuid")
 		}
+		tripID = &id
 	}
 
-	var carrierID int
+	var carrierID *int32
 	if carrierIDParam != "" {
-		carrierID2, err := strconv.Atoi(carrierIDParam)
+		id, err := strconv.Atoi(carrierIDParam)
 		if err != nil {
-			return terror.NewValidationError("invalid carrierId", "carrierId must be integer")
+			return terror.NewValidationError("invalid carrierId", "must be integer")
 		}
-		carrierID = carrierID2
+		cid := int32(id)
+		carrierID = &cid
 	}
 
-	trip, err := h.service.GetTripByIdAndCarrier(c.Request().Context(), tripID, int32(carrierID))
+	trip, err := h.service.GetTripByIdAndCarrier(ctx, tripID, carrierID)
 	if err != nil {
 		return err
 	}

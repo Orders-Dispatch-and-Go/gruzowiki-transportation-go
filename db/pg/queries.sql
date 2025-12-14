@@ -241,7 +241,12 @@ FROM cargo_requests
 WHERE id = ANY($1::uuid[]);
 
 -- name: GetTripByIdAndCarrier :one
-SELECT * FROM trips WHERE id = $1 OR carrier = $2;
+SELECT id, route_id, from_station, to_station,
+       started_at, calculate_end_at, actual_end_at,
+       price, status, carrier, car
+FROM trips
+WHERE (sqlc.narg(trip_id)::uuid IS NULL OR id = sqlc.narg(trip_id))
+  AND (sqlc.narg(carrier_id)::int4 IS NULL OR carrier = sqlc.narg(carrier_id));
 
 -- name: GetTripById :many
 select * from trips where id = $1;
