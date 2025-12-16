@@ -82,9 +82,9 @@ func (h *CargoRequestHandler) CreateCargoCargoRequest(c echo.Context) error {
 	userId := c.Get(middlewares.UserIdCtxClaim)
 	ctx = context.WithValue(ctx, middlewares.UserIdCtxClaim, userId)
 
-	if request.ConsignerID != userId {
+	/*if request.ConsignerID != userId {
 		return terror.NewValidationError("must be equal to userId from jwt", "consignerId")
-	}
+	}*/
 
 	response, err := h.service.CreateCargoRequest(ctx, request)
 	if err != nil {

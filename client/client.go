@@ -63,11 +63,15 @@ func (c *FeignClient) GetPotentialTrips(tripRouteID string, cargoRequestRouteIDs
 	}
 
 	resp, err := c.httpClient.Do(req)
-	err = c.logFeignClientResponse(resp)
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to make request: %w", err)
 	}
+
+	err = c.logFeignClientResponse(resp)
+	if err != nil {
+		return nil, fmt.Errorf("failed to log response: %w", err)
+	}
+
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
@@ -113,8 +117,9 @@ func (c *FeignClient) MergeRoutes(tripRouteID string, cargoRequestRouteIDs []str
 		return uuid.Nil, fmt.Errorf("failed to make request: %w", err)
 	}
 
-	if err = c.logFeignClientResponse(resp); err != nil {
-		return uuid.Nil, err
+	err = c.logFeignClientResponse(resp)
+	if err != nil {
+		return uuid.Nil, fmt.Errorf("failed to log client response request: %w", err)
 	}
 
 	defer resp.Body.Close()
@@ -202,11 +207,15 @@ func (c *FeignClient) CreateRoute(
 	}
 
 	resp, err := c.httpClient.Do(req)
-	err = c.logFeignClientResponse(resp)
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to make request: %w", err)
 	}
+
+	err = c.logFeignClientResponse(resp)
+	if err != nil {
+		return nil, fmt.Errorf("failed to log client response request: %w", err)
+	}
+
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
@@ -257,11 +266,15 @@ func (c *FeignClient) GetRoute(url string, routeId uuid.UUID) (*models.GetTripRo
 	}
 
 	resp, err := c.httpClient.Do(req)
-	err = c.logFeignClientResponse(resp)
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to make request: %w", err)
 	}
+
+	err = c.logFeignClientResponse(resp)
+	if err != nil {
+		return nil, fmt.Errorf("failed to log client response request: %w", err)
+	}
+
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
@@ -312,7 +325,14 @@ func (c *FeignClient) GetPoints(url string, routeId uuid.UUID) (*GetRoutePointsR
 	}
 
 	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to make request: %w", err)
+	}
+
 	err = c.logFeignClientResponse(resp)
+	if err != nil {
+		return nil, fmt.Errorf("failed to log client response request: %w", err)
+	}
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to make request: %w", err)

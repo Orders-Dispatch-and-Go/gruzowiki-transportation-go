@@ -148,7 +148,11 @@ func (s *CargoRequestService) CreateCargoRequest(ctx context.Context, postCargoR
 		return nil, err
 	}
 
-	routeId, err := s.client.CreateRouteForCargoRequest(postCargoRequestRequest, createFromStationResponse.ID, createToStationResponse.ID)
+	routeId, err := s.client.CreateRouteForCargoRequest(
+		postCargoRequestRequest,
+		createFromStationResponse.ID,
+		createToStationResponse.ID,
+	)
 	if err != nil {
 		return nil, err
 	}

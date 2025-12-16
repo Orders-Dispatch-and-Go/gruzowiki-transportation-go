@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"context"
+	"gruzowiki/rest/middlewares"
 	"gruzowiki/rest/models"
 	"gruzowiki/rest/terror"
 	"gruzowiki/services"
@@ -56,13 +58,17 @@ func (h *TripHandler) GetTripByCargoRequest(c echo.Context) error {
 }
 
 func (h *TripHandler) CreateTrip(c echo.Context) error {
-	var req models.CreateTripRequest
+	ctx := c.Request().Context()
 
+	var req models.CreateTripRequest
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"message": err.Error()})
 	}
 
-	id, err := h.service.CreateTrip(c.Request().Context(), req)
+	userId := c.Get(middlewares.UserIdCtxClaim)
+	ctx = context.WithValue(ctx, middlewares.UserIdCtxClaim, userId)
+
+	id, err := h.service.CreateTrip(ctx, req)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": err.Error()})
 	}

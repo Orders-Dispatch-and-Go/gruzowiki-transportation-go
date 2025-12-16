@@ -151,6 +151,7 @@ func (s *ServerImpl) Start() {
 	consigners.POST("", s.ConsignerHandler.CreateConsigner)
 
 	trips := e.Group("/trip")
+	trips.Use(middlewares.AllowedRoles([]string{middlewares.ConsignerRole, middlewares.CarrierRole}...))
 	trips.GET("", s.TripHandler.GetTripByIdAndCarrier)
 	trips.GET("/cargo_request/:id", s.TripHandler.GetTripByCargoRequest)
 	trips.POST("", s.TripHandler.CreateTrip)

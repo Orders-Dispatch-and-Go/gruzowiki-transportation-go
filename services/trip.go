@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"gruzowiki/db/pg"
 	"gruzowiki/repositories"
+	"gruzowiki/rest/middlewares"
 	"gruzowiki/rest/models"
 	"gruzowiki/rest/terror"
 	"gruzowiki/util"
@@ -198,7 +199,6 @@ func uuidsToStrigs(ids []pgtype.UUID) []string {
 }
 
 func (s *TripService) CreateTrip(ctx context.Context, req models.CreateTripRequest) (*uuid.UUID, error) {
-
 	fromID, err := s.stationRepo.InsertStation(ctx, pg.InsertStationParams{
 		ID:      pgtype.UUID{Bytes: uuid.New(), Valid: true},
 		Address: pgtype.Text{String: req.FromStation.Address, Valid: true},
@@ -226,13 +226,15 @@ func (s *TripService) CreateTrip(ctx context.Context, req models.CreateTripReque
 
 	startedAtInt := util.ToTimestamp(req.StartedAt)
 
+	requestUserId := ctx.Value(middlewares.UserIdCtxClaim).(int)
+
 	tripID, err := s.tripRepo.CreateTrip(
 		ctx,
 		fromID.Bytes,
 		toID.Bytes,
 		*routeID,
 		startedAtInt,
-		req.Carrier,
+		int32(requestUserId),
 		nil,
 	)
 	if err != nil {
