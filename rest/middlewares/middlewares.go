@@ -35,7 +35,7 @@ func HandleError(next echo.HandlerFunc) echo.HandlerFunc {
 
 		fmt.Println("Request ERROR")
 		fmt.Printf("Method: %s URI: %s\n", c.Request().Method, c.Request().URL.Path)
-		fmt.Printf("error: %s, code: %d\n", err, code)
+		fmt.Printf("Error: %s, code: %d\n", err, code)
 
 		return c.JSON(code, err)
 	}

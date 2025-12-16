@@ -39,7 +39,7 @@ func NewNotFoundError(objectType string, findByField string) NotFoundError {
 }
 
 func NewValidationError(message string, cause string) ValidationError {
-	msg := fmt.Sprintf("validation error: %s, %s", cause, message)
+	msg := fmt.Sprintf("validation error: %s %s", cause, message)
 	return ValidationError{
 		ErrorResponse{
 			Type:    TypeValidationError,
