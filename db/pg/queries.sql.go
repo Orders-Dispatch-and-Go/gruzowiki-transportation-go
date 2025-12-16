@@ -453,19 +453,21 @@ func (q *Queries) GetTripById(ctx context.Context, id pgtype.UUID) ([]Trip, erro
 }
 
 const getTripByIdAndCarrier = `-- name: GetTripByIdAndCarrier :one
-SELECT id, route_id, from_station, to_station, started_at, calculate_end_at, actual_end_at, price, status, carrier, car
+SELECT id, route_id, from_station, to_station,
+       started_at, calculate_end_at, actual_end_at,
+       price, status, carrier, car
 FROM trips
-WHERE id = $1
-  AND carrier = $2
+WHERE ($1::uuid IS NULL OR id = $1)
+  AND ($2::int4 IS NULL OR carrier = $2)
 `
 
 type GetTripByIdAndCarrierParams struct {
-	ID      pgtype.UUID
-	Carrier pgtype.Int4
+	TripID    pgtype.UUID
+	CarrierID pgtype.Int4
 }
 
 func (q *Queries) GetTripByIdAndCarrier(ctx context.Context, arg GetTripByIdAndCarrierParams) (Trip, error) {
-	row := q.db.QueryRow(ctx, getTripByIdAndCarrier, arg.ID, arg.Carrier)
+	row := q.db.QueryRow(ctx, getTripByIdAndCarrier, arg.TripID, arg.CarrierID)
 	var i Trip
 	err := row.Scan(
 		&i.ID,

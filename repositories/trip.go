@@ -4,11 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"gruzowiki/db/pg"
+	"gruzowiki/rest/terror"
+	"gruzowiki/util"
+
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
-	"gruzowiki/db/pg"
-	"gruzowiki/rest/terror"
 )
 
 type TripRepo struct {
@@ -138,25 +140,31 @@ func (r *TripRepo) UpdateRout(ctx context.Context, tripId, routeId string) error
 	return r.conn.Queries(ctx).UpdateTripRoute(ctx, pg.UpdateTripRouteParams{ID: pgtype.UUID{Bytes: id, Valid: true}, RouteID: pgtype.UUID{Bytes: route, Valid: true}})
 }
 
-func (r *TripRepo) GetTripByIdAndCarrier(ctx context.Context, tripID uuid.UUID, carrierID int32) (*pg.Trip, error) {
-	pgID := pgtype.UUID{
-		Bytes: tripID,
-		Valid: true,
-	}
-	pgCarrier := pgtype.Int4{
-		Int32: carrierID,
-		Valid: true,
+func (r *TripRepo) GetTripByIdAndCarrier(ctx context.Context, tripID *uuid.UUID, carrierID *int32,
+) (*pg.Trip, error) {
+
+	var pgTripID pgtype.UUID
+	if tripID != nil {
+		pgTripID = util.UuidToPgUuid(*tripID)
 	}
 
-	trip, err := r.conn.Queries(ctx).GetTripByIdAndCarrier(ctx, pg.GetTripByIdAndCarrierParams{
-		ID:      pgID,
-		Carrier: pgCarrier,
-	})
+	var pgCarrierID pgtype.Int4
+	if carrierID != nil {
+		pgCarrierID = util.Int32ToPgInt4(*carrierID)
+	}
+
+	trip, err := r.conn.Queries(ctx).GetTripByIdAndCarrier(
+		ctx,
+		pg.GetTripByIdAndCarrierParams{
+			TripID:    pgTripID,
+			CarrierID: pgCarrierID,
+		},
+	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, nil
 		}
-		return nil, fmt.Errorf("query GetTripByIdAndCarrier: %w", err)
+		return nil, fmt.Errorf("GetTripByIdAndCarrier query: %w", err)
 	}
 
 	return &trip, nil
