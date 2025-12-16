@@ -354,6 +354,42 @@ func (q *Queries) GetRecipient(ctx context.Context, id int32) (Recipient, error)
 	return i, err
 }
 
+const getRecipientByEmail = `-- name: GetRecipientByEmail :one
+select id, first_name, second_name, third_name, phone, email from recipients where email = $1
+`
+
+func (q *Queries) GetRecipientByEmail(ctx context.Context, email pgtype.Text) (Recipient, error) {
+	row := q.db.QueryRow(ctx, getRecipientByEmail, email)
+	var i Recipient
+	err := row.Scan(
+		&i.ID,
+		&i.FirstName,
+		&i.SecondName,
+		&i.ThirdName,
+		&i.Phone,
+		&i.Email,
+	)
+	return i, err
+}
+
+const getRecipientByPhone = `-- name: GetRecipientByPhone :one
+select id, first_name, second_name, third_name, phone, email from recipients where phone = $1
+`
+
+func (q *Queries) GetRecipientByPhone(ctx context.Context, phone pgtype.Text) (Recipient, error) {
+	row := q.db.QueryRow(ctx, getRecipientByPhone, phone)
+	var i Recipient
+	err := row.Scan(
+		&i.ID,
+		&i.FirstName,
+		&i.SecondName,
+		&i.ThirdName,
+		&i.Phone,
+		&i.Email,
+	)
+	return i, err
+}
+
 const getSuitableTripsForCargoRequest = `-- name: GetSuitableTripsForCargoRequest :many
 SELECT 
     t.route_id

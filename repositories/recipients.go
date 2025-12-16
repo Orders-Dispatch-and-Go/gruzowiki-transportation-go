@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"gruzowiki/db/pg"
+	"gruzowiki/rest/terror"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -16,6 +17,28 @@ type RecipientRepo struct {
 
 func NewRecipientRepo(conn pg.Conn) *RecipientRepo {
 	return &RecipientRepo{conn: conn}
+}
+
+func (r *RecipientRepo) GetRecipientByEmail(ctx context.Context, email string) (*pg.Recipient, error) {
+	recipient, err := r.conn.Queries(ctx).GetRecipientByEmail(ctx, pgtype.Text{String: email, Valid: true})
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, terror.NewNotFoundError("recipient", email)
+		}
+		return nil, fmt.Errorf("query GetRecipient: %w", err)
+	}
+	return &recipient, nil
+}
+
+func (r *RecipientRepo) GetRecipientByPhone(ctx context.Context, phone string) (*pg.Recipient, error) {
+	recipient, err := r.conn.Queries(ctx).GetRecipientByPhone(ctx, pgtype.Text{String: phone, Valid: true})
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, terror.NewNotFoundError("recipient", phone)
+		}
+		return nil, fmt.Errorf("query GetRecipient: %w", err)
+	}
+	return &recipient, nil
 }
 
 func (r *RecipientRepo) CreateRecipient(ctx context.Context, firstName, secondName, thirdName, phone, email string) (int32, error) {

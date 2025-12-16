@@ -2,10 +2,13 @@ package services
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"github.com/jackc/pgx/v5"
 	"gruzowiki/repositories"
 	"gruzowiki/rest/models"
 	"gruzowiki/rest/terror"
+	"strings"
 )
 
 type RecipientService struct {
@@ -19,7 +22,23 @@ func NewRecipientService(repo *repositories.RecipientRepo) *RecipientService {
 func (s *RecipientService) CreateRecipient(ctx context.Context, firstName, secondName, thirdName, phone, email string) (*models.CreateRecipientResponse, error) {
 	newID, err := s.repo.CreateRecipient(ctx, firstName, secondName, thirdName, phone, email)
 	if err != nil {
-		return nil, fmt.Errorf("CreateRecipient: %w", err)
+		if !strings.Contains(err.Error(), "duplicate key") {
+			return nil, fmt.Errorf("CreateRecipient: %w", err)
+		} else {
+			recipient, err := s.repo.GetRecipientByEmail(ctx, email)
+			if err == nil {
+				return &models.CreateRecipientResponse{ID: recipient.ID}, nil
+			}
+
+			recipient, err = s.repo.GetRecipientByPhone(ctx, phone)
+			if err != nil {
+				if errors.Is(err, pgx.ErrNoRows) {
+					return nil, terror.NewNotFoundError("recipient", "")
+				}
+				return nil, fmt.Errorf("CreateRecipient: %w", err)
+			}
+			newID = recipient.ID
+		}
 	}
 
 	resp := &models.CreateRecipientResponse{ID: newID}

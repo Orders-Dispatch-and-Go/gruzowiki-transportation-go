@@ -250,3 +250,9 @@ WHERE (sqlc.narg(trip_id)::uuid IS NULL OR id = sqlc.narg(trip_id))
 
 -- name: GetTripById :many
 select * from trips where id = $1;
+
+-- name: GetRecipientByEmail :one
+select * from recipients where email = $1;
+
+-- name: GetRecipientByPhone :one
+select * from recipients where phone = $1;
