@@ -488,22 +488,34 @@ func (q *Queries) GetTripById(ctx context.Context, id pgtype.UUID) ([]Trip, erro
 	return items, nil
 }
 
-const getTripByIdAndCarrier = `-- name: GetTripByIdAndCarrier :one
-SELECT id, route_id, from_station, to_station,
-       started_at, calculate_end_at, actual_end_at,
-       price, status, carrier, car
+const getTripRouteID = `-- name: GetTripRouteID :one
+SELECT route_id
 FROM trips
-WHERE ($1::uuid IS NULL OR id = $1)
-  AND ($2::int4 IS NULL OR carrier = $2)
+WHERE id = $1
 `
 
-type GetTripByIdAndCarrierParams struct {
-	TripID    pgtype.UUID
-	CarrierID pgtype.Int4
+func (q *Queries) GetTripRouteID(ctx context.Context, id pgtype.UUID) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, getTripRouteID, id)
+	var route_id pgtype.UUID
+	err := row.Scan(&route_id)
+	return route_id, err
 }
 
-func (q *Queries) GetTripByIdAndCarrier(ctx context.Context, arg GetTripByIdAndCarrierParams) (Trip, error) {
-	row := q.db.QueryRow(ctx, getTripByIdAndCarrier, arg.TripID, arg.CarrierID)
+const getTripWithFilter = `-- name: GetTripWithFilter :one
+SELECT id, route_id, from_station, to_station, started_at, calculate_end_at, actual_end_at, price, status, carrier, car FROM trips
+WHERE ($1::uuid IS NULL OR id = $1)
+  AND ($2::int4 IS NULL OR carrier = $2)
+  AND ($3::text IS NULL OR status = $3)
+`
+
+type GetTripWithFilterParams struct {
+	TripID    pgtype.UUID
+	CarrierID pgtype.Int4
+	Status    pgtype.Text
+}
+
+func (q *Queries) GetTripWithFilter(ctx context.Context, arg GetTripWithFilterParams) (Trip, error) {
+	row := q.db.QueryRow(ctx, getTripWithFilter, arg.TripID, arg.CarrierID, arg.Status)
 	var i Trip
 	err := row.Scan(
 		&i.ID,
@@ -519,19 +531,6 @@ func (q *Queries) GetTripByIdAndCarrier(ctx context.Context, arg GetTripByIdAndC
 		&i.Car,
 	)
 	return i, err
-}
-
-const getTripRouteID = `-- name: GetTripRouteID :one
-SELECT route_id
-FROM trips
-WHERE id = $1
-`
-
-func (q *Queries) GetTripRouteID(ctx context.Context, id pgtype.UUID) (pgtype.UUID, error) {
-	row := q.db.QueryRow(ctx, getTripRouteID, id)
-	var route_id pgtype.UUID
-	err := row.Scan(&route_id)
-	return route_id, err
 }
 
 const getTripsByIDsWithPagination = `-- name: GetTripsByIDsWithPagination :many

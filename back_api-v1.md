@@ -215,7 +215,7 @@ Http status: 200
 ### Получение поездки по перевозчику
 если параметр не передан, то он не будет использоваться в запросе
 
-Get /trip?tripId=uuid&carrierId=int
+Get /trip?tripId=uuid&carrierId=int&status=string
 
 Http status: 200
 ````

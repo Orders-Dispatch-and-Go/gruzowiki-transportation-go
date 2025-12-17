@@ -99,11 +99,12 @@ func (h *TripHandler) Start(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
-func (h *TripHandler) GetTripByIdAndCarrier(c echo.Context) error {
+func (h *TripHandler) GetTripWithFilter(c echo.Context) error {
 	ctx := c.Request().Context()
 
 	tripIDParam := c.QueryParam("tripId")
 	carrierIDParam := c.QueryParam("carrierId")
+	statusParam := c.QueryParam("status")
 
 	var tripID *uuid.UUID
 	if tripIDParam != "" {
@@ -124,7 +125,7 @@ func (h *TripHandler) GetTripByIdAndCarrier(c echo.Context) error {
 		carrierID = &cid
 	}
 
-	trip, err := h.service.GetTripByIdAndCarrier(ctx, tripID, carrierID)
+	trip, err := h.service.GetTripWithFilter(ctx, tripID, carrierID, statusParam)
 	if err != nil {
 		return err
 	}

@@ -140,7 +140,11 @@ func (r *TripRepo) UpdateRout(ctx context.Context, tripId, routeId string) error
 	return r.conn.Queries(ctx).UpdateTripRoute(ctx, pg.UpdateTripRouteParams{ID: pgtype.UUID{Bytes: id, Valid: true}, RouteID: pgtype.UUID{Bytes: route, Valid: true}})
 }
 
-func (r *TripRepo) GetTripByIdAndCarrier(ctx context.Context, tripID *uuid.UUID, carrierID *int32,
+func (r *TripRepo) GetTripWithFilter(
+	ctx context.Context,
+	tripID *uuid.UUID,
+	carrierID *int32,
+	status string,
 ) (*pg.Trip, error) {
 
 	var pgTripID pgtype.UUID
@@ -153,18 +157,24 @@ func (r *TripRepo) GetTripByIdAndCarrier(ctx context.Context, tripID *uuid.UUID,
 		pgCarrierID = util.Int32ToPgInt4(*carrierID)
 	}
 
-	trip, err := r.conn.Queries(ctx).GetTripByIdAndCarrier(
+	pgStatus := pgtype.Text{String: "", Valid: false}
+	if status != "" {
+		pgStatus = pgtype.Text{String: status, Valid: true}
+	}
+
+	trip, err := r.conn.Queries(ctx).GetTripWithFilter(
 		ctx,
-		pg.GetTripByIdAndCarrierParams{
+		pg.GetTripWithFilterParams{
 			TripID:    pgTripID,
 			CarrierID: pgCarrierID,
+			Status:    pgStatus,
 		},
 	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, nil
 		}
-		return nil, fmt.Errorf("GetTripByIdAndCarrier query: %w", err)
+		return nil, fmt.Errorf("GetTripWithFilter query: %w", err)
 	}
 
 	return &trip, nil

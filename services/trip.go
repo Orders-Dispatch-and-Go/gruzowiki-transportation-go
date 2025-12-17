@@ -293,13 +293,13 @@ func (s *TripService) StartTrip(ctx context.Context, tripId string, cargoRequest
 	return nil
 }
 
-func (s *TripService) GetTripByIdAndCarrier(
+func (s *TripService) GetTripWithFilter(
 	ctx context.Context,
 	tripID *uuid.UUID,
 	carrierID *int32,
+	status string,
 ) (*models.TripResponse, error) {
-
-	trip, err := s.tripRepo.GetTripByIdAndCarrier(ctx, tripID, carrierID)
+	trip, err := s.tripRepo.GetTripWithFilter(ctx, tripID, carrierID, status)
 	if err != nil {
 		return nil, err
 	}
