@@ -212,7 +212,7 @@ Http status: 200
 
 ## Грузоперевозчик
 
-### Получение поездки по перевозчику
+### Получение поездки с фильтрами
 если параметр не передан, то он не будет использоваться в запросе
 
 Get /trip?tripId=uuid&carrierId=int&status=string
@@ -328,7 +328,7 @@ PATCH /trip/{uuid}/start
 
 Http status: 200
 
-### подтверждение доставки груза
+### подтверждение доставки заявки
 PATCH /cargo_request/{uuid}/finish/code/{int}
 
 Http status: 200
