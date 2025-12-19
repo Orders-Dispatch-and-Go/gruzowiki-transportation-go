@@ -291,7 +291,7 @@ func (c *FeignClient) GetRoute(url string, routeId uuid.UUID) (*models.GetTripRo
 }
 
 func (c *FeignClient) GetPointsForCargoRequest(cargoRequestRouteID uuid.UUID) (*GetRoutePointsResponse, error) {
-	url := c.baseURL + "/routes/cargo_request/"
+	url := c.baseURL + "/routes/cargo_requests/"
 	response, err := c.GetPoints(url, cargoRequestRouteID)
 	if err != nil {
 		return nil, err
@@ -300,7 +300,7 @@ func (c *FeignClient) GetPointsForCargoRequest(cargoRequestRouteID uuid.UUID) (*
 }
 
 func (c *FeignClient) GetPointsForTrip(cargoRequestRouteID uuid.UUID) (*GetRoutePointsResponse, error) {
-	url := c.baseURL + "/routes/trip/"
+	url := c.baseURL + "/routes/trips/"
 	response, err := c.GetPoints(url, cargoRequestRouteID)
 	if err != nil {
 		return nil, err
