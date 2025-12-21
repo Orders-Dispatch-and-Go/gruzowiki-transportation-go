@@ -119,7 +119,7 @@ func AllowedRoles(allowedRoles ...string) echo.MiddlewareFunc {
 				return echo.NewHTTPError(http.StatusForbidden, "Insufficient permissions")
 			}*/
 
-			fmt.Printf("UserJwtClaims: User ID: %d, Email: %s, Roles: %s\n", claims.UserData.ID, claims.UserData.Email, claims.UserAuthorities)
+			fmt.Printf("UserJwtClaims: User ID: %d, Email: %s, Roles: %s", claims.UserData.ID, claims.UserData.Email, claims.UserAuthorities)
 			c.Set(UserIdCtxClaim, claims.UserData.ID)
 			c.Set(EmailCtxClaim, claims.UserData.Email)
 			c.Set(RolesCtxClaim, claims.UserAuthorities)

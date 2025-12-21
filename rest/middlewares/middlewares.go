@@ -33,7 +33,7 @@ func HandleError(next echo.HandlerFunc) echo.HandlerFunc {
 			code = http.StatusInternalServerError
 		}
 
-		fmt.Println("Request ERROR")
+		fmt.Println("\nRequest ERROR")
 		fmt.Printf("Method: %s URI: %s\n", c.Request().Method, c.Request().URL.Path)
 		fmt.Printf("Error: %s, code: %d\n", err, code)
 
@@ -53,7 +53,7 @@ func LoggingMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 			}
 			oneLine := strings.ReplaceAll(string(bodyBytes), "\n", "")
 			oneLine = strings.ReplaceAll(oneLine, " ", "")
-			fmt.Println("Request body:", oneLine)
+			fmt.Println("\nRequest body:", oneLine)
 			c.Request().Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 		}
 
