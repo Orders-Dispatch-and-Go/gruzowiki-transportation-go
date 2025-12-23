@@ -84,6 +84,29 @@ ORDER BY id;
 -- name: GetCargoRequest :one
 select * from cargo_requests where id = $1;
 
+-- name: GetCargoRequestWithCargo :one
+SELECT
+    cr.id,
+    cr.consigner_id,
+    cr.recipient_id,
+    cr.from_station,
+    cr.to_station,
+    cr.created_at,
+    cr.deadline,
+    cr.route_id,
+    cr.trip_id,
+    cr.price,
+    cr.status,
+    cr.receive_code,
+    c.worth,
+    c.width,
+    c.height,
+    c.length,
+    c.weight
+FROM cargo_requests cr
+         LEFT JOIN cargo c ON c.request_id = cr.id
+WHERE cr.id = $1;
+
 -- name: InsertCargoRequest :one
 insert into cargo_requests (id, consigner_id, recipient_id, from_station, to_station, created_at, deadline, route_id, trip_id, price, status, receive_code)
 values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) returning id;

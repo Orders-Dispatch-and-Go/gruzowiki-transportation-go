@@ -51,6 +51,7 @@ type (
 			ids []pgtype.UUID,
 		) ([]pg.GetCargoRequestRouteIDsRow, error)
 		GetCargoRequestById(ctx context.Context, id uuid.UUID) (pg.CargoRequest, error)
+		GetCargoRequestByIdWithCargo(ctx context.Context, id uuid.UUID) (pg.GetCargoRequestWithCargoRow, error)
 	}
 
 	StationService interface {
@@ -288,7 +289,7 @@ func (s *CargoRequestService) GetRequestsForTripWithRoutes(
 
 	finalRequests := make([]models.CargoRequestResponse, 0, len(requestsToLoad))
 	for _, reqID := range requestsToLoad { //подгружаем нужные нам заявки по id
-		pgReq, err := s.repo.GetCargoRequestById(ctx, reqID)
+		pgReq, err := s.repo.GetCargoRequestByIdWithCargo(ctx, reqID)
 		if err != nil {
 			return nil, fmt.Errorf("load cargo request %s: %w", reqID.String(), err)
 		}
@@ -335,6 +336,11 @@ func (s *CargoRequestService) GetRequestsForTripWithRoutes(
 			Price:       util.NumericToString(pgReq.Price),
 			Status:      pgReq.Status.String,
 			ReceiveCode: receiveCode,
+			Width:       int(pgReq.Width.Int32),
+			Height:      int(pgReq.Height.Int32),
+			Length:      int(pgReq.Length.Int32),
+			Weight:      int(pgReq.Weight.Int32),
+			Worth:       int(pgReq.Worth.Int.Int64()),
 		}
 
 		finalRequests = append(finalRequests, req)

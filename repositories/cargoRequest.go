@@ -325,3 +325,13 @@ func (c *CargoRequestRepo) GetCargoRequestById(ctx context.Context, id uuid.UUID
 
 	return req, nil
 }
+
+func (c *CargoRequestRepo) GetCargoRequestByIdWithCargo(
+	ctx context.Context,
+	id uuid.UUID,
+) (pg.GetCargoRequestWithCargoRow, error) {
+	return c.conn.Queries(ctx).GetCargoRequestWithCargo(ctx, pgtype.UUID{
+		Bytes: id,
+		Valid: true,
+	})
+}

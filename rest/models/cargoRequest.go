@@ -61,6 +61,11 @@ type (
 		Price       string   `json:"price"`
 		Status      string   `json:"status"`
 		ReceiveCode *string  `json:"receiveCode"`
+		Worth       int      `json:"worth"`
+		Width       int      `json:"width"`
+		Height      int      `json:"height"`
+		Length      int      `json:"length"`
+		Weight      int      `json:"weight"`
 	}
 
 	CargoTypesResponse struct {

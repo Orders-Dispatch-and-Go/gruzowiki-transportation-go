@@ -248,6 +248,76 @@ func (q *Queries) GetCargoRequestRouteIDs(ctx context.Context, dollar_1 []pgtype
 	return items, nil
 }
 
+const getCargoRequestWithCargo = `-- name: GetCargoRequestWithCargo :one
+SELECT
+    cr.id,
+    cr.consigner_id,
+    cr.recipient_id,
+    cr.from_station,
+    cr.to_station,
+    cr.created_at,
+    cr.deadline,
+    cr.route_id,
+    cr.trip_id,
+    cr.price,
+    cr.status,
+    cr.receive_code,
+
+    c.worth,
+    c.width,
+    c.height,
+    c.length,
+    c.weight
+FROM cargo_requests cr
+         LEFT JOIN cargo c ON c.request_id = cr.id
+WHERE cr.id = $1
+`
+
+type GetCargoRequestWithCargoRow struct {
+	ID          pgtype.UUID
+	ConsignerID pgtype.Int4
+	RecipientID pgtype.Int4
+	FromStation pgtype.UUID
+	ToStation   pgtype.UUID
+	CreatedAt   pgtype.Int8
+	Deadline    pgtype.Int8
+	RouteID     pgtype.UUID
+	TripID      pgtype.UUID
+	Price       pgtype.Numeric
+	Status      pgtype.Text
+	ReceiveCode pgtype.Int4
+	Worth       pgtype.Numeric
+	Width       pgtype.Int4
+	Height      pgtype.Int4
+	Length      pgtype.Int4
+	Weight      pgtype.Int4
+}
+
+func (q *Queries) GetCargoRequestWithCargo(ctx context.Context, id pgtype.UUID) (GetCargoRequestWithCargoRow, error) {
+	row := q.db.QueryRow(ctx, getCargoRequestWithCargo, id)
+	var i GetCargoRequestWithCargoRow
+	err := row.Scan(
+		&i.ID,
+		&i.ConsignerID,
+		&i.RecipientID,
+		&i.FromStation,
+		&i.ToStation,
+		&i.CreatedAt,
+		&i.Deadline,
+		&i.RouteID,
+		&i.TripID,
+		&i.Price,
+		&i.Status,
+		&i.ReceiveCode,
+		&i.Worth,
+		&i.Width,
+		&i.Height,
+		&i.Length,
+		&i.Weight,
+	)
+	return i, err
+}
+
 const getCargoRequestsForTrip = `-- name: GetCargoRequestsForTrip :many
 SELECT DISTINCT ON (cr.id) cr.id
 FROM cargo_requests cr
