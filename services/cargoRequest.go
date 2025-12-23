@@ -7,6 +7,7 @@ import (
 	"gruzowiki/db/pg"
 	"gruzowiki/rest/middlewares"
 	"gruzowiki/rest/models"
+	"gruzowiki/rest/terror"
 	"gruzowiki/util"
 	"strconv"
 	"time"
@@ -387,5 +388,24 @@ func (s *CargoRequestService) MarkTrip(ctx context.Context, cargoReqId string, t
 }
 
 func (s *CargoRequestService) Delivered(ctx context.Context, cargoReqId string, code string) error {
-	return s.repo.UpdateCargoRequestCode(ctx, cargoReqId, code)
+	receiveCode, err := strconv.ParseInt(code, 10, 32)
+	if err != nil {
+		return err
+	}
+
+	cargoReqIdUuid, err := uuid.Parse(cargoReqId)
+	if err != nil {
+		return err
+	}
+
+	pgCargoRequest, err := s.repo.GetCargoRequestById(ctx, cargoReqIdUuid)
+	if err != nil {
+		return err
+	}
+
+	if pgCargoRequest.ReceiveCode.Int32 != int32(receiveCode) {
+		return terror.NewValidationError("cargoRequest receive code not matched", strconv.Itoa(int(receiveCode)))
+	}
+
+	return nil
 }

@@ -7,7 +7,6 @@ import (
 	"gruzowiki/rest/models"
 	"gruzowiki/util"
 	"math/big"
-	"strconv"
 	"strings"
 
 	"github.com/google/uuid"
@@ -179,7 +178,7 @@ func (c *CargoRequestRepo) MarkTrip(ctx context.Context, cargoReqId string, trip
 }
 
 func (c *CargoRequestRepo) UpdateCargoRequestCode(ctx context.Context, reqId, code string) error {
-	id, err := uuid.Parse(reqId)
+	/*id, err := uuid.Parse(reqId)
 	if err != nil {
 		return err
 	}
@@ -190,8 +189,8 @@ func (c *CargoRequestRepo) UpdateCargoRequestCode(ctx context.Context, reqId, co
 	err = c.conn.Queries(ctx).UpdateCargoRequestReceiveCode(ctx, pg.UpdateCargoRequestReceiveCodeParams{
 		ID:          pgtype.UUID{Bytes: id, Valid: true},
 		ReceiveCode: pgtype.Int4{Int32: int32(receiveCode), Valid: true},
-	})
-	return err
+	})*/
+	return nil
 }
 
 func (c *CargoRequestRepo) UpdateRoute(ctx context.Context, cargoReqId string, routeId string) error {
