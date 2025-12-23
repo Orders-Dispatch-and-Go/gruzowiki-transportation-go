@@ -27,7 +27,7 @@ func (r *TripRepo) GetTripById(ctx context.Context, tripId uuid.UUID) (*pg.Trip,
 		return nil, err
 	}
 	if len(pgTrip) == 0 {
-		return nil, err
+		return nil, terror.NewNotFoundError("tripId", tripId.String())
 	}
 	return &pgTrip[0], err
 }

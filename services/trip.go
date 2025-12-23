@@ -272,7 +272,12 @@ func (s *TripService) StartTrip(ctx context.Context, tripId string, cargoRequest
 		cargoRequestRouteIDs = append(cargoRequestRouteIDs, cargoRequestRoute.RouteID.String())
 	}
 
-	pgTrip, err := s.tripRepo.GetTripById(ctx, uuid.MustParse(tripId))
+	tripIdUuid, err := uuid.Parse(tripId)
+	if err != nil {
+		return err
+	}
+
+	pgTrip, err := s.tripRepo.GetTripById(ctx, tripIdUuid)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return terror.NewValidationError("trip", tripId)
