@@ -275,12 +275,20 @@ func (s *TripService) StartTrip(ctx context.Context, tripId string, cargoRequest
 		return err
 	}
 
-	s.tripRepo.UpdateTripStatus(ctx, tripId, models.TripStatusInProgress)
-	s.tripRepo.UpdateRout(ctx, tripId, tripRouteId.String())
-	for _, cargoRequest := range cargoRequestRoutes {
+	err = s.tripRepo.UpdateTripStatus(ctx, tripId, models.TripStatusInProgress)
+	if err != nil {
+		return err
+	}
+
+	err = s.tripRepo.UpdateRout(ctx, tripId, tripRouteId.String())
+	if err != nil {
+		return err
+	}
+
+	for _, cargoRequestId := range cargoRequestIds {
 		err = s.cargoRequestRepo.UpdateCargoRequestOnStartTrip(
 			ctx,
-			uuid.MustParse(cargoRequest.ID.String()),
+			uuid.MustParse(cargoRequestId),
 			uuid.MustParse(tripId),
 			tripRouteId,
 			models.CargoRequestStatusInProgress,
