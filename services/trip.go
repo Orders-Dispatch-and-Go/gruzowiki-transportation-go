@@ -2,7 +2,9 @@ package services
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"github.com/jackc/pgx/v5"
 	"gruzowiki/db/pg"
 	"gruzowiki/repositories"
 	"gruzowiki/rest/middlewares"
@@ -270,7 +272,15 @@ func (s *TripService) StartTrip(ctx context.Context, tripId string, cargoRequest
 		cargoRequestRouteIDs = append(cargoRequestRouteIDs, cargoRequestRoute.RouteID.String())
 	}
 
-	tripRouteId, err := s.client.MergeRoutes(tripId, cargoRequestRouteIDs)
+	pgTrip, err := s.tripRepo.GetTripById(ctx, uuid.MustParse(tripId))
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return terror.NewValidationError("trip", tripId)
+		}
+		return err
+	}
+
+	newTripRouteId, err := s.client.MergeRoutes(pgTrip.RouteID.String(), cargoRequestRouteIDs)
 	if err != nil {
 		return err
 	}
@@ -280,7 +290,7 @@ func (s *TripService) StartTrip(ctx context.Context, tripId string, cargoRequest
 		return err
 	}
 
-	err = s.tripRepo.UpdateRout(ctx, tripId, tripRouteId.String())
+	err = s.tripRepo.UpdateRout(ctx, tripId, newTripRouteId.String())
 	if err != nil {
 		return err
 	}
@@ -290,7 +300,7 @@ func (s *TripService) StartTrip(ctx context.Context, tripId string, cargoRequest
 			ctx,
 			uuid.MustParse(cargoRequestId),
 			uuid.MustParse(tripId),
-			tripRouteId,
+			newTripRouteId,
 			models.CargoRequestStatusInProgress,
 		)
 		if err != nil {
